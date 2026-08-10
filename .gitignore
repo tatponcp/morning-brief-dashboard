@@ -1,0 +1,14 @@
+node_modules/
+.next/
+out/
+build/
+.vercel/
+.env
+.env*.local
+*.tsbuildinfo
+next-env.d.ts
+
+# Windows / OneDrive
+Thumbs.db
+desktop.ini
+.DS_Store
