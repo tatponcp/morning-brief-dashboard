@@ -1,4 +1,5 @@
 import { ACCENT } from "@/lib/accent";
+import snapshot from "@/data/macro-snapshot.json";
 import type { Section } from "@/lib/types";
 
 /** เส้นตัวอย่างเล็ก ๆ ในการ์ดหน้าสรุป — server component, วาดด้วย SVG ล้วน */
@@ -43,6 +44,23 @@ export function MiniSpark({ section }: { section: Section }) {
 function pick(section: Section): number[] {
   if (section.contracts?.length) return section.contracts[0].rows.map((r) => r.close);
   if (section.flows?.length) return section.flows.map((r) => r.total);
+
+  const pane = section.groups?.[0]?.panes?.[0];
+  if (pane) {
+    const key = pane.kind === "candle" ? "c" : pane.series[0]?.key;
+    if (key) {
+      const vals = pane.rows
+        .map((r) => r[key])
+        .filter((v): v is number => typeof v === "number");
+      if (vals.length) return vals;
+    }
+  }
+
+  if (section.id === "macro") {
+    const gold = snapshot.instruments.find((x) => x.id === "gold");
+    if (gold) return gold.rows.slice(-90).map((r) => r.c);
+  }
+
   const spark = section.board?.stats?.find((s) => s.spark)?.spark;
   return spark ?? [];
 }

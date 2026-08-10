@@ -1,4 +1,4 @@
-import type { ContractSeries, FlowRow } from "@/lib/types";
+import type { ContractSeries, FlowRow, PaneRow } from "@/lib/types";
 
 /** LCG แบบ deterministic — server กับ client ต้องได้ค่าเดียวกันเสมอ */
 function rng(seed: number) {
@@ -100,6 +100,82 @@ export function makeBreadth(seed: number, days: number, endAt: number) {
     out.push({ i, v: Number(v.toFixed(1)) });
   }
   out[out.length - 1].v = endAt;
+  return out;
+}
+
+/** แท่งเทียนรายวัน — ใช้กับ pane kind "candle" */
+export function makeCandles(
+  seed: number,
+  days: number,
+  from: number,
+  peak: number,
+  to: number,
+): PaneRow[] {
+  const r = rng(seed);
+  const dates = businessDays("2026-05-20", days);
+  let prev = from;
+  return dates.map((t, i) => {
+    const p = i / (days - 1);
+    // ขึ้นไปทำยอดแถว ๆ 70% ของช่วง แล้วย่อลงมาปิดที่ to
+    const path =
+      p < 0.7
+        ? from + (peak - from) * (p / 0.7)
+        : peak + (to - peak) * ((p - 0.7) / 0.3);
+    const o = prev;
+    const c = path + (r() - 0.5) * (peak - from) * 0.12;
+    const h = Math.max(o, c) + r() * (peak - from) * 0.07;
+    const l = Math.min(o, c) - r() * (peak - from) * 0.07;
+    prev = c;
+    return {
+      t,
+      o: Number(o.toFixed(2)),
+      h: Number(h.toFixed(2)),
+      l: Number(l.toFixed(2)),
+      c: Number(c.toFixed(2)),
+    };
+  });
+}
+
+/** เส้นสะสมที่ไหลไปจบที่ค่าที่กำหนด */
+export function makeCumulative(
+  seed: number,
+  days: number,
+  key: string,
+  from: number,
+  to: number,
+  startDate = "2026-05-20",
+): PaneRow[] {
+  const r = rng(seed);
+  const dates = businessDays(startDate, days);
+  return dates.map((t, i) => {
+    const p = i / (days - 1);
+    const v = from + (to - from) * Math.pow(p, 1.15) + (r() - 0.5) * Math.abs(to - from) * 0.16;
+    return { t, [key]: Math.round(p === 1 ? to : v) };
+  });
+}
+
+/** ซีรีส์ intraday 15 นาที (ใช้กับกราฟระยะสั้นข้อ 3) */
+export function make15m(
+  seed: number,
+  bars: number,
+  fields: { key: string; from: number; to: number; jitter?: number }[],
+): PaneRow[] {
+  const r = rng(seed);
+  const out: PaneRow[] = [];
+  const start = new Date("2026-08-04T10:00:00Z");
+  for (let i = 0; i < bars; i++) {
+    const d = new Date(start.getTime() + i * 15 * 60 * 1000);
+    const p = i / (bars - 1);
+    const row: PaneRow = {
+      t: `${d.toISOString().slice(0, 10)}T${d.toISOString().slice(11, 16)}`,
+    };
+    for (const f of fields) {
+      const jit = f.jitter ?? Math.abs(f.to - f.from) * 0.12;
+      const v = f.from + (f.to - f.from) * Math.pow(p, 1.1) + (r() - 0.5) * jit;
+      row[f.key] = Number((p === 1 ? f.to : v).toFixed(4));
+    }
+    out.push(row);
+  }
   return out;
 }
 

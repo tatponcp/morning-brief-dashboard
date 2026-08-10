@@ -50,6 +50,29 @@
 `@vercel/og` หรือ Playwright screenshot หน้าเดียวกันออกมาเป็น PNG 1080×1080 — โค้ดชุดเดิม
 ได้ทั้งเว็บและรูป
 
+## 4.1 สถานะการแปลงภาพ → ข้อมูลจริง (อัปเดต)
+
+| # | Section | สถานะ | หมายเหตุ |
+|---|---|---|---|
+| 1 | S50 + OI | 🟩 native | รอต่อข้อมูลจริงจาก TFEX |
+| 2 | Long/Short ต่างชาติ–กองทุน | 🟩 native | รอต่อ SET Investor Type |
+| 3 | USD Futures Flow | 🟩 native | กราฟวาดเองครบทั้ง 6 pane (แท่งเทียน + Super Flow + OI + 15m PBC) ข้อมูลยังเป็น demo — ต้องได้ CSV export จาก VM ก่อน |
+| 4 | Confirm Up/Down S50 | 🖼️ ภาพ | ตามที่ตกลง |
+| 5 | Market Breadth | 🖼️ ภาพ | ตามที่ตกลง (ถ้าอยากได้ native ภายหลัง คำนวณเองจากราคาหุ้น SET50 ได้) |
+| 6 | Global Macro | 🟩 **native + ข้อมูลจริง** | ดึงราคา Gold/VIX/DXY/US10Y สดอัตโนมัติ ไม่ต้องแคปภาพอีกแล้ว |
+
+### ข้อ 6 ทำงานยังไง
+
+- [`src/lib/market.ts`](web/src/lib/market.ts) — ยิง provider จริง ถ้าล่ม/ช้าเกิน 8 วิ จะ fallback
+  ไปใช้ snapshot ใน repo → **build ไม่มีวันพังเพราะ provider ล่ม**
+- หน้า `/macro` เป็น ISR `revalidate = 3600` → ราคาอัปเดตทุกชั่วโมง แต่ยังเสิร์ฟเร็วเท่า static
+- มีแถบบอกสถานะบนหน้าเว็บว่ากำลังใช้ข้อมูลสดหรือ snapshot
+- อัปเดต snapshot ด้วยมือ: `npm run fetch:macro`
+
+> ⚠️ ตอนนี้ default provider เป็น endpoint สาธารณะของ Yahoo Finance ซึ่งไม่มีสัญญารองรับ
+> เหมาะกับ demo/ภายใน ถ้าจะใช้เชิงพาณิชย์จริงจังควรย้ายไป provider ที่มีสัญญา
+> (Twelve Data, Polygon, EOD Historical) — แก้แค่ฟังก์ชัน `fetchDaily()` ตัวเดียว
+
 ## 5. Scrape อัตโนมัติ (Input 1, 2) — recheck แล้ว
 
 | ชุดข้อมูล | อัตโนมัติได้ไหม | วิธี |

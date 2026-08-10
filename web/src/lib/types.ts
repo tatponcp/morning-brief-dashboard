@@ -20,6 +20,55 @@ export type Candle = {
   c: number;
 };
 
+/* ───────── โมเดล pane สำหรับ section ที่วาดกราฟเอง (ข้อ 3, 6) ─────────
+   หนึ่ง "group" = การ์ดหนึ่งใบ ข้างในซ้อนได้หลาย pane เหมือนหน้าจอโปรแกรมเทรด */
+
+export type PaneKind = "candle" | "line" | "area";
+
+export type SeriesDef = {
+  key: string;
+  name: string;
+  color: string;
+  strokeWidth?: number;
+  /** วาดเป็นพื้นที่ไล่สีใต้เส้น */
+  fill?: boolean;
+  digits?: number;
+};
+
+export type RefLine = {
+  y: number;
+  color: string;
+  label?: string;
+  dash?: boolean;
+};
+
+export type PaneRow = { t: string } & Record<string, number | string>;
+
+export type Pane = {
+  id: string;
+  title: string;
+  note?: string;
+  kind: PaneKind;
+  height?: number;
+  series: SeriesDef[];
+  rows: PaneRow[];
+  refLines?: RefLine[];
+  /** ลากเส้น 0 (สำหรับกราฟสะสม) */
+  zeroLine?: boolean;
+  /** ป้ายค่าล่าสุดมุมขวา */
+  lastBadge?: boolean;
+  digits?: number;
+};
+
+export type PaneGroup = {
+  id: string;
+  title: string;
+  subtitle?: string;
+  accentHex?: string;
+  panes: Pane[];
+  footer?: { label: string; value: string; tone?: Bias }[];
+};
+
 /** Section 1 — S50 Futures + Open Interest (กรอกข้อมูลย้อนหลังได้) */
 export type ContractSeries = {
   symbol: string;
@@ -57,6 +106,26 @@ export type Section = {
   contracts?: ContractSeries[];
   flows?: FlowRow[];
   board?: ImageBoard;
+  /** ข้อ 3 · 6 — วาดกราฟเองจากข้อมูล ไม่ใช้ภาพแคป */
+  groups?: PaneGroup[];
+  /** การ์ดตัวเลขเด่นใต้กราฟหลัก (ข้อ 6) */
+  instruments?: Instrument[];
+};
+
+/** เครื่องมือหนึ่งตัวในหน้า Global Macro */
+export type Instrument = {
+  id: string;
+  label: string;
+  sub: string;
+  color: string;
+  value: number;
+  change: number;
+  changePct: number;
+  suffix?: string;
+  digits?: number;
+  note?: string;
+  tone?: Bias;
+  rows: { t: string; c: number }[];
 };
 
 export type Brief = {

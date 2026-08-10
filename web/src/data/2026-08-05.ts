@@ -1,5 +1,12 @@
 import type { Brief } from "@/lib/types";
-import { makeContract, makeFlows, makeSpark } from "./generate";
+import {
+  make15m,
+  makeCandles,
+  makeContract,
+  makeCumulative,
+  makeFlows,
+  makeSpark,
+} from "./generate";
 
 /**
  * ตัวอย่าง Brief 1 วัน — ข้อความทั้งหมดมาจาก Result Example ที่ IC ทำไว้
@@ -119,21 +126,106 @@ export const brief20260805: Brief = {
       subtitle: "อ่านจังหวะเงินบาทแข็ง / อ่อน จากตำแหน่งของตลาด",
       source: "VM · แคปภาพจากระบบ",
       accent: "sky",
-      mode: "image",
-      board: {
-        src: "/uploads/2026-08-05/usd.png",
-        alt: "USDU26 Daily และ 15 นาที พร้อม Super Flow / PBC",
-        stats: [
-          { label: "USDU26 ล่าสุด", value: "32.93", delta: "ภาพใหญ่ยังอ่อน", tone: "bear", spark: makeSpark(3, 24, 33.4, 32.93) },
-          { label: "แนวโน้มภาพใหญ่", value: "อ่อน", tone: "bear" },
-          { label: "Super Flow (สะสม)", value: "ติดลบ", tone: "bear", spark: makeSpark(5, 24, 0.6, -0.4) },
-          { label: "PBC Daily Reset", value: "-4,075", delta: "ยังอ่อน", tone: "bear" },
-        ],
-        callouts: [
-          { x: 26, y: 20, text: "ตำแหน่งสุทธิยังอยู่ฝั่งกดดันดอลลาร์", tone: "bear" },
-          { x: 74, y: 62, text: "ระยะสั้นเริ่มทรงตัวใกล้โซนฐาน", tone: "neutral" },
-        ],
-      },
+      mode: "data",
+      groups: [
+        {
+          id: "usd-daily",
+          title: "USDU26 — ภาพใหญ่ (Daily)",
+          subtitle: "ตำแหน่งสุทธิของตลาดยังอยู่ฝั่งกดดันดอลลาร์",
+          accentHex: "#38bdf8",
+          panes: [
+            {
+              id: "usd-price-d",
+              title: "USDU26 (Daily)",
+              kind: "candle",
+              height: 210,
+              digits: 2,
+              series: [{ key: "c", name: "USDU26", color: "#34f5a0" }],
+              rows: makeCandles(101, 58, 32.2, 33.55, 32.93),
+              refLines: [{ y: 32.93, color: "#34f5a0", label: "32.93" }],
+            },
+            {
+              id: "usd-superflow",
+              title: "Super Flow (สะสม)",
+              note: "แรงซื้อ/ขายสุทธิสะสมของภาพใหญ่",
+              kind: "line",
+              height: 150,
+              digits: 0,
+              zeroLine: true,
+              series: [{ key: "flow", name: "Super Flow", color: "#e2e8f0", fill: true }],
+              rows: makeCumulative(103, 58, "flow", 620_000, -225_314),
+              refLines: [
+                { y: 159_204, color: "#34f5a0", label: "+159,204" },
+                { y: -179_037, color: "#fb7185", label: "-179,037" },
+              ],
+            },
+            {
+              id: "usd-oi",
+              title: "OI (สัญญาคงค้าง)",
+              kind: "line",
+              height: 150,
+              digits: 0,
+              series: [{ key: "oi", name: "Open Interest", color: "#ffc53d" }],
+              rows: makeCumulative(107, 58, "oi", 980_000, 1_306_431),
+            },
+          ],
+          footer: [
+            { label: "USDU26 ล่าสุด", value: "32.93", tone: "neutral" },
+            { label: "แนวโน้มภาพใหญ่", value: "อ่อน", tone: "bear" },
+            { label: "Super Flow (สะสม)", value: "ติดลบ", tone: "bear" },
+          ],
+        },
+        {
+          id: "usd-15m",
+          title: "USDU26 — ระยะสั้น (15 นาที)",
+          subtitle: "Flow ระยะสั้นเริ่มทรงตัวใกล้โซนฐาน แต่ยังอ่อน",
+          accentHex: "#a78bfa",
+          panes: [
+            {
+              id: "usd-price-15",
+              title: "USDU26 (15m)",
+              kind: "line",
+              height: 180,
+              digits: 2,
+              series: [{ key: "px", name: "USDU26", color: "#ffc53d" }],
+              rows: make15m(111, 120, [{ key: "px", from: 33.5, to: 32.96, jitter: 0.06 }]),
+              refLines: [
+                { y: 32.96, color: "#34f5a0", label: "32.96" },
+                { y: 32.93, color: "#22d3ee", label: "32.93" },
+              ],
+            },
+            {
+              id: "usd-pbc",
+              title: "PBC (สะสม)",
+              kind: "line",
+              height: 150,
+              digits: 0,
+              zeroLine: true,
+              series: [{ key: "pbc", name: "PBC", color: "#22d3ee", fill: true }],
+              rows: make15m(113, 120, [{ key: "pbc", from: 12_000, to: -230_188 }]),
+              refLines: [
+                { y: -230_188, color: "#34f5a0", label: "-230,188" },
+                { y: -329_075, color: "#fb7185", label: "-329,075" },
+              ],
+            },
+            {
+              id: "usd-pbc-reset",
+              title: "PBC Daily Reset (15m)",
+              kind: "line",
+              height: 140,
+              digits: 0,
+              zeroLine: true,
+              series: [{ key: "reset", name: "PBC Daily Reset", color: "#e879f9" }],
+              rows: make15m(117, 120, [{ key: "reset", from: -1_200, to: -4_075, jitter: 9_000 }]),
+            },
+          ],
+          footer: [
+            { label: "USDU26 ล่าสุด", value: "32.96", tone: "neutral" },
+            { label: "แนวโน้มระยะสั้น", value: "ทรงตัวใกล้ฐาน", tone: "neutral" },
+            { label: "PBC Daily Reset", value: "-4,075", tone: "bear" },
+          ],
+        },
+      ],
       narrative: {
         summary: [
           "ภาพใหญ่ USD ยังอ่อน",
@@ -242,22 +334,10 @@ export const brief20260805: Brief = {
       index: 6,
       title: "Global Macro Signals",
       subtitle: "Gold, VIX, DXY และ Bond Yield กำลังส่งอะไร",
-      source: "Website · แคปภาพจากระบบ",
+      source: "ข้อมูลราคาจริงจาก provider · อัปเดตอัตโนมัติทุกชั่วโมง",
       accent: "rose",
-      mode: "image",
-      board: {
-        src: "/uploads/2026-08-05/macro.jpg",
-        alt: "Global Macro — Gold, VIX, DXY, US10Y",
-        stats: [
-          { label: "GOLD (COMEX)", value: "4,360.80", delta: "+87.20 (+2.05%)", tone: "bull", spark: makeSpark(51, 24, 4180, 4360) },
-          { label: "VIX", value: "15.81", delta: "-0.23 (-1.43%)", tone: "bull", spark: makeSpark(55, 24, 19, 15.8) },
-          { label: "DXY", value: "99.64", delta: "-0.32 (-0.32%)", tone: "bull", spark: makeSpark(59, 24, 101.2, 99.64) },
-          { label: "US10Y", value: "4.62%", delta: "-0.07 (-1.49%)", tone: "bull", spark: makeSpark(63, 24, 4.78, 4.62) },
-        ],
-        callouts: [
-          { x: 40, y: 22, text: "ทองเด้งกลับแรง ขึ้นมายืนได้แถว 4,360.80", tone: "bull" },
-        ],
-      },
+      // ข้อมูลของ section นี้โหลดสดตอน render (ดู src/lib/market.ts)
+      mode: "data",
       narrative: {
         summary: [
           "DXY และ US10Y อ่อนลง",

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getBrief } from "@/data";
 import { PriceOIPanel } from "@/components/charts/PriceOIPanel";
 import { FlowPanel } from "@/components/charts/FlowPanel";
+import { PaneGroupCard } from "@/components/charts/PaneGroupCard";
 import { ImageBoard } from "@/components/ui/ImageBoard";
 import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
 import { SectionHero } from "@/components/ui/SectionHero";
@@ -37,6 +38,16 @@ export function SectionView({ id }: { id: string }) {
         <Reveal>
           <FlowPanel rows={s.flows} />
         </Reveal>
+      )}
+
+      {!!s.groups?.length && (
+        <div className="grid gap-4 xl:grid-cols-2">
+          {s.groups.map((g, i) => (
+            <Reveal key={g.id} delay={i * 0.08}>
+              <PaneGroupCard group={g} />
+            </Reveal>
+          ))}
+        </div>
       )}
 
       {s.board && (
