@@ -255,17 +255,22 @@ export const brief20260805: Brief = {
       accent: "amber",
       mode: "image",
       board: {
-        src: "/uploads/2026-08-05/confirm.jpg",
-        alt: "Confirm Up/Down S50 — Last, Confirm, Trend, Mid Trend",
+        images: [
+          {
+            src: "/uploads/2026-08-05/confirm.jpg",
+            alt: "Confirm Up/Down S50 — Last, Confirm, Trend, Mid Trend",
+            caption: "Last / Confirm Up-Down / Trend / Mid Trend — TF Daily",
+            callouts: [
+              { x: 24, y: 22, text: "ราคายังยืนเหนือโซนสำคัญได้", tone: "bull", side: "right" },
+              { x: 78, y: 68, text: "Trend ระยะสั้นอ่อนลง กดดันต่อเนื่อง", tone: "bear", side: "left" },
+            ],
+          },
+        ],
         stats: [
           { label: "Last", value: "1,077.52", delta: "+0.35%", tone: "bull", spark: makeSpark(9, 24, 1010, 1077) },
           { label: "Confirm Up/Down", value: "-100M", delta: "ดีขึ้นต่อเนื่อง", tone: "neutral", spark: makeSpark(13, 24, -230, -100) },
           { label: "Trend", value: "-28K", delta: "อ่อนลงชัด", tone: "bear", spark: makeSpark(17, 24, 20, -28) },
           { label: "Mid Trend", value: "-89", delta: "เริ่มฟื้นตัว", tone: "neutral", spark: makeSpark(21, 24, -104, -89) },
-        ],
-        callouts: [
-          { x: 22, y: 24, text: "ราคายังยืนเหนือโซนสำคัญได้", tone: "bull" },
-          { x: 76, y: 70, text: "Trend ระยะสั้นอ่อนลง กดดันต่อเนื่อง", tone: "bear" },
         ],
       },
       narrative: {
@@ -297,16 +302,22 @@ export const brief20260805: Brief = {
       accent: "violet",
       mode: "image",
       board: {
-        src: "/uploads/2026-08-05/breadth.jpg",
-        alt: "Market Breadth SET50 — % เหนือ MA200, % เหนือ RSI50, % New High",
+        images: [
+          {
+            src: "/uploads/2026-08-05/breadth.jpg",
+            alt: "Market Breadth SET50 — % เหนือ MA200, % เหนือ RSI50, % New High",
+            caption: "SET50 Index + Breadth 4 เส้น (Indy 2090 v1.05) — TF 15 นาที",
+            callouts: [
+              { x: 76, y: 14, text: "ดัชนี SET50 ลงมาใกล้แนวรับสำคัญแล้ว", tone: "bull", side: "left" },
+              { x: 30, y: 62, text: "Breadth หลายเส้นเข้าเขตสีเขียว", tone: "bull", side: "right" },
+            ],
+          },
+        ],
         stats: [
           { label: "% เหนือ MA200", value: "17.00", delta: "ใกล้โซนแนวรับ", tone: "bull", spark: makeSpark(31, 24, 62, 17) },
           { label: "% อยู่เหนือ RSI50", value: "31.00", delta: "ในเขตแนวรับ", tone: "bull", spark: makeSpark(35, 24, 70, 31) },
           { label: "% เหนือ MA200 (2)", value: "18.00", delta: "ใกล้โซนแนวรับ", tone: "bull", spark: makeSpark(39, 24, 58, 18) },
           { label: "% New High (365D)", value: "17.00", delta: "ใกล้โซนแนวรับ", tone: "bull", spark: makeSpark(43, 24, 66, 17) },
-        ],
-        callouts: [
-          { x: 78, y: 16, text: "ดัชนี SET50 ลงมาใกล้แนวรับสำคัญแล้ว", tone: "bull" },
         ],
       },
       narrative: {

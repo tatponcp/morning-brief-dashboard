@@ -1,21 +1,13 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import Image from "next/image";
-import {
-  Check,
-  Copy,
-  Download,
-  ImagePlus,
-  Plus,
-  Sparkles,
-  Trash2,
-  Wand2,
-} from "lucide-react";
+import { useMemo, useState } from "react";
+import { Check, Copy, Download, Plus, Sparkles, Trash2, Wand2 } from "lucide-react";
 import { getBrief } from "@/data";
 import { ACCENT, toneOf } from "@/lib/accent";
-import type { Bias } from "@/lib/types";
+import type { Bias, ImageBoard as Board } from "@/lib/types";
 import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
+import { ImageBoard } from "@/components/ui/ImageBoard";
+import { BoardEditor } from "@/components/studio/BoardEditor";
 
 const TONES: { key: Bias; label: string }[] = [
   { key: "bull", label: "บวก" },
@@ -33,9 +25,10 @@ export default function StudioPage() {
   const [interpretation, setInterpretation] = useState(section.narrative.interpretation);
   const [actions, setActions] = useState(section.narrative.actions);
   const [insight, setInsight] = useState(section.narrative.insight);
-  const [image, setImage] = useState<string | null>(section.board?.src ?? null);
+  const [board, setBoard] = useState<Board>(
+    section.board ?? { images: [{ src: "", alt: "", callouts: [] }], stats: [] },
+  );
   const [copied, setCopied] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
 
   function loadSection(id: string) {
     const s = brief.sections.find((x) => x.id === id)!;
@@ -44,7 +37,7 @@ export default function StudioPage() {
     setInterpretation(s.narrative.interpretation);
     setActions(s.narrative.actions);
     setInsight(s.narrative.insight);
-    setImage(s.board?.src ?? null);
+    setBoard(s.board ?? { images: [{ src: "", alt: "", callouts: [] }], stats: [] });
   }
 
   const payload = useMemo(
@@ -53,21 +46,20 @@ export default function StudioPage() {
         {
           date: brief.date,
           sectionId,
-          image: image?.startsWith("data:") ? "<uploaded-file>" : image,
+          board: {
+            ...board,
+            images: board.images.map((im) => ({
+              ...im,
+              src: im.src.startsWith("data:") ? "<uploaded-file>" : im.src,
+            })),
+          },
           narrative: { summary, interpretation, actions, insight },
         },
         null,
         2,
       ),
-    [brief.date, sectionId, image, summary, interpretation, actions, insight],
+    [brief.date, sectionId, board, summary, interpretation, actions, insight],
   );
-
-  function onPick(file?: File) {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setImage(String(reader.result));
-    reader.readAsDataURL(file);
-  }
 
   return (
     <div className="space-y-5">
@@ -132,43 +124,8 @@ export default function StudioPage() {
       <div className="grid gap-5 xl:grid-cols-2">
         {/* ---------- editor ---------- */}
         <div className="space-y-4">
-          <Block title="ภาพประกอบ (แคปมาวางได้เลย)" color={a.hex}>
-            <div
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                e.preventDefault();
-                onPick(e.dataTransfer.files?.[0]);
-              }}
-              onPaste={(e) => onPick(e.clipboardData.files?.[0])}
-              onClick={() => fileRef.current?.click()}
-              tabIndex={0}
-              className="grid cursor-pointer place-items-center rounded-xl border border-dashed border-white/15 bg-white/2 px-4 py-8 text-center transition hover:border-[#ffc53d]/50 hover:bg-[#ffc53d]/4"
-            >
-              {image ? (
-                <Image
-                  src={image}
-                  alt="preview"
-                  width={1200}
-                  height={700}
-                  unoptimized
-                  className="h-auto max-h-64 w-auto rounded-lg border border-white/10 object-contain"
-                />
-              ) : (
-                <>
-                  <ImagePlus className="mb-2 size-7 text-slate-500" />
-                  <p className="text-[13px] text-slate-400">
-                    ลากไฟล์มาวาง · คลิกเพื่อเลือก · หรือกด Ctrl+V วางภาพที่แคปไว้
-                  </p>
-                </>
-              )}
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={(e) => onPick(e.target.files?.[0] ?? undefined)}
-              />
-            </div>
+          <Block title="ภาพ + จุดอธิบาย (แคปมาวางได้เลย)" color={a.hex}>
+            <BoardEditor board={board} onChange={setBoard} />
           </Block>
 
           <Block title="1 · สรุปสั้น" color="#22d3ee">
@@ -292,14 +249,10 @@ export default function StudioPage() {
                 <p className="text-[11.5px] text-slate-500">{section.subtitle}</p>
               </div>
             </div>
-            {image && (
-              <Image
-                src={image}
-                alt="preview"
-                width={1600}
-                height={900}
-                unoptimized
-                className="mb-1 h-auto w-full rounded-xl border border-white/8"
+            {board.images.some((im) => im.src) && (
+              <ImageBoard
+                board={{ ...board, images: board.images.filter((im) => im.src) }}
+                accent={section.accent}
               />
             )}
             <NarrativeGrid

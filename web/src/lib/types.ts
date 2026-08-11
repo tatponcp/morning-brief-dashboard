@@ -84,14 +84,38 @@ export type FlowRow = {
   set50: number;
 };
 
-/** Section 3-6 — IC แคปภาพมาวาง แล้วเติมคำอธิบาย */
-export type ImageBoard = {
+/** จุดชี้บนภาพ — ระบบวาดกล่องคำอธิบาย + เส้นโยงให้เอง */
+export type Callout = {
+  /** ตำแหน่งจุดบนภาพ หน่วยเป็น % */
+  x: number;
+  y: number;
+  text: string;
+  tone?: Bias;
+  /** ทิศที่กล่องคำอธิบายจะกางออก */
+  side?: "left" | "right";
+};
+
+export type BoardImage = {
   src: string;
   alt: string;
-  /** จุดโฟกัสบนภาพ (0-100%) ที่ให้ระบบวาด callout สวย ๆ ทับให้ */
-  callouts?: { x: number; y: number; text: string; tone?: Bias }[];
-  /** ตัวเลขเด่นข้างภาพ */
-  stats?: { label: string; value: string; delta?: string; tone?: Bias; spark?: number[] }[];
+  /** หัวข้อกำกับใต้ภาพ เช่น "S50U26 (Daily)" */
+  caption?: string;
+  callouts?: Callout[];
+};
+
+export type BoardStat = {
+  label: string;
+  value: string;
+  delta?: string;
+  tone?: Bias;
+  spark?: number[];
+};
+
+/** โหมดภาพ — IC แคปภาพมาวาง ระบบครอบกรอบ/ชี้จุด/ตัวเลขให้เป็น Infographic */
+export type ImageBoard = {
+  images: BoardImage[];
+  /** ตัวเลขเด่นแถวล่าง */
+  stats?: BoardStat[];
 };
 
 export type Section = {
