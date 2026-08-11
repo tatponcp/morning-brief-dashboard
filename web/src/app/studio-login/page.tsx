@@ -1,14 +1,14 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { KeyRound, ShieldCheck } from "lucide-react";
-import { STUDIO_COOKIE, studioToken } from "@/lib/studio-auth";
+import { readStudioPassword, STUDIO_COOKIE, studioToken } from "@/lib/studio-auth";
 
 export const metadata = { title: "เข้าสู่ IC Studio" };
 
 async function login(formData: FormData) {
   "use server";
 
-  const password = process.env.STUDIO_PASSWORD;
+  const password = readStudioPassword();
   const input = String(formData.get("password") ?? "");
   const next = String(formData.get("next") || "/studio");
 

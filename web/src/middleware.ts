@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { STUDIO_COOKIE, studioToken } from "@/lib/studio-auth";
+import { readStudioPassword, STUDIO_COOKIE, studioToken } from "@/lib/studio-auth";
 
 /**
  * กั้น /studio ไม่ให้ลูกค้าเข้าถึง
@@ -11,7 +11,7 @@ import { STUDIO_COOKIE, studioToken } from "@/lib/studio-auth";
  * — ปลอดภัยไว้ก่อน ดีกว่าเผลอเปิดทิ้งไว้
  */
 export function middleware(req: NextRequest) {
-  const password = process.env.STUDIO_PASSWORD;
+  const password = readStudioPassword();
 
   // dev ในเครื่อง: เข้าได้เลย ไม่ต้องใส่รหัส
   if (process.env.NODE_ENV !== "production") return NextResponse.next();
