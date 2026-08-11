@@ -1,13 +1,37 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Check, Copy, Download, Plus, Sparkles, Trash2, Wand2 } from "lucide-react";
+import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
+import {
+  Check,
+  Copy,
+  Download,
+  History,
+  Plus,
+  RotateCcw,
+  Save,
+  Sparkles,
+  Trash2,
+  TriangleAlert,
+  Wand2,
+} from "lucide-react";
 import { getBrief } from "@/data";
 import { ACCENT, toneOf } from "@/lib/accent";
-import type { Bias, ImageBoard as Board } from "@/lib/types";
+import {
+  clearDrafts,
+  initialDrafts,
+  loadDrafts,
+  saveDrafts,
+  type Draft,
+  type DraftMap,
+  type SaveState,
+} from "@/lib/drafts";
+import type { Bias } from "@/lib/types";
 import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
 import { ImageBoard } from "@/components/ui/ImageBoard";
 import { BoardEditor } from "@/components/studio/BoardEditor";
+
+/** subscribe ที่ไม่เคยแจ้งเปลี่ยน — ใช้แค่ให้ useSyncExternalStore บอกว่าอยู่ฝั่ง client แล้ว */
+const subscribeNever = () => () => {};
 
 const TONES: { key: Bias; label: string }[] = [
   { key: "bull", label: "บวก" },
@@ -17,49 +41,91 @@ const TONES: { key: Bias; label: string }[] = [
 
 export default function StudioPage() {
   const brief = getBrief();
-  const [sectionId, setSectionId] = useState(brief.sections[2].id);
+  const [sectionId, setSectionId] = useState(brief.sections[3].id);
   const section = brief.sections.find((s) => s.id === sectionId)!;
   const a = ACCENT[section.accent];
 
-  const [summary, setSummary] = useState<string[]>(section.narrative.summary);
-  const [interpretation, setInterpretation] = useState(section.narrative.interpretation);
-  const [actions, setActions] = useState(section.narrative.actions);
-  const [insight, setInsight] = useState(section.narrative.insight);
-  const [board, setBoard] = useState<Board>(
-    section.board ?? { images: [{ src: "", alt: "", callouts: [] }], stats: [] },
-  );
-  const [copied, setCopied] = useState(false);
+  /**
+   * รู้ว่าตอนนี้อยู่ฝั่ง browser แล้วหรือยัง โดยไม่ต้อง setState ใน effect
+   * (บน server คืน false → HTML ที่ render ตรงกับตอน hydrate ไม่มี mismatch)
+   */
+  const isClient = useSyncExternalStore(subscribeNever, () => true, () => false);
 
-  function loadSection(id: string) {
-    const s = brief.sections.find((x) => x.id === id)!;
-    setSectionId(id);
-    setSummary(s.narrative.summary);
-    setInterpretation(s.narrative.interpretation);
-    setActions(s.narrative.actions);
-    setInsight(s.narrative.insight);
-    setBoard(s.board ?? { images: [{ src: "", alt: "", callouts: [] }], stats: [] });
-  }
+  /** ร่างที่ค้างไว้ในเครื่องจากครั้งก่อน */
+  const stored = useMemo(
+    () => (isClient ? loadDrafts(brief) : { drafts: initialDrafts(brief), restored: false }),
+    [isClient, brief],
+  );
+
+  /**
+   * ร่างของทุก section เก็บรวมไว้ที่เดียว — สลับแท็บแล้วค่าไม่หาย
+   * null = ยังไม่ได้แก้อะไรในรอบนี้ ใช้ค่าจาก stored ไปก่อน
+   */
+  const [edits, setEdits] = useState<DraftMap | null>(null);
+  const drafts = edits ?? stored.drafts;
+
+  const [saveState, setSaveState] = useState<SaveState>("saved");
+  const [copied, setCopied] = useState(false);
+  const [exported, setExported] = useState(false);
+
+  const draft = drafts[sectionId];
+
+  /** บันทึกทันทีที่แก้ ไม่ผ่าน effect — กันร่างหายเวลาปิดแท็บกะทันหัน */
+  const commit = useCallback(
+    (next: DraftMap) => {
+      setEdits(next);
+      setSaveState(saveDrafts(brief.date, next));
+    },
+    [brief.date],
+  );
+
+  const patch = useCallback(
+    (p: Partial<Draft>) =>
+      commit({ ...drafts, [sectionId]: { ...drafts[sectionId], ...p } }),
+    [commit, drafts, sectionId],
+  );
+
+  const resetSection = () =>
+    commit({ ...drafts, [sectionId]: initialDrafts(brief)[sectionId] });
+
+  const resetAll = () => {
+    clearDrafts(brief.date);
+    setEdits(initialDrafts(brief));
+    setSaveState("saved");
+  };
+
+  const restored = stored.restored;
 
   const payload = useMemo(
     () =>
       JSON.stringify(
         {
           date: brief.date,
-          sectionId,
-          board: {
-            ...board,
-            images: board.images.map((im) => ({
-              ...im,
-              src: im.src.startsWith("data:") ? "<uploaded-file>" : im.src,
-            })),
-          },
-          narrative: { summary, interpretation, actions, insight },
+          dateLabelTH: brief.dateLabelTH,
+          sections: brief.sections.map((s) => ({
+            id: s.id,
+            index: s.index,
+            title: s.title,
+            ...drafts[s.id],
+          })),
         },
         null,
         2,
       ),
-    [brief.date, sectionId, board, summary, interpretation, actions, insight],
+    [brief, drafts],
   );
+
+  function exportJson() {
+    const blob = new Blob([payload], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `brief-${brief.date}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setExported(true);
+    setTimeout(() => setExported(false), 1800);
+  }
 
   return (
     <div className="space-y-5">
@@ -74,11 +140,10 @@ export default function StudioPage() {
               IC Studio · สร้าง Brief วันนี้
             </h1>
             <p className="mt-1 text-[14px] text-slate-400">
-              วางภาพที่แคปมา → กรอก 3 ช่อง (สรุปสั้น / แปลความ / Action) → ระบบจัดหน้าให้เป็น
-              Infographic อัตโนมัติ
+              วางภาพที่แคปมา → กรอก 3 ช่อง → ระบบจัดหน้าให้เป็น Infographic อัตโนมัติ
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => {
                 navigator.clipboard.writeText(payload);
@@ -90,12 +155,60 @@ export default function StudioPage() {
               {copied ? <Check className="size-4 text-[#34f5a0]" /> : <Copy className="size-4" />}
               {copied ? "คัดลอกแล้ว" : "คัดลอก JSON"}
             </button>
-            <button className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ffc53d] to-[#fb923c] px-3.5 py-2.5 text-[13px] font-semibold text-ink-950">
-              <Download className="size-4" />
-              เผยแพร่
+            <button
+              onClick={exportJson}
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ffc53d] to-[#fb923c] px-3.5 py-2.5 text-[13px] font-semibold text-ink-950 transition hover:brightness-110"
+            >
+              {exported ? <Check className="size-4" /> : <Download className="size-4" />}
+              {exported ? "ดาวน์โหลดแล้ว" : "ส่งออก Brief (.json)"}
             </button>
           </div>
         </div>
+      </div>
+
+      {/* แถบสถานะร่าง */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span
+          className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] ${
+            saveState === "saved"
+              ? "border-[#34f5a0]/30 bg-[#34f5a0]/8 text-[#34f5a0]"
+              : "border-[#ffc53d]/30 bg-[#ffc53d]/8 text-[#ffc53d]"
+          }`}
+        >
+          {saveState === "saved" ? (
+            <>
+              <Save className="size-3.5" /> บันทึกร่างอัตโนมัติในเครื่องแล้ว
+            </>
+          ) : saveState === "too-big" ? (
+            <>
+              <TriangleAlert className="size-3.5" /> ภาพใหญ่เกินเก็บในเครื่อง — ข้อความถูกบันทึก
+              แต่ภาพจะหายถ้ารีเฟรช
+            </>
+          ) : (
+            <>
+              <TriangleAlert className="size-3.5" /> บันทึกร่างไม่สำเร็จ
+            </>
+          )}
+        </span>
+
+        {restored && (
+          <span className="flex items-center gap-1.5 rounded-lg border border-[#22d3ee]/30 bg-[#22d3ee]/8 px-3 py-1.5 text-[12px] text-[#22d3ee]">
+            <History className="size-3.5" /> กู้ร่างที่ค้างไว้จากครั้งก่อนแล้ว
+          </span>
+        )}
+
+        <button
+          onClick={resetSection}
+          className="ml-auto flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-[12px] text-slate-400 transition hover:border-white/25 hover:text-white"
+        >
+          <RotateCcw className="size-3.5" /> คืนค่า section นี้
+        </button>
+        <button
+          onClick={resetAll}
+          className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-[12px] text-slate-500 transition hover:border-[#fb7185]/40 hover:text-[#fb7185]"
+        >
+          <Trash2 className="size-3.5" /> ล้างร่างทั้งหมด
+        </button>
       </div>
 
       {/* section picker */}
@@ -106,7 +219,7 @@ export default function StudioPage() {
           return (
             <button
               key={s.id}
-              onClick={() => loadSection(s.id)}
+              onClick={() => setSectionId(s.id)}
               className="flex shrink-0 items-center gap-2 rounded-xl border px-3.5 py-2 text-[12.5px] transition"
               style={{
                 borderColor: on ? sa.hex : "rgba(148,163,184,0.16)",
@@ -125,36 +238,40 @@ export default function StudioPage() {
         {/* ---------- editor ---------- */}
         <div className="space-y-4">
           <Block title="ภาพ + จุดอธิบาย (แคปมาวางได้เลย)" color={a.hex}>
-            <BoardEditor board={board} onChange={setBoard} />
+            <BoardEditor board={draft.board} onChange={(board) => patch({ board })} />
           </Block>
 
           <Block title="1 · สรุปสั้น" color="#22d3ee">
             <div className="space-y-2">
-              {summary.map((s, i) => (
+              {draft.summary.map((s, i) => (
                 <div key={i} className="flex gap-2">
                   <input
                     value={s}
                     onChange={(e) =>
-                      setSummary((v) => v.map((x, j) => (j === i ? e.target.value : x)))
+                      patch({
+                        summary: draft.summary.map((x, j) => (j === i ? e.target.value : x)),
+                      })
                     }
                     className="min-w-0 flex-1 rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2 text-[13.5px] text-slate-100 outline-none focus:border-[#22d3ee]/60"
                   />
                   <button
-                    onClick={() => setSummary((v) => v.filter((_, j) => j !== i))}
+                    onClick={() => patch({ summary: draft.summary.filter((_, j) => j !== i) })}
                     className="rounded-lg border border-white/8 px-2 text-slate-500 hover:border-[#fb7185]/40 hover:text-[#fb7185]"
                   >
                     <Trash2 className="size-4" />
                   </button>
                 </div>
               ))}
-              <AddButton onClick={() => setSummary((v) => [...v, ""])}>เพิ่มบูลเล็ต</AddButton>
+              <AddButton onClick={() => patch({ summary: [...draft.summary, ""] })}>
+                เพิ่มบูลเล็ต
+              </AddButton>
             </div>
           </Block>
 
           <Block title="2 · แปลความ" color="#a78bfa">
             <textarea
-              value={interpretation}
-              onChange={(e) => setInterpretation(e.target.value)}
+              value={draft.interpretation}
+              onChange={(e) => patch({ interpretation: e.target.value })}
               rows={5}
               className="w-full resize-y rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2.5 text-[13.5px] leading-relaxed text-slate-100 outline-none focus:border-[#a78bfa]/60"
             />
@@ -162,15 +279,17 @@ export default function StudioPage() {
 
           <Block title="3 · Action วันนี้" color="#ffc53d">
             <div className="space-y-2">
-              {actions.map((act, i) => (
+              {draft.actions.map((act, i) => (
                 <div key={i} className="flex flex-wrap gap-2">
                   <input
                     value={act.label}
                     placeholder="หัวข้อ"
                     onChange={(e) =>
-                      setActions((v) =>
-                        v.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)),
-                      )
+                      patch({
+                        actions: draft.actions.map((x, j) =>
+                          j === i ? { ...x, label: e.target.value } : x,
+                        ),
+                      })
                     }
                     className="w-32 rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2 text-[13px] text-slate-300 outline-none focus:border-[#ffc53d]/60"
                   />
@@ -178,9 +297,11 @@ export default function StudioPage() {
                     value={act.value}
                     placeholder="ค่า"
                     onChange={(e) =>
-                      setActions((v) =>
-                        v.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)),
-                      )
+                      patch({
+                        actions: draft.actions.map((x, j) =>
+                          j === i ? { ...x, value: e.target.value } : x,
+                        ),
+                      })
                     }
                     className="min-w-0 flex-1 rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2 text-[13.5px] text-slate-100 outline-none focus:border-[#ffc53d]/60"
                   />
@@ -189,9 +310,11 @@ export default function StudioPage() {
                       <button
                         key={t.key}
                         onClick={() =>
-                          setActions((v) =>
-                            v.map((x, j) => (j === i ? { ...x, tone: t.key } : x)),
-                          )
+                          patch({
+                            actions: draft.actions.map((x, j) =>
+                              j === i ? { ...x, tone: t.key } : x,
+                            ),
+                          })
                         }
                         className={`px-2.5 py-2 text-[11.5px] transition ${
                           (act.tone ?? "neutral") === t.key
@@ -204,7 +327,7 @@ export default function StudioPage() {
                     ))}
                   </div>
                   <button
-                    onClick={() => setActions((v) => v.filter((_, j) => j !== i))}
+                    onClick={() => patch({ actions: draft.actions.filter((_, j) => j !== i) })}
                     className="rounded-lg border border-white/8 px-2 text-slate-500 hover:border-[#fb7185]/40 hover:text-[#fb7185]"
                   >
                     <Trash2 className="size-4" />
@@ -213,7 +336,7 @@ export default function StudioPage() {
               ))}
               <AddButton
                 onClick={() =>
-                  setActions((v) => [...v, { label: "", value: "", tone: "neutral" }])
+                  patch({ actions: [...draft.actions, { label: "", value: "", tone: "neutral" }] })
                 }
               >
                 เพิ่มบรรทัด Action
@@ -223,8 +346,8 @@ export default function StudioPage() {
 
           <Block title="Insight ปิดท้าย" color="#34f5a0">
             <input
-              value={insight}
-              onChange={(e) => setInsight(e.target.value)}
+              value={draft.insight}
+              onChange={(e) => patch({ insight: e.target.value })}
               className="w-full rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2.5 text-[13.5px] text-slate-100 outline-none focus:border-[#34f5a0]/60"
             />
           </Block>
@@ -249,18 +372,21 @@ export default function StudioPage() {
                 <p className="text-[11.5px] text-slate-500">{section.subtitle}</p>
               </div>
             </div>
-            {board.images.some((im) => im.src) && (
+            {draft.board.images.some((im) => im.src) && (
               <ImageBoard
-                board={{ ...board, images: board.images.filter((im) => im.src) }}
+                board={{
+                  ...draft.board,
+                  images: draft.board.images.filter((im) => im.src),
+                }}
                 accent={section.accent}
               />
             )}
             <NarrativeGrid
               n={{
-                summary: summary.filter(Boolean),
-                interpretation,
-                actions: actions.filter((x) => x.label || x.value),
-                insight,
+                summary: draft.summary.filter(Boolean),
+                interpretation: draft.interpretation,
+                actions: draft.actions.filter((x) => x.label || x.value),
+                insight: draft.insight,
               }}
             />
           </div>
