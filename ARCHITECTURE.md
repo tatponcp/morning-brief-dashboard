@@ -73,6 +73,22 @@
 > เหมาะกับ demo/ภายใน ถ้าจะใช้เชิงพาณิชย์จริงจังควรย้ายไป provider ที่มีสัญญา
 > (Twelve Data, Polygon, EOD Historical) — แก้แค่ฟังก์ชัน `fetchDaily()` ตัวเดียว
 
+## 4.2 การกั้น IC Studio
+
+ลูกค้า **ไม่เห็น** `/studio` แล้ว — ทั้งไม่มีลิงก์ในเมนู และเข้า URL ตรงก็ไม่ได้
+
+| กลไก | ที่ไหน |
+|---|---|
+| กั้น route | [`src/middleware.ts`](web/src/middleware.ts) — ไม่มี cookie ที่ถูกต้อง → เด้งไป `/studio-login` |
+| หน้าใส่รหัส | [`/studio-login`](web/src/app/studio-login/page.tsx) — cookie เป็น httpOnly อายุ 12 ชม. |
+| เอาออกจากเมนู | Sidebar / Topbar ไม่มีลิงก์ IC Studio อีกแล้ว (แต่การกั้นจริงอยู่ที่ middleware ไม่ใช่การซ่อนลิงก์) |
+
+**ต้องตั้งค่าก่อน deploy:** Vercel → Settings → Environment Variables → `STUDIO_PASSWORD`
+ถ้าไม่ตั้ง `/studio` จะตอบ 503 ปิดตัวเองไว้ (ปลอดภัยไว้ก่อน) · ตอน `npm run dev` ในเครื่องไม่ต้องใส่รหัส
+
+> นี่เป็นการกันคนทั่วไปเข้าหน้าเครื่องมือ ไม่ใช่ระบบยืนยันตัวตนรายคน
+> ถ้าต้องแยกสิทธิ์ว่าใครแก้อะไร / เก็บ log ให้เปลี่ยนไปใช้ Supabase Auth
+
 ## 5. Scrape อัตโนมัติ (Input 1, 2) — recheck แล้ว
 
 | ชุดข้อมูล | อัตโนมัติได้ไหม | วิธี |

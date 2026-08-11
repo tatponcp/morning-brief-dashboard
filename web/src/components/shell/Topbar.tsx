@@ -12,7 +12,6 @@ const MOBILE = [
   { href: "/confirm", label: "4 · Confirm" },
   { href: "/breadth", label: "5 · Breadth" },
   { href: "/macro", label: "6 · Macro" },
-  { href: "/studio", label: "IC Studio" },
 ];
 
 export function Topbar({ dateLabel }: { dateLabel: string }) {

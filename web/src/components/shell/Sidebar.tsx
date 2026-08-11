@@ -12,7 +12,6 @@ import {
   DollarSign,
   Globe2,
   LayoutGrid,
-  PenSquare,
   Radar,
   Users,
 } from "lucide-react";
@@ -37,9 +36,11 @@ const NAV: Item[] = [
   { href: "/macro", label: "Global Macro", hint: "Gold · VIX · DXY", icon: Globe2, accent: "rose", badge: "6" },
 ];
 
-const STUDIO: Item[] = [
-  { href: "/studio", label: "IC Studio", hint: "สร้าง Brief วันนี้", icon: PenSquare, accent: "amber" },
-];
+/**
+ * IC Studio ไม่อยู่ในเมนู — ลูกค้าไม่ควรเห็นว่ามีหน้าเครื่องมือหลังบ้าน
+ * IC เข้าผ่าน URL /studio โดยตรง (bookmark ไว้) แล้วใส่รหัสผ่าน
+ * การกั้นจริงอยู่ที่ src/middleware.ts ไม่ใช่การซ่อนลิงก์
+ */
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -97,17 +98,6 @@ export function Sidebar() {
           ))}
         </ul>
 
-        <SectionLabel collapsed={collapsed}>สำหรับผู้ทำสัญญาณ</SectionLabel>
-        <ul className="space-y-1">
-          {STUDIO.map((item) => (
-            <NavRow
-              key={item.href}
-              item={item}
-              active={pathname.startsWith(item.href)}
-              collapsed={collapsed}
-            />
-          ))}
-        </ul>
       </nav>
 
       <button
