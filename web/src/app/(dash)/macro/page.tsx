@@ -1,5 +1,5 @@
 import { Radio } from "lucide-react";
-import { getBrief } from "@/data";
+import { loadBrief } from "@/lib/brief-store";
 import { loadMacro } from "@/lib/market";
 import { PaneGroupCard } from "@/components/charts/PaneGroupCard";
 import { InstrumentCard } from "@/components/charts/InstrumentCard";
@@ -13,7 +13,7 @@ import type { PaneGroup } from "@/lib/types";
 export const revalidate = 3600;
 
 export default async function MacroPage() {
-  const brief = getBrief();
+  const { brief } = await loadBrief();
   const s = brief.sections.find((x) => x.id === "macro")!;
   const macro = await loadMacro();
 

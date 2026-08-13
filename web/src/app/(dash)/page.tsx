@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { ArrowUpRight, Gauge, Lightbulb, MessageSquareText, Target, Zap } from "lucide-react";
-import { getBrief } from "@/data";
+import { loadBrief } from "@/lib/brief-store";
 import { ACCENT, toneOf } from "@/lib/accent";
 import { Reveal } from "@/components/ui/Reveal";
 import { MiniSpark } from "@/components/ui/MiniSpark";
 
-export default function SummaryPage() {
-  const brief = getBrief();
+export default async function SummaryPage() {
+  const { brief } = await loadBrief();
 
   return (
     <div className="space-y-5">

@@ -96,6 +96,49 @@ Vercel build เอง  →  ลูกค้าเห็นของใหม่
 > ขั้นถัดไปถ้าอยากให้กดปุ่มเดียวแล้วขึ้นเว็บเลย (ไม่ต้อง push) ต้องต่อ Supabase
 > ซึ่งต้องสมัครบัญชีและเอา API key มาใส่ — ทำแทนกันไม่ได้ ต้องเจ้าของบัญชีทำเอง
 
+## 4.1.6 เปิดโหมด "กดปุ่มเดียวขึ้นเว็บ" ด้วย Supabase
+
+โค้ดฝั่งเว็บพร้อมแล้วทั้งหมด เหลือแค่สร้างโปรเจกต์ Supabase แล้วเอา key มาใส่
+ระหว่างที่ยังไม่ตั้ง ระบบใช้ published.json ต่อไปตามปกติ ไม่มีอะไรพัง
+
+**1. สร้างโปรเจกต์** — ไปที่ https://supabase.com สมัคร (ฟรี) → New project
+เลือก region **Southeast Asia (Singapore)** จะเร็วที่สุดสำหรับผู้ใช้ในไทย
+
+**2. สร้างตาราง** — เมนูซ้าย **SQL Editor** → New query → วางเนื้อไฟล์
+[`web/supabase/schema.sql`](web/supabase/schema.sql) ทั้งไฟล์ → **Run**
+
+**3. คัดลอก key** — **Settings → API** จะเห็นสองค่าที่ต้องใช้:
+- `Project URL` (เช่น `https://abcdefg.supabase.co`)
+- `service_role` key (อันยาว ๆ ขึ้นต้น `eyJ...` — **ไม่ใช่** `anon` key)
+
+**4. ใส่ที่ Vercel** — Settings → Environment Variables → Production, ติ๊ก Sensitive:
+
+| Key | Value |
+|---|---|
+| `SUPABASE_URL` | Project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | service_role key |
+
+**5. Redeploy** — เสร็จแล้วปุ่ม **"เผยแพร่ขึ้นเว็บ"** สีเขียวจะโผล่ใน `/studio`
+กดแล้วลูกค้าเห็นทันที ไม่ต้อง push อีกต่อไป
+
+### สิ่งที่เกิดขึ้นตอนกดเผยแพร่
+
+```
+/studio  →  POST /api/publish   (ตรวจ cookie รหัส Studio ก่อน)
+              ├─ อัปโหลดภาพ data URL ขึ้น Storage → แทนด้วย public URL
+              ├─ upsert ลงตาราง briefs (คีย์เป็นวันที่ เผยแพร่ซ้ำ = ทับของเดิม)
+              └─ revalidatePath ทุกหน้า → ลูกค้าเห็นของใหม่ทันที
+```
+
+- ตาราง `briefs` เปิด RLS ไว้และไม่มี policy = **anon key อ่านไม่ได้เลย**
+  เข้าถึงได้เฉพาะ service role key ที่อยู่ฝั่งเซิร์ฟเวอร์เท่านั้น
+- `service_role` key ข้ามสิทธิ์ทั้งหมด **ห้ามตั้งชื่อ env ขึ้นต้นด้วย `NEXT_PUBLIC_`** เด็ดขาด
+- ถ้า Supabase ล่ม เว็บถอยไปใช้ข้อมูลใน repo อัตโนมัติ ไม่จอขาว
+
+> ⚠️ ส่วนที่ต่อ Supabase ยังไม่ได้ทดสอบกับฐานข้อมูลจริง เพราะยังไม่มี key
+> ทดสอบแล้วเฉพาะเส้นทาง fallback (ไม่มี key → ใช้ published.json ปกติ)
+> ตอนใส่ key แล้วถ้ามีอะไรไม่เข้าที่ บอกได้ ผมแก้ให้
+
 ## 4.2 การกั้น IC Studio
 
 ลูกค้า **ไม่เห็น** `/studio` แล้ว — ทั้งไม่มีลิงก์ในเมนู และเข้า URL ตรงก็ไม่ได้

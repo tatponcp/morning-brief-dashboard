@@ -1,9 +1,9 @@
 import { Sidebar } from "@/components/shell/Sidebar";
 import { Topbar } from "@/components/shell/Topbar";
-import { getLatestBrief } from "@/data";
+import { loadBrief } from "@/lib/brief-store";
 
-export default function DashLayout({ children }: { children: React.ReactNode }) {
-  const brief = getLatestBrief();
+export default async function DashLayout({ children }: { children: React.ReactNode }) {
+  const { brief } = await loadBrief();
   return (
     <div className="flex min-h-dvh">
       <Sidebar />

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getBrief } from "@/data";
+import { loadBrief } from "@/lib/brief-store";
 import { PriceOIPanel } from "@/components/charts/PriceOIPanel";
 import { FlowPanel } from "@/components/charts/FlowPanel";
 import { PaneGroupCard } from "@/components/charts/PaneGroupCard";
@@ -8,8 +8,8 @@ import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
 import { SectionHero } from "@/components/ui/SectionHero";
 import { Reveal } from "@/components/ui/Reveal";
 
-export function SectionView({ id }: { id: string }) {
-  const brief = getBrief();
+export async function SectionView({ id }: { id: string }) {
+  const { brief } = await loadBrief();
   const s = brief.sections.find((x) => x.id === id);
   if (!s) notFound();
 

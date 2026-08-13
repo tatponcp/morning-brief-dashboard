@@ -10,6 +10,7 @@
     "fetch:macro": "node scripts/fetch-macro.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.3",
     "clsx": "^2.1.1",
     "lucide-react": "^1.31.0",
     "motion": "^13.0.0",
