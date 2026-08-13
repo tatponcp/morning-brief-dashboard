@@ -1,7 +1,13 @@
-import type { Brief, ImageBoard, Narrative } from "./types";
+import type { Brief, ContractSeries, FlowRow, ImageBoard, Narrative } from "./types";
 
 /** ร่างของ 1 section ที่ IC กำลังแก้อยู่ */
-export type Draft = Narrative & { board: ImageBoard };
+export type Draft = Narrative & {
+  board: ImageBoard;
+  /** ข้อมูลที่ import เข้ามาใหม่ (ข้อ 1) — ไม่มี = ใช้ของเดิมที่เผยแพร่อยู่ */
+  contracts?: ContractSeries[];
+  /** ข้อมูลที่ import เข้ามาใหม่ (ข้อ 2) */
+  flows?: FlowRow[];
+};
 
 export type DraftMap = Record<string, Draft>;
 
@@ -17,6 +23,8 @@ export function initialDrafts(brief: Brief): DraftMap {
     out[s.id] = {
       ...structuredClone(s.narrative),
       board: s.board ? structuredClone(s.board) : emptyBoard(),
+      ...(s.contracts ? { contracts: structuredClone(s.contracts) } : {}),
+      ...(s.flows ? { flows: structuredClone(s.flows) } : {}),
     };
   }
   return out;

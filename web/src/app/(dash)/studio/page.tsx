@@ -29,6 +29,9 @@ import type { Bias } from "@/lib/types";
 import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
 import { ImageBoard } from "@/components/ui/ImageBoard";
 import { BoardEditor } from "@/components/studio/BoardEditor";
+import { DataImporter } from "@/components/studio/DataImporter";
+import { PriceOIPanel } from "@/components/charts/PriceOIPanel";
+import { FlowPanel } from "@/components/charts/FlowPanel";
 
 /** subscribe ที่ไม่เคยแจ้งเปลี่ยน — ใช้แค่ให้ useSyncExternalStore บอกว่าอยู่ฝั่ง client แล้ว */
 const subscribeNever = () => () => {};
@@ -197,6 +200,14 @@ export default function StudioPage() {
           </span>
         )}
 
+        <span className="hidden items-center gap-1.5 rounded-lg border border-white/10 bg-white/3 px-3 py-1.5 text-[12px] text-slate-400 lg:flex">
+          เผยแพร่: กด &ldquo;ส่งออก Brief&rdquo; → วางทับ{" "}
+          <code className="rounded bg-white/8 px-1 text-[11px] text-slate-200">
+            src/data/published.json
+          </code>{" "}
+          → git push
+        </span>
+
         <button
           onClick={resetSection}
           className="ml-auto flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-[12px] text-slate-400 transition hover:border-white/25 hover:text-white"
@@ -237,6 +248,22 @@ export default function StudioPage() {
       <div className="grid gap-5 xl:grid-cols-2">
         {/* ---------- editor ---------- */}
         <div className="space-y-4">
+          {(section.contracts || section.flows) && (
+            <Block
+              title={
+                section.contracts
+                  ? "นำเข้าข้อมูลย้อนหลัง (ราคาปิด + Open Interest)"
+                  : "นำเข้าข้อมูลย้อนหลัง (กองทุน / ต่างชาติ)"
+              }
+              color="#22d3ee"
+            >
+              <DataImporter
+                kind={section.contracts ? "contracts" : "flows"}
+                onApply={(data) => patch(data)}
+              />
+            </Block>
+          )}
+
           <Block title="ภาพ + จุดอธิบาย (แคปมาวางได้เลย)" color={a.hex}>
             <BoardEditor board={draft.board} onChange={(board) => patch({ board })} />
           </Block>
@@ -372,6 +399,20 @@ export default function StudioPage() {
                 <p className="text-[11.5px] text-slate-500">{section.subtitle}</p>
               </div>
             </div>
+            {!!draft.contracts?.length && (
+              <div className="mb-3 grid gap-3">
+                {draft.contracts.map((c) => (
+                  <PriceOIPanel key={c.symbol} series={c} />
+                ))}
+              </div>
+            )}
+
+            {!!draft.flows?.length && (
+              <div className="mb-3">
+                <FlowPanel rows={draft.flows} />
+              </div>
+            )}
+
             {draft.board.images.some((im) => im.src) && (
               <ImageBoard
                 board={{

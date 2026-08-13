@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { KeyRound, ShieldCheck } from "lucide-react";
 import { readStudioPassword, STUDIO_COOKIE, studioToken } from "@/lib/studio-auth";
@@ -78,12 +79,12 @@ export default async function StudioLogin({
           </button>
         </form>
 
-        <a
+        <Link
           href="/"
           className="mt-4 block text-center text-[12.5px] text-slate-500 transition hover:text-slate-300"
         >
           ← กลับไปหน้า Dashboard
-        </a>
+        </Link>
       </div>
     </main>
   );

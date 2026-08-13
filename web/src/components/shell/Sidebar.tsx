@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
   Activity,
@@ -42,20 +42,27 @@ const NAV: Item[] = [
  * การกั้นจริงอยู่ที่ src/middleware.ts ไม่ใช่การซ่อนลิงก์
  */
 
+const STORE_KEY = "mb:sidebar";
+const subscribeNever = () => () => {};
+
 export function Sidebar() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
-  const [ready, setReady] = useState(false);
 
-  useEffect(() => {
-    const saved = window.localStorage.getItem("mb:sidebar");
-    if (saved === "1") setCollapsed(true);
-    setReady(true);
-  }, []);
+  // อ่านค่าที่จำไว้แบบไม่ผ่าน effect — เมนูจะได้ไม่กางแล้วหุบให้เห็นตอนโหลดหน้า
+  const isClient = useSyncExternalStore(subscribeNever, () => true, () => false);
+  const [override, setOverride] = useState<boolean | null>(null);
+  const collapsed =
+    override ?? (isClient && window.localStorage.getItem(STORE_KEY) === "1");
 
-  useEffect(() => {
-    if (ready) window.localStorage.setItem("mb:sidebar", collapsed ? "1" : "0");
-  }, [collapsed, ready]);
+  const toggle = () => {
+    const next = !collapsed;
+    setOverride(next);
+    try {
+      window.localStorage.setItem(STORE_KEY, next ? "1" : "0");
+    } catch {
+      /* โหมดส่วนตัวของเบราว์เซอร์อาจเขียนไม่ได้ — ไม่เป็นไร */
+    }
+  };
 
   return (
     <motion.aside
@@ -101,7 +108,7 @@ export function Sidebar() {
       </nav>
 
       <button
-        onClick={() => setCollapsed((v) => !v)}
+        onClick={toggle}
         className="group m-3 flex items-center justify-center gap-2 rounded-xl border border-white/8 bg-white/3 py-2.5 text-[12px] text-slate-400 transition hover:border-white/16 hover:bg-white/6 hover:text-white"
       >
         <ChevronLeft
