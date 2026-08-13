@@ -1,7 +1,7 @@
 import "server-only";
 import { getBrief } from "@/data";
 import { mergePublished, type PublishedFile } from "./merge-brief";
-import { getSupabase, IMAGE_BUCKET } from "./supabase";
+import { getSupabase, IMAGE_BUCKET, supabaseStatus } from "./supabase";
 import type { Brief } from "./types";
 
 /**
@@ -96,10 +96,12 @@ export type SaveResult =
 export async function saveBrief(payload: PublishedFile): Promise<SaveResult> {
   const db = getSupabase();
   if (!db) {
+    const status = supabaseStatus();
     return {
       ok: false,
-      reason:
-        "ยังไม่ได้ตั้งค่า Supabase — ใช้ปุ่ม 'ส่งออก Brief (.json)' แล้ววางทับ src/data/published.json แทน",
+      reason: status.missing.length
+        ? `${status.hint} · ระหว่างนี้ใช้ปุ่ม "ส่งออก Brief (.json)" แล้ววางทับ src/data/published.json ได้`
+        : "เชื่อมต่อ Supabase ไม่สำเร็จ",
     };
   }
 
