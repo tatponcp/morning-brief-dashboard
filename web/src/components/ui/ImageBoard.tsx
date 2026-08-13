@@ -32,7 +32,7 @@ export function ImageBoard({ board, accent }: { board: Board; accent: Accent }) 
   return (
     <>
       <div className="panel overflow-hidden">
-        <div className="flex items-center gap-3 border-b border-white/6 px-5 py-3.5">
+        <div className="flex items-center gap-2.5 border-b border-white/6 px-4 py-2">
           <span
             className="size-2 rounded-full"
             style={{ background: a.hex, boxShadow: `0 0 12px ${a.hex}` }}
@@ -54,7 +54,7 @@ export function ImageBoard({ board, accent }: { board: Board; accent: Accent }) 
         </div>
 
         <div
-          className={`grid gap-3 p-3 ${board.images.length > 1 ? "lg:grid-cols-2" : ""}`}
+          className={`grid gap-2 p-2 ${board.images.length > 1 ? "lg:grid-cols-2" : ""}`}
         >
           {board.images.map((im, i) => (
             <Figure
@@ -72,10 +72,10 @@ export function ImageBoard({ board, accent }: { board: Board; accent: Accent }) 
             {board.stats.map((s, i) => {
               const t = toneOf(s.tone);
               return (
-                <div key={i} className="bg-ink-900 px-4 py-4">
-                  <p className="truncate text-[11.5px] text-slate-500">{s.label}</p>
+                <div key={i} className="bg-ink-900 px-3 py-2.5">
+                  <p className="truncate text-[11px] text-slate-500">{s.label}</p>
                   <div className="flex items-end justify-between gap-2">
-                    <p className="font-display text-xl font-bold text-white">{s.value}</p>
+                    <p className="font-display text-[17px] font-bold text-white">{s.value}</p>
                     {s.spark && <Sparkline data={s.spark} color={t.hex} width={72} height={26} />}
                   </div>
                   {s.delta && (
@@ -150,7 +150,7 @@ function Figure({
           width={1920}
           height={1080}
           unoptimized={image.src.startsWith("data:")}
-          className="h-auto w-full cursor-zoom-in"
+          className="mx-auto h-auto max-h-[58vh] w-full cursor-zoom-in object-contain"
           onClick={onZoom}
         />
 
@@ -188,7 +188,7 @@ function Figure({
 
       {image.caption && (
         <figcaption
-          className="mt-2 flex items-center gap-2 px-1 text-[12.5px] font-semibold"
+          className="mt-1.5 flex items-center gap-2 px-1 text-[12px] font-semibold"
           style={{ color: accentHex }}
         >
           <span className="h-3 w-0.5 rounded" style={{ background: accentHex }} />

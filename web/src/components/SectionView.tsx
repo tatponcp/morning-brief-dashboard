@@ -13,20 +13,44 @@ export async function SectionView({ id }: { id: string }) {
   const s = brief.sections.find((x) => x.id === id);
   if (!s) notFound();
 
+  const hero = (
+    <SectionHero
+      index={s.index}
+      title={s.title}
+      subtitle={s.subtitle}
+      source={s.source}
+      accent={s.accent}
+      dateLabel={brief.dateLabelTH}
+      demo={s.demo}
+    />
+  );
+
+  /**
+   * Section ที่เป็นภาพ (ข้อ 4, 5) — วางภาพซ้าย คำอธิบายขวา
+   * อ่านจบได้ในจอเดียว ไม่ต้องเลื่อนลงไปหาสรุป
+   */
+  if (s.board) {
+    return (
+      <div>
+        {hero}
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] xl:items-start">
+          <Reveal>
+            <ImageBoard board={s.board} accent={s.accent} />
+          </Reveal>
+          <Reveal delay={0.06}>
+            <NarrativeGrid n={s.narrative} layout="stack" />
+          </Reveal>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <SectionHero
-        index={s.index}
-        title={s.title}
-        subtitle={s.subtitle}
-        source={s.source}
-        accent={s.accent}
-        dateLabel={brief.dateLabelTH}
-        demo={s.demo}
-      />
+      {hero}
 
       {s.contracts && (
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="grid gap-3 xl:grid-cols-2">
           {s.contracts.map((c, i) => (
             <Reveal key={c.symbol} delay={i * 0.08}>
               <PriceOIPanel series={c} />
@@ -42,19 +66,13 @@ export async function SectionView({ id }: { id: string }) {
       )}
 
       {!!s.groups?.length && (
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="grid gap-3 xl:grid-cols-2">
           {s.groups.map((g, i) => (
             <Reveal key={g.id} delay={i * 0.08}>
               <PaneGroupCard group={g} />
             </Reveal>
           ))}
         </div>
-      )}
-
-      {s.board && (
-        <Reveal>
-          <ImageBoard board={s.board} accent={s.accent} />
-        </Reveal>
       )}
 
       <NarrativeGrid n={s.narrative} />

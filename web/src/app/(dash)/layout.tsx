@@ -9,7 +9,7 @@ export default async function DashLayout({ children }: { children: React.ReactNo
       <Sidebar />
       <div className="min-w-0 flex-1">
         <Topbar dateLabel={brief.dateLabelTH} />
-        <main className="grid-lines mx-auto w-full max-w-[1400px] px-4 py-6 md:px-8 md:py-9">
+        <main className="grid-lines mx-auto w-full max-w-[1500px] px-3 py-4 md:px-6 md:py-5">
           {children}
         </main>
       </div>

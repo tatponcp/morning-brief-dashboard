@@ -55,7 +55,7 @@ export default async function MacroPage() {
 
       <Reveal>
         <div
-          className={`mb-4 flex flex-wrap items-center gap-2 rounded-xl border px-4 py-2.5 text-[12.5px] ${
+          className={`mb-3 flex flex-wrap items-center gap-2 rounded-xl border px-3 py-1.5 text-[12px] ${
             macro.live
               ? "border-[#34f5a0]/30 bg-[#34f5a0]/8 text-[#34f5a0]"
               : "border-[#ffc53d]/30 bg-[#ffc53d]/8 text-[#ffc53d]"
@@ -75,7 +75,7 @@ export default async function MacroPage() {
         <PaneGroupCard group={goldGroup} />
       </Reveal>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {macro.instruments.map((inst, i) => (
           <Reveal key={inst.id} delay={i * 0.06}>
             <InstrumentCard inst={inst} />

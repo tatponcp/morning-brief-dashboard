@@ -18,7 +18,7 @@ export function Topbar({ dateLabel }: { dateLabel: string }) {
   const pathname = usePathname();
   return (
     <header className="sticky top-0 z-20 border-b border-white/8 bg-ink-950/70 backdrop-blur-xl">
-      <div className="flex items-center gap-3 px-4 py-3 md:px-8">
+      <div className="flex items-center gap-3 px-4 py-2 md:px-6">
         <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/4 px-3 py-1.5">
           <Sparkles className="size-3.5 text-[#22d3ee]" />
           <span className="text-[11.5px] tracking-wide text-slate-300">
@@ -39,7 +39,7 @@ export function Topbar({ dateLabel }: { dateLabel: string }) {
         </div>
       </div>
 
-      <nav className="scroll-slim flex gap-1.5 overflow-x-auto px-4 pb-3 md:hidden">
+      <nav className="scroll-slim flex gap-1.5 overflow-x-auto px-4 pb-2 md:hidden">
         {MOBILE.map((m) => {
           const active = pathname === m.href;
           return (
