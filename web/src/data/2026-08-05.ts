@@ -46,6 +46,7 @@ export const brief20260805: Brief = {
     /* ─────────────── 1 ─────────────── */
     {
       id: "s50-oi",
+      demo: true,
       index: 1,
       title: "S50 Futures + Open Interest",
       subtitle: "ดูว่าราคาย่อด้วยแรงขายธรรมดา หรือมีแรงกดดันใหม่เพิ่ม",
@@ -92,6 +93,7 @@ export const brief20260805: Brief = {
     /* ─────────────── 2 ─────────────── */
     {
       id: "flows",
+      demo: true,
       index: 2,
       title: "สะสม Long / Short ของต่างชาติและกองทุน",
       subtitle: "ดูว่าเงินใหญ่กำลังหนุนตลาด หรือยังถ่วงอยู่",
@@ -121,6 +123,7 @@ export const brief20260805: Brief = {
     /* ─────────────── 3 ─────────────── */
     {
       id: "usd-futures",
+      demo: true,
       index: 3,
       title: "USD Futures Flow",
       subtitle: "อ่านจังหวะเงินบาทแข็ง / อ่อน จากตำแหน่งของตลาด",

@@ -22,6 +22,7 @@ export async function SectionView({ id }: { id: string }) {
         source={s.source}
         accent={s.accent}
         dateLabel={brief.dateLabelTH}
+        demo={s.demo}
       />
 
       {s.contracts && (

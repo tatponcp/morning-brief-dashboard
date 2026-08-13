@@ -83,6 +83,11 @@ export default async function SummaryPage() {
                       {s.index}
                     </span>
                     <p className="truncate text-[13px] font-semibold text-slate-100">{s.title}</p>
+                    {s.demo && (
+                      <span className="shrink-0 rounded bg-[#ffc53d]/15 px-1.5 py-0.5 text-[9.5px] font-semibold text-[#ffc53d]">
+                        demo
+                      </span>
+                    )}
                     <ArrowUpRight className="ml-auto size-4 text-slate-600 transition group-hover:text-white" />
                   </div>
                   <MiniSpark section={s} />

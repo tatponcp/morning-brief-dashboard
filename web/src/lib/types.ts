@@ -126,6 +126,8 @@ export type Section = {
   source: string;
   accent: "cyan" | "green" | "amber" | "violet" | "rose" | "sky";
   mode: "data" | "image";
+  /** true = ตัวเลขยังเป็นข้อมูลจำลอง ยังไม่ใช่ของจริง (จะขึ้นป้ายเตือนบนหน้าเว็บ) */
+  demo?: boolean;
   narrative: Narrative;
   contracts?: ContractSeries[];
   flows?: FlowRow[];

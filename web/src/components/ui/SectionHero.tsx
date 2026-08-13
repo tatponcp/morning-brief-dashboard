@@ -1,3 +1,4 @@
+import { TriangleAlert } from "lucide-react";
 import { ACCENT, type Accent } from "@/lib/accent";
 
 export function SectionHero({
@@ -7,6 +8,7 @@ export function SectionHero({
   source,
   accent,
   dateLabel,
+  demo,
 }: {
   index: number;
   title: string;
@@ -14,6 +16,8 @@ export function SectionHero({
   source: string;
   accent: Accent;
   dateLabel: string;
+  /** true = ตัวเลขยังเป็นข้อมูลจำลอง */
+  demo?: boolean;
 }) {
   const a = ACCENT[accent];
   return (
@@ -37,9 +41,17 @@ export function SectionHero({
             {title}
           </h1>
           <p className="mt-1.5 text-[14px] text-slate-400 md:text-[15px]">{subtitle}</p>
-          <p className="mt-2 inline-flex rounded-full border border-white/8 bg-white/3 px-2.5 py-1 text-[11px] text-slate-500">
-            แหล่งข้อมูล · {source}
-          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <p className="inline-flex rounded-full border border-white/8 bg-white/3 px-2.5 py-1 text-[11px] text-slate-500">
+              แหล่งข้อมูล · {source}
+            </p>
+            {demo && (
+              <p className="inline-flex items-center gap-1.5 rounded-full border border-[#ffc53d]/40 bg-[#ffc53d]/10 px-2.5 py-1 text-[11px] font-semibold text-[#ffc53d]">
+                <TriangleAlert className="size-3" />
+                ตัวเลขเป็นข้อมูลจำลอง ยังไม่ใช่ราคาจริง
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-ink-850/80 px-4 py-3 text-right">
