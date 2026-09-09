@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, ChevronDown, Share2, Sparkles } from "lucide-react";
+import { CalendarDays, ChevronDown, Search, Share2, Sparkles } from "lucide-react";
 
 const MOBILE = [
   { href: "/", label: "สรุป" },
@@ -27,6 +27,17 @@ export function Topbar({ dateLabel }: { dateLabel: string }) {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() =>
+              window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }))
+            }
+            title="ค้นหา section (Ctrl+K)"
+            className="hidden items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-2 text-[12.5px] text-slate-400 transition hover:border-white/20 hover:text-white sm:flex"
+          >
+            <Search className="size-3.5" />
+            ค้นหา
+            <kbd className="rounded border border-white/12 px-1 text-[10px]">Ctrl K</kbd>
+          </button>
           <button className="group flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-2 text-[12.5px] text-slate-200 transition hover:border-[#ffc53d]/40 hover:bg-[#ffc53d]/8">
             <CalendarDays className="size-4 text-[#ffc53d]" />
             <span className="font-semibold text-[#ffc53d]">{dateLabel}</span>

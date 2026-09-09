@@ -7,6 +7,7 @@ import { ImageBoard } from "@/components/ui/ImageBoard";
 import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
 import { SectionHero } from "@/components/ui/SectionHero";
 import { Reveal } from "@/components/ui/Reveal";
+import { SectionNav } from "@/components/ui/SectionNav";
 
 export async function SectionView({ id }: { id: string }) {
   const { brief } = await loadBrief();
@@ -41,6 +42,7 @@ export async function SectionView({ id }: { id: string }) {
             <NarrativeGrid n={s.narrative} layout="stack" />
           </Reveal>
         </div>
+        <SectionNav sections={brief.sections} currentId={s.id} />
       </div>
     );
   }
@@ -76,6 +78,7 @@ export async function SectionView({ id }: { id: string }) {
       )}
 
       <NarrativeGrid n={s.narrative} />
+      <SectionNav sections={brief.sections} currentId={s.id} />
     </div>
   );
 }

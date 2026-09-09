@@ -37,8 +37,13 @@ export async function loadBrief(date?: string): Promise<LoadedBrief> {
 
     const row = data[0];
     const payload = row.payload as PublishedFile;
+
+    // ใช้ brief ในโค้ดเป็นโครงตั้งต้น แล้วสวมวันที่ของแถวเข้าไป
+    // (ถ้าเผยแพร่วันใหม่ที่ยังไม่มีในโค้ด จะได้ไม่ถูกมองว่าคนละวันแล้ว merge ไม่ติด)
+    const skeleton = { ...getBrief(row.date), date: row.date };
+
     return {
-      brief: mergePublished(getBrief(row.date), {
+      brief: mergePublished(skeleton, {
         ...payload,
         date: row.date,
         dateLabelTH: payload.dateLabelTH || row.date_label_th,

@@ -6,6 +6,7 @@ import { InstrumentCard } from "@/components/charts/InstrumentCard";
 import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
 import { SectionHero } from "@/components/ui/SectionHero";
 import { Reveal } from "@/components/ui/Reveal";
+import { SectionNav } from "@/components/ui/SectionNav";
 import { thaiDate } from "@/lib/format";
 import type { PaneGroup } from "@/lib/types";
 
@@ -84,6 +85,7 @@ export default async function MacroPage() {
       </div>
 
       <NarrativeGrid n={s.narrative} />
+      <SectionNav sections={brief.sections} currentId={s.id} />
     </div>
   );
 }
