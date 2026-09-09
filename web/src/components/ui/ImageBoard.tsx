@@ -174,6 +174,7 @@ function Figure({
 
         <button
           onClick={onZoom}
+          aria-label="ขยายภาพ"
           className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-lg border border-white/12 bg-ink-900/80 px-2.5 py-1.5 text-[11.5px] text-slate-200 opacity-0 backdrop-blur transition group-hover:opacity-100"
         >
           <Maximize2 className="size-3.5" />

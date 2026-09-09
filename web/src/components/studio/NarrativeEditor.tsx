@@ -204,6 +204,7 @@ function IconBtn({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
+      aria-label="ลบรายการนี้"
       className="rounded-lg border border-white/8 px-2 text-slate-500 transition hover:border-[#fb7185]/40 hover:text-[#fb7185]"
     >
       <Trash2 className="size-3.5" />

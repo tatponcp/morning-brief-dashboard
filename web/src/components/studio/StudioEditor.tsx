@@ -437,6 +437,7 @@ export function StudioEditor({
               onClick={undo}
               disabled={!past.length}
               title="ย้อนกลับ (Ctrl+Z)"
+              aria-label="ย้อนกลับ"
               className="rounded-lg border border-white/10 p-2 text-slate-400 transition hover:text-white disabled:opacity-30"
             >
               <Undo2 className="size-4" />
@@ -445,6 +446,7 @@ export function StudioEditor({
               onClick={redo}
               disabled={!future.length}
               title="ทำซ้ำ (Ctrl+Shift+Z)"
+              aria-label="ทำซ้ำ"
               className="rounded-lg border border-white/10 p-2 text-slate-400 transition hover:text-white disabled:opacity-30"
             >
               <Redo2 className="size-4" />
@@ -452,6 +454,7 @@ export function StudioEditor({
             <button
               onClick={() => commit({ ...drafts, [sectionId]: initialDrafts(brief)[sectionId] })}
               title="คืนค่า section นี้"
+              aria-label="คืนค่า section นี้"
               className="rounded-lg border border-white/10 p-2 text-slate-400 transition hover:text-white"
             >
               <RotateCcw className="size-4" />

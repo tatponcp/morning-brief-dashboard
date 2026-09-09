@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { readStudioPassword, STUDIO_COOKIE, studioToken } from "@/lib/studio-auth";
 
 /**
- * กั้น /studio ไม่ให้ลูกค้าเข้าถึง
+ * กั้น /studio ไม่ให้ลูกค้าเข้าถึง (Next 16 เรียกไฟล์นี้ว่า proxy แทน middleware)
  *
  * ตั้งรหัสผ่านที่ Vercel → Settings → Environment Variables → STUDIO_PASSWORD
  * (อย่าเขียนรหัสลงในโค้ด เพราะ repo เป็น public)
@@ -10,7 +10,7 @@ import { readStudioPassword, STUDIO_COOKIE, studioToken } from "@/lib/studio-aut
  * ถ้าไม่ได้ตั้ง STUDIO_PASSWORD ไว้ ระบบจะปิด /studio ทั้งหมดบน production
  * — ปลอดภัยไว้ก่อน ดีกว่าเผลอเปิดทิ้งไว้
  */
-export function middleware(req: NextRequest) {
+export default function proxy(req: NextRequest) {
   const password = readStudioPassword();
 
   // dev ในเครื่อง: เข้าได้เลย ไม่ต้องใส่รหัส

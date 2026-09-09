@@ -99,6 +99,7 @@ function ImageSlot({
         {canRemove && (
           <button
             onClick={onRemove}
+            aria-label="ลบภาพนี้"
             className="ml-auto rounded-lg border border-white/8 px-2 py-1 text-slate-500 transition hover:border-[#fb7185]/40 hover:text-[#fb7185]"
           >
             <Trash2 className="size-3.5" />
@@ -237,6 +238,7 @@ function ImageSlot({
                 </button>
                 <button
                   onClick={() => onPatch({ callouts: callouts.filter((_, j) => j !== ci) })}
+                  aria-label="ลบจุดอธิบายนี้"
                   className="rounded-lg border border-white/8 px-2 py-1.5 text-slate-500 transition hover:border-[#fb7185]/40 hover:text-[#fb7185]"
                 >
                   <Trash2 className="size-3.5" />
@@ -303,6 +305,7 @@ function StatsEditor({
             </div>
             <button
               onClick={() => onChange(stats.filter((_, j) => j !== i))}
+              aria-label="ลบตัวเลขนี้"
               className="rounded-lg border border-white/8 px-2 py-1.5 text-slate-500 transition hover:border-[#fb7185]/40 hover:text-[#fb7185]"
             >
               <Trash2 className="size-3.5" />

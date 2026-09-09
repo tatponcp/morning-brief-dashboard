@@ -1,0 +1,89 @@
+# Morning Brief Dashboard
+
+แดชบอร์ดสรุปภาวะตลาดก่อนเปิดทำการ สำหรับให้ผู้แนะนำการลงทุน (IC) เผยแพร่บทวิเคราะห์รายวัน
+และให้ลูกค้าเปิดอ่านเองได้ แทนการส่งภาพอินโฟกราฟิกทางแชต
+
+**เว็บจริง:** https://morning-brief-dashboard-delta.vercel.app
+
+> ⚠️ ตัวเลขในข้อ 1, 2 และ 3 บนเว็บสาธิตยังเป็น **ข้อมูลจำลอง** (มีป้ายกำกับบนหน้าเว็บ)
+> มีเพียงข้อ 6 Global Macro ที่เป็นราคาจริง ดึงอัตโนมัติทุกชั่วโมง
+
+---
+
+## แนวคิด
+
+อินโฟกราฟิกเดิมทำด้วยมือทุกเช้า ใช้เวลานานและแก้ย้อนหลังไม่ได้
+โปรเจกต์นี้แยก "ภาพ" ออกจาก "การจัดหน้า" — เว็บเป็นคนวาดกรอบ หัวข้อ จุดอธิบาย
+และบล็อกสรุปให้ทั้งหมด IC เหลืองานแค่วางภาพหรือนำเข้าข้อมูล แล้วกรอกข้อความ 3 ช่อง
+
+ทุก section มีโครงเดียวกัน: **สรุปสั้น → แปลความ → Action วันนี้ → Insight**
+
+| # | Section | รูปแบบ | ที่มาข้อมูล |
+|---|---|---|---|
+| 1 | S50 Futures + Open Interest | กราฟ | นำเข้า CSV |
+| 2 | สะสม Long / Short ต่างชาติและกองทุน | กราฟ | นำเข้า CSV |
+| 3 | USD Futures Flow | กราฟ 6 pane | นำเข้า CSV |
+| 4 | Confirm Up / Down S50 | ภาพ + จุดอธิบาย | แคปจากระบบเทรด |
+| 5 | Market Breadth SET50 | ภาพ + จุดอธิบาย | แคปจากระบบเทรด |
+| 6 | Global Macro Signals | กราฟ | **ดึงราคาจริงอัตโนมัติ** |
+
+## Tech stack
+
+Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · Recharts · Motion · Supabase (ทางเลือก) · Vercel
+
+## เริ่มใช้งาน
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+เปิด http://localhost:3000 — ในโหมด dev เข้า `/studio` ได้เลยโดยไม่ต้องใส่รหัส
+
+| คำสั่ง | ทำอะไร |
+|---|---|
+| `npm run dev` | รันเซิร์ฟเวอร์สำหรับพัฒนา |
+| `npm run build` | build สำหรับ production |
+| `npm run lint` | ตรวจโค้ดด้วย ESLint |
+| `npm run fetch:macro` | ดึงราคา Gold / VIX / DXY / US10Y มาเก็บเป็น snapshot |
+
+## โครงไฟล์
+
+```
+web/src/
+  app/(dash)/          หน้าลูกค้า — สรุปภาพรวม + 6 section
+  app/(dash)/studio/   เครื่องมือของ IC (กั้นด้วยรหัสผ่าน)
+  app/api/publish/     endpoint เผยแพร่ขึ้นเว็บ
+  components/charts/   กราฟทั้งหมด (แท่งเทียน, เส้นสะสม, sparkline)
+  components/studio/   ตัวแก้ไข: ภาพ + จุดอธิบาย, นำเข้า CSV, ข้อความ
+  components/ui/       ชิ้นส่วนหน้าตาที่ใช้ร่วมกัน
+  lib/                 โมเดลข้อมูล, ตัวอ่าน CSV, ชั้นเชื่อมข้อมูล, สิทธิ์เข้าถึง
+  data/                brief ตั้งต้น + snapshot ราคา
+```
+
+## ตัวแปรสภาพแวดล้อม
+
+| ชื่อ | จำเป็นไหม | ใช้ทำอะไร |
+|---|---|---|
+| `STUDIO_PASSWORD` | จำเป็นบน production | รหัสเข้า `/studio` — ถ้าไม่ตั้ง หน้านั้นจะปิดตัวเอง |
+| `SUPABASE_URL` | ไม่จำเป็น | เปิดโหมดกดปุ่มเดียวขึ้นเว็บ |
+| `SUPABASE_SERVICE_ROLE_KEY` | ไม่จำเป็น | คู่กับตัวบน — **ห้ามขึ้นต้นด้วย `NEXT_PUBLIC_`** |
+
+ถ้าไม่ตั้งค่า Supabase ระบบจะใช้ไฟล์ `src/data/published.json` แทน (แก้แล้ว push เพื่ออัปเดตเว็บ)
+
+## Deploy
+
+Vercel → import repo นี้ → **ตั้ง Root Directory เป็น `web`** → เพิ่ม `STUDIO_PASSWORD` → Deploy
+
+รายละเอียดสถาปัตยกรรม การต่อ Supabase และเหตุผลเบื้องหลังการตัดสินใจแต่ละอย่าง
+อ่านได้ที่ [ARCHITECTURE.md](ARCHITECTURE.md)
+
+## คีย์ลัด
+
+| ปุ่ม | ทำอะไร |
+|---|---|
+| `Ctrl + K` | ค้นหา section |
+| `1` – `6` | ข้ามไป section นั้น |
+| `Alt + 1-6` | สลับ section ใน Studio |
+| `Ctrl + Z` / `Ctrl + Shift + Z` | ย้อนกลับ / ทำซ้ำ ใน Studio |

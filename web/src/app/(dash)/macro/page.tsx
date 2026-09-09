@@ -10,6 +10,8 @@ import { SectionNav } from "@/components/ui/SectionNav";
 import { thaiDate } from "@/lib/format";
 import type { PaneGroup } from "@/lib/types";
 
+export const metadata = { title: "6 · Global Macro Signals" };
+
 /** ดึงราคาใหม่ทุกชั่วโมง — หน้ายังเสิร์ฟแบบ static */
 export const revalidate = 3600;
 
