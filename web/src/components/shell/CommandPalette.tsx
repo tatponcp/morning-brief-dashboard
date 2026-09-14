@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { CornerDownLeft, Search } from "lucide-react";
 import { ACCENT, type Accent } from "@/lib/accent";
 
-type Entry = { href: string; label: string; hint: string; accent: Accent; keys: string };
+type Entry = { href: string; label: string; hint: string; accent: Accent; keys: string; external?: boolean };
 
 const ENTRIES: Entry[] = [
   { href: "/", label: "สรุปภาพรวม", hint: "Action วันนี้", accent: "cyan", keys: "summary sarup ภาพรวม" },
@@ -16,7 +16,14 @@ const ENTRIES: Entry[] = [
   { href: "/confirm", label: "4 · Confirm Up / Down S50", hint: "Website", accent: "amber", keys: "confirm trend" },
   { href: "/breadth", label: "5 · Market Breadth SET50", hint: "Indy 2090", accent: "violet", keys: "breadth ma200 rsi" },
   { href: "/macro", label: "6 · Global Macro Signals", hint: "Gold · VIX · DXY", accent: "rose", keys: "macro gold vix dxy bond" },
+  { href: "https://s50-dashboard.vercel.app/", label: "S50 Options · OI เชิงลึก ↗", hint: "OI รายสไตรค์ · Max Pain · PCR · IV (เปิดแท็บใหม่)", accent: "cyan", keys: "options oi strike max pain pcr iv ออปชัน", external: true },
 ];
+
+/** เปิด entry — ลิงก์นอกเว็บเปิดแท็บใหม่ ลูกค้าจะได้ไม่หลุดจาก Morning Brief */
+function openEntry(e: Entry, push: (href: string) => void) {
+  if (e.external) window.open(e.href, "_blank", "noopener,noreferrer");
+  else push(e.href);
+}
 
 /**
  * กด Ctrl+K เพื่อค้นหาและกระโดดไป section ที่ต้องการ
@@ -83,7 +90,7 @@ export function CommandPalette() {
         setCursor((c) => Math.max(c - 1, 0));
       }
       if (e.key === "Enter" && results[cursor]) {
-        router.push(results[cursor].href);
+        openEntry(results[cursor], router.push);
         setOpen(false);
       }
     };
@@ -136,7 +143,7 @@ export function CommandPalette() {
                     key={e.href}
                     onMouseEnter={() => setCursor(i)}
                     onClick={() => {
-                      router.push(e.href);
+                      openEntry(e, router.push);
                       setOpen(false);
                     }}
                     className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition ${
