@@ -128,7 +128,7 @@ export function ShareImageDialog({
         >
           {/* ---------- แถบบน ---------- */}
           <div className="flex flex-wrap items-center gap-3 border-b border-white/10 bg-ink-900/80 px-4 py-3">
-            <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-[#22d3ee] to-[#a78bfa] text-ink-950">
+            <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-cyan-neon to-violet-neon text-ink-950">
               <ImageDown className="size-5" />
             </span>
             <div className="min-w-0">
@@ -143,7 +143,7 @@ export function ShareImageDialog({
                 type="checkbox"
                 checked={options.narrative}
                 onChange={(e) => setOptions((o) => ({ ...o, narrative: e.target.checked }))}
-                className="size-3.5 accent-[#22d3ee]"
+                className="size-3.5 accent-cyan-neon"
               />
               ใส่ สรุปสั้น / แปลความ / Action
             </label>
@@ -188,9 +188,9 @@ export function ShareImageDialog({
                 aria-live="polite"
                 className={`flex items-center gap-1.5 text-[12.5px] ${
                   status.kind === "error"
-                    ? "text-[#fb7185]"
+                    ? "text-rose-neon"
                     : status.kind === "done"
-                      ? "text-[#34f5a0]"
+                      ? "text-green-neon"
                       : "text-slate-400"
                 }`}
               >
@@ -243,7 +243,7 @@ export function ShareImageDialog({
                         return "คัดลอกรูปแล้ว — ไปวางในแชตได้เลย";
                       })
                     }
-                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#22d3ee] to-[#34f5a0] px-5 py-2.5 text-[13px] font-semibold text-ink-950 transition hover:brightness-110 disabled:opacity-60"
+                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-neon to-green-neon px-5 py-2.5 text-[13px] font-semibold text-ink-950 transition hover:brightness-110 disabled:opacity-60"
                   >
                     {busy && status.text === "กำลังคัดลอก…" ? (
                       <Loader2 className="size-4 animate-spin" />

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Anuphan, Sora } from "next/font/google";
 import "./globals.css";
+import { THEME_COLORS, THEME_INIT_SCRIPT } from "@/lib/theme";
 
 const thai = Anuphan({
   subsets: ["thai", "latin"],
@@ -41,15 +42,19 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#04070e",
-  colorScheme: "dark",
+  themeColor: THEME_COLORS.dark,
+  colorScheme: "dark light",
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="th" className={`${thai.variable} ${display.variable}`}>
+    // data-theme ถูกตั้งโดยสคริปต์ก่อน React hydrate จึงต่างจาก HTML ที่ server ส่งมาได้
+    <html lang="th" className={`${thai.variable} ${display.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="min-h-dvh antialiased">{children}</body>
     </html>
   );

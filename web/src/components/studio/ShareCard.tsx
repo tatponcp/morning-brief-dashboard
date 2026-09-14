@@ -49,7 +49,7 @@ export const ShareCard = forwardRef<
           className="pointer-events-none absolute -top-40 -left-24 size-[520px] rounded-full blur-3xl"
           style={{ background: a.soft }}
         />
-        <div className="pointer-events-none absolute -right-32 -bottom-40 size-[460px] rounded-full bg-[#a78bfa]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-32 -bottom-40 size-[460px] rounded-full bg-violet-neon/10 blur-3xl" />
 
         {/* ---------- หัวรูป ---------- */}
         <header className="relative mb-5 flex items-center gap-4">
@@ -69,12 +69,12 @@ export const ShareCard = forwardRef<
           </div>
           <div className="shrink-0 rounded-2xl border border-white/10 bg-white/4 px-4 py-2 text-right">
             <p className="text-[12px] text-slate-500">ข้อมูล ณ</p>
-            <p className="font-display text-[20px] font-bold text-[#ffc53d]">{dateLabel}</p>
+            <p className="font-display text-[20px] font-bold text-amber-neon">{dateLabel}</p>
           </div>
         </header>
 
         {section.demo && (
-          <div className="relative mb-4 flex items-center gap-2 rounded-xl border border-[#ffc53d]/40 bg-[#ffc53d]/10 px-4 py-2 text-[14px] font-semibold text-[#ffc53d]">
+          <div className="relative mb-4 flex items-center gap-2 rounded-xl border border-amber-neon/40 bg-amber-neon/10 px-4 py-2 text-[14px] font-semibold text-amber-neon">
             <TriangleAlert className="size-4" />
             ตัวเลขในภาพนี้เป็นข้อมูลจำลอง ยังไม่ใช่ราคาจริง
           </div>
@@ -130,7 +130,7 @@ export const ShareCard = forwardRef<
 
         {/* ---------- ท้ายรูป ---------- */}
         <footer className="relative mt-5 flex items-center gap-3 border-t border-white/8 pt-4 text-[13px] text-slate-500">
-          <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-br from-[#22d3ee] to-[#a78bfa] font-display text-[12px] font-bold text-ink-950">
+          <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-br from-cyan-neon to-violet-neon font-display text-[12px] font-bold text-ink-950">
             MB
           </span>
           <span className="font-display font-semibold text-slate-300">Morning Brief</span>

@@ -24,12 +24,12 @@ export function InstrumentCard({ inst }: { inst: Instrument }) {
   return (
     <div
       className="panel flex h-full flex-col overflow-hidden transition duration-300 hover:-translate-y-0.5"
-      style={{ borderColor: `${inst.color}33` }}
+      style={{ borderColor: `color-mix(in srgb, ${inst.color} 20%, transparent)` }}
     >
       <div className="flex items-start gap-3 px-4 pt-4">
         <span
           className="grid size-9 shrink-0 place-items-center rounded-xl font-display text-[12px] font-bold"
-          style={{ background: `${inst.color}1f`, color: inst.color }}
+          style={{ background: `color-mix(in srgb, ${inst.color} 12%, transparent)`, color: inst.color }}
         >
           {inst.label.slice(0, 2)}
         </span>
@@ -47,8 +47,8 @@ export function InstrumentCard({ inst }: { inst: Instrument }) {
               className="rounded px-1.5 py-0.5 text-[10.5px] transition"
               style={
                 range === r.key
-                  ? { background: `${inst.color}22`, color: inst.color }
-                  : { color: "#64748b" }
+                  ? { background: `color-mix(in srgb, ${inst.color} 13%, transparent)`, color: inst.color }
+                  : { color: "var(--color-slate-400)" }
               }
             >
               {r.key}
@@ -85,7 +85,7 @@ export function InstrumentCard({ inst }: { inst: Instrument }) {
               content={(p) => (
                 <GlassTooltip {...(p as TipProps)} formatter={(_, v) => num(v, digits)} />
               )}
-              cursor={{ stroke: "rgba(255,255,255,0.18)", strokeDasharray: "4 4" }}
+              cursor={{ stroke: "var(--c-cursor)", strokeDasharray: "4 4" }}
             />
             <ReferenceLine y={inst.value} stroke={inst.color} strokeOpacity={0.3} strokeDasharray="3 6" />
             <Area
@@ -105,7 +105,7 @@ export function InstrumentCard({ inst }: { inst: Instrument }) {
       {inst.note && (
         <p
           className="mx-3 mb-3 rounded-lg border px-3 py-2 text-center text-[12px]"
-          style={{ borderColor: `${t.hex}44`, color: t.hex, background: `${t.hex}0f` }}
+          style={{ borderColor: `color-mix(in srgb, ${t.hex} 27%, transparent)`, color: t.hex, background: `color-mix(in srgb, ${t.hex} 6%, transparent)` }}
         >
           {inst.note}
         </p>

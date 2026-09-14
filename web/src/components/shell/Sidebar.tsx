@@ -73,7 +73,7 @@ export function Sidebar() {
       className="sticky top-0 z-30 hidden h-dvh shrink-0 flex-col border-r border-white/8 bg-ink-900/70 backdrop-blur-xl md:flex"
     >
       <div className="flex items-center gap-3 px-5 py-6">
-        <div className="relative grid size-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#22d3ee] to-[#a78bfa] shadow-[0_0_28px_-6px_rgba(34,211,238,0.8)]">
+        <div className="relative grid size-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-cyan-neon to-violet-neon shadow-[0_0_28px_-6px_rgba(34,211,238,0.8)]">
           <Compass className="size-5 text-ink-950" />
         </div>
         <AnimatePresence initial={false}>
@@ -174,8 +174,8 @@ function NavRow({
           className="grid size-8 shrink-0 place-items-center rounded-lg border transition"
           style={{
             borderColor: active ? a.hex : "rgba(148,163,184,0.16)",
-            background: active ? a.soft : "rgba(255,255,255,0.02)",
-            color: active ? a.hex : "#94a3b8",
+            background: active ? a.soft : "var(--c-hover)",
+            color: active ? a.hex : "var(--c-axis)",
           }}
         >
           <Icon className="size-4" />

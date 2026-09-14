@@ -16,10 +16,10 @@ const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36";
 
 export const MACRO_SPEC = [
-  { id: "gold", symbol: "GC=F", label: "GOLD", sub: "COMEX · ราคาทองคำ", color: "#ffc53d" },
-  { id: "vix", symbol: "^VIX", label: "VIX", sub: "Volatility Index", color: "#fb923c" },
-  { id: "dxy", symbol: "DX-Y.NYB", label: "DXY", sub: "Dollar Index", color: "#fb7185" },
-  { id: "us10y", symbol: "^TNX", label: "US10Y", sub: "10Y Treasury Yield", color: "#22d3ee", suffix: "%" },
+  { id: "gold", symbol: "GC=F", label: "GOLD", sub: "COMEX · ราคาทองคำ", color: "var(--c-amber)" },
+  { id: "vix", symbol: "^VIX", label: "VIX", sub: "Volatility Index", color: "var(--c-orange)" },
+  { id: "dxy", symbol: "DX-Y.NYB", label: "DXY", sub: "Dollar Index", color: "var(--c-rose)" },
+  { id: "us10y", symbol: "^TNX", label: "US10Y", sub: "10Y Treasury Yield", color: "var(--c-cyan)", suffix: "%" },
 ] as const;
 
 type SnapRow = { t: string; o: number; h: number; l: number; c: number };

@@ -40,7 +40,7 @@ export default async function StudioLogin({
     <main className="grid min-h-dvh place-items-center px-4">
       <div className="panel w-full max-w-sm px-6 py-7">
         <div className="mb-5 flex items-center gap-3">
-          <span className="grid size-11 place-items-center rounded-2xl bg-[#ffc53d]/15 text-[#ffc53d] ring-glow-amber">
+          <span className="grid size-11 place-items-center rounded-2xl bg-amber-neon/15 text-amber-neon ring-glow-amber">
             <ShieldCheck className="size-5" />
           </span>
           <div>
@@ -53,7 +53,7 @@ export default async function StudioLogin({
           <input type="hidden" name="next" value={sp.next ?? "/studio"} />
           <label className="block">
             <span className="mb-1.5 block text-[12.5px] text-slate-400">รหัสผ่าน</span>
-            <div className="flex items-center gap-2 rounded-xl border border-white/12 bg-ink-950/60 px-3 focus-within:border-[#ffc53d]/60">
+            <div className="flex items-center gap-2 rounded-xl border border-white/12 bg-ink-950/60 px-3 focus-within:border-amber-neon/60">
               <KeyRound className="size-4 shrink-0 text-slate-500" />
               <input
                 name="password"
@@ -66,14 +66,14 @@ export default async function StudioLogin({
           </label>
 
           {sp.error && (
-            <p className="rounded-lg border border-[#fb7185]/30 bg-[#fb7185]/10 px-3 py-2 text-[12.5px] text-[#fb7185]">
+            <p className="rounded-lg border border-rose-neon/30 bg-rose-neon/10 px-3 py-2 text-[12.5px] text-rose-neon">
               รหัสผ่านไม่ถูกต้อง
             </p>
           )}
 
           <button
             type="submit"
-            className="w-full rounded-xl bg-gradient-to-r from-[#ffc53d] to-[#fb923c] py-2.5 text-[14px] font-semibold text-ink-950 transition hover:brightness-110"
+            className="w-full rounded-xl bg-gradient-to-r from-amber-neon to-orange-neon py-2.5 text-[14px] font-semibold text-ink-950 transition hover:brightness-110"
           >
             เข้าสู่ระบบ
           </button>

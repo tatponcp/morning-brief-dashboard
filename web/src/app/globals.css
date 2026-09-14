@@ -1,25 +1,151 @@
 @import "tailwindcss";
 
-@theme {
-  --color-ink-950: #04070e;
-  --color-ink-900: #070c17;
-  --color-ink-850: #0a1120;
-  --color-ink-800: #0e1728;
-  --color-ink-700: #16223a;
-  --color-ink-600: #1f2f4d;
+/*
+ * ระบบธีม
+ * ─────────────────────────────────────────────
+ * ทุกสีในเว็บอ่านจากตัวแปรชุดเดียวด้านล่าง สลับธีมด้วย <html data-theme="light|dark">
+ * คอมโพเนนต์ไม่ต้องรู้ว่าอยู่ธีมไหน — กราฟ SVG ก็อ่าน var() ได้ตรง ๆ
+ *
+ * กติกาที่ใช้ทั้งโปรเจกต์ (มาจากดีไซน์มืดเดิม):
+ *   text-white / bg-white/5 / border-white/10  = "สีตัวอักษรหลัก" และแผ่นทับบาง ๆ
+ *   slate-100 … slate-600                       = ลำดับความสำคัญของตัวอักษร (เข้ม → จาง)
+ *   ink-950 … ink-600                           = พื้นผิว (ลึกสุด → ยกขึ้น)
+ *   *-neon                                      = สีประจำ section และสีบวก/ลบ
+ * ธีมสว่างจึงแค่ "กลับด้าน" ความหมายของชุดเหล่านี้ ไม่ต้องไล่แก้ทีละคลาส
+ */
 
-  --color-cyan-neon: #22d3ee;
-  --color-green-neon: #34f5a0;
-  --color-amber-neon: #ffc53d;
-  --color-violet-neon: #a78bfa;
-  --color-rose-neon: #fb7185;
-  --color-sky-neon: #38bdf8;
+@theme inline {
+  --color-ink-950: var(--ink-950);
+  --color-ink-900: var(--ink-900);
+  --color-ink-850: var(--ink-850);
+  --color-ink-800: var(--ink-800);
+  --color-ink-700: var(--ink-700);
+  --color-ink-600: var(--ink-600);
+
+  --color-cyan-neon: var(--c-cyan);
+  --color-green-neon: var(--c-green);
+  --color-amber-neon: var(--c-amber);
+  --color-violet-neon: var(--c-violet);
+  --color-rose-neon: var(--c-rose);
+  --color-sky-neon: var(--c-sky);
+  --color-orange-neon: var(--c-orange);
+  --color-lime-neon: var(--c-lime);
+  --color-pink-neon: var(--c-pink);
+  --color-yellow-neon: var(--c-yellow);
+  --color-fuchsia-neon: var(--c-fuchsia);
 
   --font-sans: var(--font-thai), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-display), var(--font-thai), ui-sans-serif, sans-serif;
 
   --animate-shimmer: shimmer 2.4s linear infinite;
   --animate-float: float 7s ease-in-out infinite;
+}
+
+/* ─────────────── ธีมมืด (ค่าเริ่มต้น) ─────────────── */
+:root {
+  color-scheme: dark;
+
+  --ink-950: #04070e;
+  --ink-900: #070c17;
+  --ink-850: #0a1120;
+  --ink-800: #0e1728;
+  --ink-700: #16223a;
+  --ink-600: #1f2f4d;
+
+  --c-cyan: #22d3ee;
+  --c-green: #34f5a0;
+  --c-amber: #ffc53d;
+  --c-violet: #a78bfa;
+  --c-rose: #fb7185;
+  --c-sky: #38bdf8;
+  --c-orange: #fb923c;
+  --c-lime: #a3e635;
+  --c-pink: #f0abfc;
+  --c-yellow: #fbbf24;
+  --c-fuchsia: #e879f9;
+
+  --c-fg: #e8eefc;
+  --c-neutral: #cbd5e1;
+  --c-soft-line: #e2e8f0;
+  --c-axis: #7f93b5;
+  --c-zero: rgba(255, 255, 255, 0.34);
+  --c-cursor: rgba(255, 255, 255, 0.18);
+  --c-hover: rgba(255, 255, 255, 0.04);
+
+  /* ตัวอักษรรอง: ค่าเดิมของ Tailwind จางเกินไปบนการ์ดสีเข้ม (≈3.7:1) */
+  --color-slate-500: #8b9bb3;
+  --color-slate-600: #75869f;
+
+  --panel-bg: linear-gradient(165deg, rgba(16, 26, 45, 0.9), rgba(7, 12, 23, 0.94));
+  --panel-border: rgba(120, 160, 220, 0.12);
+  --panel-shadow: none;
+  --glass-bg: linear-gradient(160deg, rgba(23, 35, 60, 0.78), rgba(9, 15, 28, 0.85));
+  --grid-line: rgba(120, 170, 230, 0.055);
+  --scroll-thumb: rgba(120, 160, 220, 0.22);
+  --scroll-thumb-hover: rgba(120, 160, 220, 0.38);
+  --glow-strength: 1;
+
+  --page-glow:
+    radial-gradient(900px 520px at 12% -8%, rgba(34, 211, 238, 0.13), transparent 62%),
+    radial-gradient(760px 460px at 92% 4%, rgba(167, 139, 250, 0.11), transparent 60%),
+    radial-gradient(1100px 700px at 50% 108%, rgba(52, 245, 160, 0.07), transparent 62%);
+}
+
+/* ─────────────── ธีมสว่าง ─────────────── */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --ink-950: #f3f6fb;
+  --ink-900: #ffffff;
+  --ink-850: #ffffff;
+  --ink-800: #ffffff;
+  --ink-700: #e4e9f2;
+  --ink-600: #cfd8e6;
+
+  /* สีนีออนเดิมสว่างเกินจนอ่านไม่ออกบนพื้นขาว → ใช้โทนเดียวกันแต่เข้มขึ้น */
+  --c-cyan: #0b6178;
+  --c-green: #025c42;
+  --c-amber: #8f4206;
+  --c-violet: #6d28d9;
+  --c-rose: #be123c;
+  --c-sky: #075985;
+  --c-orange: #9a3412;
+  --c-lime: #4d7c0f;
+  --c-pink: #a21caf;
+  --c-yellow: #a16207;
+  --c-fuchsia: #a21caf;
+
+  --c-fg: #0f172a;
+  --c-neutral: #475569;
+  --c-soft-line: #334155;
+  --c-axis: #64748b;
+  --c-zero: rgba(15, 23, 42, 0.32);
+  --c-cursor: rgba(15, 23, 42, 0.2);
+  --c-hover: rgba(15, 23, 42, 0.04);
+
+  /* "white" ในโค้ดคือสีตัวอักษรหลัก/แผ่นทับบาง ๆ → ธีมสว่างกลับเป็นสีเข้ม */
+  --color-white: #0f172a;
+  --color-slate-100: #0f172a;
+  --color-slate-200: #1e293b;
+  --color-slate-300: #334155;
+  --color-slate-400: #475569;
+  --color-slate-500: #556579;
+  --color-slate-600: #5a687b;
+  --color-slate-700: #cbd5e1;
+
+  --panel-bg: linear-gradient(165deg, #ffffff, #fbfcfe);
+  --panel-border: rgba(15, 23, 42, 0.09);
+  --panel-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -12px rgba(15, 23, 42, 0.12);
+  --glass-bg: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 253, 0.9));
+  --grid-line: rgba(15, 23, 42, 0.035);
+  --scroll-thumb: rgba(15, 23, 42, 0.18);
+  --scroll-thumb-hover: rgba(15, 23, 42, 0.32);
+  --glow-strength: 0.45;
+
+  --page-glow:
+    radial-gradient(900px 520px at 12% -8%, rgba(14, 116, 144, 0.08), transparent 62%),
+    radial-gradient(760px 460px at 92% 4%, rgba(109, 40, 217, 0.06), transparent 60%),
+    radial-gradient(1100px 700px at 50% 108%, rgba(4, 120, 87, 0.05), transparent 62%);
 }
 
 @keyframes shimmer {
@@ -32,31 +158,39 @@
   50% { transform: translateY(-10px); }
 }
 
-:root {
-  color-scheme: dark;
-}
-
 html,
 body {
-  background: var(--color-ink-950);
-  color: #e8eefc;
+  background: var(--ink-950);
+  color: var(--c-fg);
 }
 
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  background-image:
-    radial-gradient(900px 520px at 12% -8%, rgba(34, 211, 238, 0.13), transparent 62%),
-    radial-gradient(760px 460px at 92% 4%, rgba(167, 139, 250, 0.11), transparent 60%),
-    radial-gradient(1100px 700px at 50% 108%, rgba(52, 245, 160, 0.07), transparent 62%);
+  background-image: var(--page-glow);
   background-attachment: fixed;
+}
+
+/* สลับธีมแล้วสีค่อย ๆ เปลี่ยน ไม่กระพริบ — ปิดถ้าผู้ใช้ตั้ง reduced motion */
+@media (prefers-reduced-motion: no-preference) {
+  html.theme-transition,
+  html.theme-transition *,
+  html.theme-transition *::before,
+  html.theme-transition *::after {
+    transition:
+      background-color 0.25s ease,
+      border-color 0.25s ease,
+      color 0.25s ease,
+      fill 0.25s ease,
+      stroke 0.25s ease !important;
+  }
 }
 
 /* ---------- utilities ---------- */
 
 @utility glass {
-  background: linear-gradient(160deg, rgba(23, 35, 60, 0.78), rgba(9, 15, 28, 0.85));
-  border: 1px solid rgba(120, 160, 220, 0.14);
+  background: var(--glass-bg);
+  border: 1px solid var(--panel-border);
   box-shadow:
     0 1px 0 0 rgba(255, 255, 255, 0.05) inset,
     0 24px 60px -30px rgba(0, 0, 0, 0.9);
@@ -64,15 +198,16 @@ body {
 }
 
 @utility panel {
-  background: linear-gradient(165deg, rgba(16, 26, 45, 0.9), rgba(7, 12, 23, 0.94));
-  border: 1px solid rgba(120, 160, 220, 0.12);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
   border-radius: 1.25rem;
+  box-shadow: var(--panel-shadow);
 }
 
 @utility grid-lines {
   background-image:
-    linear-gradient(rgba(120, 170, 230, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(120, 170, 230, 0.055) 1px, transparent 1px);
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 34px 34px;
 }
 
@@ -84,30 +219,45 @@ body {
 
 @utility scroll-slim {
   scrollbar-width: thin;
-  scrollbar-color: rgba(120, 160, 220, 0.25) transparent;
+  scrollbar-color: var(--scroll-thumb) transparent;
 }
 
-.ring-glow-cyan { box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.35), 0 0 34px -10px rgba(34, 211, 238, 0.6); }
-.ring-glow-green { box-shadow: 0 0 0 1px rgba(52, 245, 160, 0.32), 0 0 34px -10px rgba(52, 245, 160, 0.55); }
-.ring-glow-amber { box-shadow: 0 0 0 1px rgba(255, 197, 61, 0.32), 0 0 34px -10px rgba(255, 197, 61, 0.55); }
-.ring-glow-violet { box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.32), 0 0 34px -10px rgba(167, 139, 250, 0.55); }
-.ring-glow-rose { box-shadow: 0 0 0 1px rgba(251, 113, 133, 0.32), 0 0 34px -10px rgba(251, 113, 133, 0.55); }
-.ring-glow-sky { box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.32), 0 0 34px -10px rgba(56, 189, 248, 0.55); }
+.ring-glow-cyan,
+.ring-glow-green,
+.ring-glow-amber,
+.ring-glow-violet,
+.ring-glow-rose,
+.ring-glow-sky {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--glow) 34%, transparent),
+    0 0 34px -10px color-mix(in srgb, var(--glow) calc(58% * var(--glow-strength)), transparent);
+}
+.ring-glow-cyan { --glow: var(--c-cyan); }
+.ring-glow-green { --glow: var(--c-green); }
+.ring-glow-amber { --glow: var(--c-amber); }
+.ring-glow-violet { --glow: var(--c-violet); }
+.ring-glow-rose { --glow: var(--c-rose); }
+.ring-glow-sky { --glow: var(--c-sky); }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(120, 160, 220, 0.22);
+  background: var(--scroll-thumb);
   border-radius: 999px;
   border: 3px solid transparent;
   background-clip: content-box;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(120, 160, 220, 0.38); background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); background-clip: content-box; }
 
-.recharts-cartesian-axis-tick text { font-size: 11px; fill: #7f93b5; }
+.recharts-cartesian-axis-tick text { font-size: 11px; fill: var(--c-axis); }
 .recharts-surface { overflow: visible; }
 
 /* การ์ดรูปส่งลูกค้า: ซ่อนปุ่มควบคุมให้พรีวิวตรงกับรูปที่ได้จริง */
 .share-card [data-export-hide] {
   display: none !important;
 }
+
+/* รูปกว้างคงที่ 1080px — ไม่ให้ตาราง responsive ยุบตามขนาดจอของ IC */
+.share-card [data-share-cols="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+.share-card [data-share-cols="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+.share-card [data-share-cols="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }

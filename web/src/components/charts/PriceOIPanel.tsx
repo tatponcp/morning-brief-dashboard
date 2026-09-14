@@ -42,8 +42,8 @@ export function PriceOIPanel({ series }: { series: ContractSeries }) {
     <div className="panel overflow-hidden">
       {/* header */}
       <div className="flex flex-wrap items-center gap-3 border-b border-white/6 px-5 py-4">
-        <h3 className="font-display text-xl font-bold text-[#34f5a0]">{series.symbol}</h3>
-        <span className="rounded-lg bg-white/4 px-2.5 py-1 font-display text-lg font-bold text-[#ffc53d]">
+        <h3 className="font-display text-xl font-bold text-green-neon">{series.symbol}</h3>
+        <span className="rounded-lg bg-white/4 px-2.5 py-1 font-display text-lg font-bold text-amber-neon">
           C: {num(last.close)}
         </span>
         <div data-export-hide className="ml-auto flex gap-1 rounded-lg border border-white/8 bg-white/3 p-1">
@@ -53,7 +53,7 @@ export function PriceOIPanel({ series }: { series: ContractSeries }) {
               onClick={() => setRange(r.key)}
               className={`rounded-md px-2.5 py-1 text-[11.5px] transition ${
                 range === r.key
-                  ? "bg-[#22d3ee]/16 text-[#22d3ee]"
+                  ? "bg-cyan-neon/16 text-cyan-neon"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
@@ -66,13 +66,13 @@ export function PriceOIPanel({ series }: { series: ContractSeries }) {
       {/* price */}
       <div className="px-2 pt-4">
         <div className="mb-1 flex items-center gap-2 px-3">
-          <TrendingUp className="size-4 text-[#34f5a0]" />
+          <TrendingUp className="size-4 text-green-neon" />
           <span className="text-[12px] font-semibold tracking-wide text-slate-300">
             PRICE <span className="font-normal text-slate-500">(Daily)</span>
           </span>
           <span
             className={`ml-auto rounded-md px-2 py-0.5 text-[12px] font-semibold ${
-              up ? "bg-[#34f5a0]/12 text-[#34f5a0]" : "bg-[#fb7185]/12 text-[#fb7185]"
+              up ? "bg-green-neon/12 text-green-neon" : "bg-rose-neon/12 text-rose-neon"
             }`}
           >
             {up ? "+" : ""}
@@ -96,11 +96,11 @@ export function PriceOIPanel({ series }: { series: ContractSeries }) {
               content={(p) => (
                 <GlassTooltip {...(p as TipProps)} formatter={(k, v) => (k === "close" ? num(v) : int(v))} />
               )}
-              cursor={{ stroke: "rgba(255,255,255,0.18)", strokeDasharray: "4 4" }}
+              cursor={{ stroke: "var(--c-cursor)", strokeDasharray: "4 4" }}
             />
             <ReferenceLine
               y={last.close}
-              stroke="#ffc53d"
+              stroke="var(--c-amber)"
               strokeDasharray="5 5"
               strokeOpacity={0.6}
             />
@@ -108,10 +108,10 @@ export function PriceOIPanel({ series }: { series: ContractSeries }) {
               type="monotone"
               dataKey="close"
               name="Close"
-              stroke="#34f5a0"
+              stroke="var(--c-green)"
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4, fill: "#34f5a0" }}
+              activeDot={{ r: 4, fill: "var(--c-green)" }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -120,13 +120,13 @@ export function PriceOIPanel({ series }: { series: ContractSeries }) {
       {/* open interest */}
       <div className="px-2 pt-2 pb-4">
         <div className="mb-1 flex items-center gap-2 px-3">
-          <Layers className="size-4 text-[#22d3ee]" />
+          <Layers className="size-4 text-cyan-neon" />
           <span className="text-[12px] font-semibold tracking-wide text-slate-300">
             OPEN INTEREST
           </span>
           <span
             className={`ml-auto rounded-md px-2 py-0.5 text-[12px] font-semibold ${
-              oiUp ? "bg-[#34f5a0]/12 text-[#34f5a0]" : "bg-[#fb7185]/12 text-[#fb7185]"
+              oiUp ? "bg-green-neon/12 text-green-neon" : "bg-rose-neon/12 text-rose-neon"
             }`}
           >
             {oiUp ? "+" : ""}
@@ -138,8 +138,8 @@ export function PriceOIPanel({ series }: { series: ContractSeries }) {
           <AreaChart data={rows} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id={`oi-${series.symbol}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.4} />
-                <stop offset="100%" stopColor="#22d3ee" stopOpacity={0} />
+                <stop offset="0%" stopColor="var(--c-cyan)" stopOpacity={0.4} />
+                <stop offset="100%" stopColor="var(--c-cyan)" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid stroke="rgba(148,163,184,0.08)" vertical={false} />
@@ -153,16 +153,16 @@ export function PriceOIPanel({ series }: { series: ContractSeries }) {
             />
             <Tooltip
               content={(p) => <GlassTooltip {...(p as TipProps)} formatter={(_, v) => int(v)} />}
-              cursor={{ stroke: "rgba(255,255,255,0.18)", strokeDasharray: "4 4" }}
+              cursor={{ stroke: "var(--c-cursor)", strokeDasharray: "4 4" }}
             />
             <Area
               type="monotone"
               dataKey="oi"
               name="Open Interest"
-              stroke="#22d3ee"
+              stroke="var(--c-cyan)"
               strokeWidth={2}
               fill={`url(#oi-${series.symbol})`}
-              activeDot={{ r: 4, fill: "#22d3ee" }}
+              activeDot={{ r: 4, fill: "var(--c-cyan)" }}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -192,7 +192,7 @@ function Stat({
     <div className="bg-ink-900 px-5 py-4">
       <p className="text-[11.5px] text-slate-500">{label}</p>
       <p className="font-display text-2xl font-bold text-white">{value}</p>
-      <p className={`text-[12.5px] font-semibold ${up ? "text-[#34f5a0]" : "text-[#fb7185]"}`}>
+      <p className={`text-[12.5px] font-semibold ${up ? "text-green-neon" : "text-rose-neon"}`}>
         {delta}
       </p>
     </div>

@@ -135,7 +135,7 @@ export const brief20260805: Brief = {
           id: "usd-daily",
           title: "USDU26 — ภาพใหญ่ (Daily)",
           subtitle: "ตำแหน่งสุทธิของตลาดยังอยู่ฝั่งกดดันดอลลาร์",
-          accentHex: "#38bdf8",
+          accentHex: "var(--c-sky)",
           panes: [
             {
               id: "usd-price-d",
@@ -143,9 +143,9 @@ export const brief20260805: Brief = {
               kind: "candle",
               height: 132,
               digits: 2,
-              series: [{ key: "c", name: "USDU26", color: "#34f5a0" }],
+              series: [{ key: "c", name: "USDU26", color: "var(--c-green)" }],
               rows: makeCandles(101, 58, 32.2, 33.55, 32.93),
-              refLines: [{ y: 32.93, color: "#34f5a0", label: "32.93" }],
+              refLines: [{ y: 32.93, color: "var(--c-green)", label: "32.93" }],
             },
             {
               id: "usd-superflow",
@@ -155,11 +155,11 @@ export const brief20260805: Brief = {
               height: 78,
               digits: 0,
               zeroLine: true,
-              series: [{ key: "flow", name: "Super Flow", color: "#e2e8f0", fill: true }],
+              series: [{ key: "flow", name: "Super Flow", color: "var(--c-soft-line)", fill: true }],
               rows: makeCumulative(103, 58, "flow", 620_000, -225_314),
               refLines: [
-                { y: 159_204, color: "#34f5a0", label: "+159,204" },
-                { y: -179_037, color: "#fb7185", label: "-179,037" },
+                { y: 159_204, color: "var(--c-green)", label: "+159,204" },
+                { y: -179_037, color: "var(--c-rose)", label: "-179,037" },
               ],
             },
             {
@@ -168,7 +168,7 @@ export const brief20260805: Brief = {
               kind: "line",
               height: 78,
               digits: 0,
-              series: [{ key: "oi", name: "Open Interest", color: "#ffc53d" }],
+              series: [{ key: "oi", name: "Open Interest", color: "var(--c-amber)" }],
               rows: makeCumulative(107, 58, "oi", 980_000, 1_306_431),
             },
           ],
@@ -182,7 +182,7 @@ export const brief20260805: Brief = {
           id: "usd-15m",
           title: "USDU26 — ระยะสั้น (15 นาที)",
           subtitle: "Flow ระยะสั้นเริ่มทรงตัวใกล้โซนฐาน แต่ยังอ่อน",
-          accentHex: "#a78bfa",
+          accentHex: "var(--c-violet)",
           panes: [
             {
               id: "usd-price-15",
@@ -190,11 +190,11 @@ export const brief20260805: Brief = {
               kind: "line",
               height: 118,
               digits: 2,
-              series: [{ key: "px", name: "USDU26", color: "#ffc53d" }],
+              series: [{ key: "px", name: "USDU26", color: "var(--c-amber)" }],
               rows: make15m(111, 120, [{ key: "px", from: 33.5, to: 32.96, jitter: 0.06 }]),
               refLines: [
-                { y: 32.96, color: "#34f5a0", label: "32.96" },
-                { y: 32.93, color: "#22d3ee", label: "32.93" },
+                { y: 32.96, color: "var(--c-green)", label: "32.96" },
+                { y: 32.93, color: "var(--c-cyan)", label: "32.93" },
               ],
             },
             {
@@ -204,11 +204,11 @@ export const brief20260805: Brief = {
               height: 78,
               digits: 0,
               zeroLine: true,
-              series: [{ key: "pbc", name: "PBC", color: "#22d3ee", fill: true }],
+              series: [{ key: "pbc", name: "PBC", color: "var(--c-cyan)", fill: true }],
               rows: make15m(113, 120, [{ key: "pbc", from: 12_000, to: -230_188 }]),
               refLines: [
-                { y: -230_188, color: "#34f5a0", label: "-230,188" },
-                { y: -329_075, color: "#fb7185", label: "-329,075" },
+                { y: -230_188, color: "var(--c-green)", label: "-230,188" },
+                { y: -329_075, color: "var(--c-rose)", label: "-329,075" },
               ],
             },
             {
@@ -218,7 +218,7 @@ export const brief20260805: Brief = {
               height: 70,
               digits: 0,
               zeroLine: true,
-              series: [{ key: "reset", name: "PBC Daily Reset", color: "#e879f9" }],
+              series: [{ key: "reset", name: "PBC Daily Reset", color: "var(--c-fuchsia)" }],
               rows: make15m(117, 120, [{ key: "reset", from: -1_200, to: -4_075, jitter: 9_000 }]),
             },
           ],

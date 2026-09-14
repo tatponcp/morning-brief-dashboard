@@ -18,7 +18,7 @@ export default function GlobalError({
   return (
     <main className="grid min-h-dvh place-items-center px-4 text-center">
       <div className="panel max-w-md px-6 py-7">
-        <span className="mx-auto mb-4 grid size-12 place-items-center rounded-2xl bg-[#fb7185]/15 text-[#fb7185]">
+        <span className="mx-auto mb-4 grid size-12 place-items-center rounded-2xl bg-rose-neon/15 text-rose-neon">
           <TriangleAlert className="size-6" />
         </span>
         <h1 className="font-display text-xl font-bold text-white">หน้านี้โหลดไม่สำเร็จ</h1>
@@ -31,7 +31,7 @@ export default function GlobalError({
         )}
         <button
           onClick={reset}
-          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#22d3ee] to-[#34f5a0] px-5 py-2.5 text-[13.5px] font-semibold text-ink-950 transition hover:brightness-110"
+          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-neon to-green-neon px-5 py-2.5 text-[13.5px] font-semibold text-ink-950 transition hover:brightness-110"
         >
           <RefreshCw className="size-4" />
           ลองใหม่

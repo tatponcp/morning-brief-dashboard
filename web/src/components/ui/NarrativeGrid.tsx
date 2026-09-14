@@ -27,13 +27,13 @@ export function NarrativeGrid({
           <Card
             title="สรุปสั้น"
             step="1"
-            color="#22d3ee"
+            color="var(--c-cyan)"
             icon={<CheckCircle2 className="size-5" />}
           >
             <ul className="space-y-2">
               {n.summary.map((s, i) => (
                 <li key={i} className="flex gap-2.5 text-[13.5px] leading-relaxed text-slate-200">
-                  <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[#22d3ee]" />
+                  <span className="mt-2 size-1.5 shrink-0 rounded-full bg-cyan-neon" />
                   <span>{s}</span>
                 </li>
               ))}
@@ -45,7 +45,7 @@ export function NarrativeGrid({
           <Card
             title="แปลความ"
             step="2"
-            color="#a78bfa"
+            color="var(--c-violet)"
             icon={<MessageSquareText className="size-5" />}
           >
             <p className="text-[13.5px] leading-[1.8] text-slate-200">{n.interpretation}</p>
@@ -53,7 +53,7 @@ export function NarrativeGrid({
         </Reveal>
 
         <Reveal delay={0.16}>
-          <Card title="Action วันนี้" step="3" color="#ffc53d" icon={<Zap className="size-5" />}>
+          <Card title="Action วันนี้" step="3" color="var(--c-amber)" icon={<Zap className="size-5" />}>
             <ul className="space-y-1.5">
               {n.actions.map((a, i) => {
                 const t = toneOf(a.tone);
@@ -73,13 +73,13 @@ export function NarrativeGrid({
       </div>
 
       <Reveal delay={0.2}>
-        <div className="relative overflow-hidden rounded-xl border border-[#22d3ee]/25 bg-gradient-to-r from-[#22d3ee]/10 via-transparent to-[#a78bfa]/10 px-4 py-3">
+        <div className="relative overflow-hidden rounded-xl border border-cyan-neon/25 bg-gradient-to-r from-cyan-neon/10 via-transparent to-violet-neon/10 px-4 py-3">
           <div className="flex items-center gap-3">
-            <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#ffc53d]/15 text-[#ffc53d]">
+            <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-amber-neon/15 text-amber-neon">
               <Lightbulb className="size-4" />
             </span>
             <p className="text-[13.5px] leading-snug text-slate-100">
-              <span className="font-display font-bold text-[#22d3ee]">Insight: </span>
+              <span className="font-display font-bold text-cyan-neon">Insight: </span>
               {n.insight}
             </p>
           </div>
@@ -105,12 +105,12 @@ function Card({
   return (
     <div
       className="panel h-full px-4 py-3.5 transition duration-300 hover:-translate-y-0.5"
-      style={{ borderColor: `${color}33` }}
+      style={{ borderColor: `color-mix(in srgb, ${color} 20%, transparent)` }}
     >
       <div className="mb-2.5 flex items-center gap-2.5">
         <span
           className="grid size-7 place-items-center rounded-lg"
-          style={{ background: `${color}1f`, color }}
+          style={{ background: `color-mix(in srgb, ${color} 12%, transparent)`, color }}
         >
           {icon}
         </span>

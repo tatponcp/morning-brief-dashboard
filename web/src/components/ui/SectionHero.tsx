@@ -46,14 +46,14 @@ export function SectionHero({
 
         <div className="ml-auto flex items-center gap-2">
           {demo && (
-            <span className="inline-flex items-center gap-1 rounded-lg border border-[#ffc53d]/40 bg-[#ffc53d]/10 px-2 py-1 text-[10.5px] font-semibold text-[#ffc53d]">
+            <span className="inline-flex items-center gap-1 rounded-lg border border-amber-neon/40 bg-amber-neon/10 px-2 py-1 text-[10.5px] font-semibold text-amber-neon">
               <TriangleAlert className="size-3" />
               ข้อมูลจำลอง
             </span>
           )}
           <span className="rounded-lg border border-white/10 bg-ink-850/80 px-2.5 py-1 text-[11.5px]">
             <span className="text-slate-500">ข้อมูล ณ </span>
-            <span className="font-display font-bold text-[#ffc53d]">{dateLabel}</span>
+            <span className="font-display font-bold text-amber-neon">{dateLabel}</span>
           </span>
         </div>
 

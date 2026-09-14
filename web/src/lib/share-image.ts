@@ -39,7 +39,9 @@ export async function renderPng(node: HTMLElement): Promise<Blob> {
   const blob = await toBlob(node, {
     pixelRatio: 2,
     cacheBust: true,
-    backgroundColor: "#04070e",
+    // ใช้พื้นตามธีมปัจจุบัน IC เลือกได้ว่าจะส่งรูปโทนมืดหรือสว่าง
+    backgroundColor:
+      getComputedStyle(document.documentElement).getPropertyValue("--ink-950").trim() || "#04070e",
     fontEmbedCSS: await fontCSS,
     filter: keep,
   });

@@ -31,12 +31,12 @@ export function SectionRail({
             className="group flex shrink-0 items-center gap-2.5 rounded-xl border px-3 py-2 text-left transition lg:w-full"
             style={{
               borderColor: on ? a.hex : "rgba(148,163,184,0.14)",
-              background: on ? a.soft : "rgba(255,255,255,0.02)",
+              background: on ? a.soft : "var(--c-hover)",
             }}
           >
             <span
               className="grid size-6 shrink-0 place-items-center rounded-md font-display text-[11px] font-bold"
-              style={{ background: on ? a.hex : "rgba(255,255,255,0.06)", color: on ? "#04070e" : a.hex }}
+              style={{ background: on ? a.hex : "var(--c-hover)", color: on ? "var(--ink-950)" : a.hex }}
             >
               {s.index}
             </span>
@@ -47,13 +47,13 @@ export function SectionRail({
               >
                 {s.title}
               </span>
-              <span className="hidden text-[10.5px] text-slate-500 lg:block">
+              <span className="hidden text-[10.5px] text-slate-400 lg:block">
                 {st.complete ? "กรอกครบแล้ว" : `เหลือ ${st.missing.length} ช่อง`}
               </span>
             </span>
 
             {st.complete ? (
-              <Check className="size-4 shrink-0 text-[#34f5a0]" />
+              <Check className="size-4 shrink-0 text-green-neon" />
             ) : (
               <CircleDashed className="size-4 shrink-0 text-slate-600" />
             )}

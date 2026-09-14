@@ -5,7 +5,7 @@ export default function NotFound() {
   return (
     <main className="grid min-h-dvh place-items-center px-4 text-center">
       <div>
-        <span className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-gradient-to-br from-[#22d3ee] to-[#a78bfa] text-ink-950">
+        <span className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-gradient-to-br from-cyan-neon to-violet-neon text-ink-950">
           <Compass className="size-7" />
         </span>
         <h1 className="font-display text-2xl font-bold text-white">ไม่พบหน้าที่ต้องการ</h1>
@@ -14,7 +14,7 @@ export default function NotFound() {
         </p>
         <Link
           href="/"
-          className="mt-5 inline-block rounded-xl bg-gradient-to-r from-[#22d3ee] to-[#34f5a0] px-5 py-2.5 text-[13.5px] font-semibold text-ink-950 transition hover:brightness-110"
+          className="mt-5 inline-block rounded-xl bg-gradient-to-r from-cyan-neon to-green-neon px-5 py-2.5 text-[13.5px] font-semibold text-ink-950 transition hover:brightness-110"
         >
           กลับไปหน้าสรุปภาพรวม
         </Link>

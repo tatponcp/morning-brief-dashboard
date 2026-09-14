@@ -233,7 +233,7 @@ export function StudioEditor({
     <div className="pb-16">
       {/* ---------- header ---------- */}
       <div className="panel mb-3 flex flex-wrap items-center gap-3 px-4 py-2.5">
-        <span className="grid size-8 place-items-center rounded-xl bg-[#ffc53d]/15 text-[#ffc53d]">
+        <span className="grid size-8 place-items-center rounded-xl bg-amber-neon/15 text-amber-neon">
           <Wand2 className="size-4" />
         </span>
         <h1 className="font-display text-[17px] font-bold text-white">IC Studio</h1>
@@ -246,14 +246,14 @@ export function StudioEditor({
             onChange={(e) => setDate(e.target.value)}
             className="bg-transparent text-[12.5px] text-white outline-none"
           />
-          <span className="text-[11.5px] font-semibold text-[#ffc53d]">{thaiDate(date)}</span>
+          <span className="text-[11.5px] font-semibold text-amber-neon">{thaiDate(date)}</span>
         </label>
 
         <div className="ml-auto flex items-center gap-2">
           <div className="hidden items-center gap-2 sm:flex">
             <div className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[#22d3ee] to-[#34f5a0] transition-all"
+                className="h-full rounded-full bg-gradient-to-r from-cyan-neon to-green-neon transition-all"
                 style={{ width: `${(progress.done / progress.total) * 100}%` }}
               />
             </div>
@@ -266,7 +266,7 @@ export function StudioEditor({
             onClick={() => setShowPreview((v) => !v)}
             className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11.5px] transition xl:hidden ${
               showPreview
-                ? "border-[#22d3ee]/40 bg-[#22d3ee]/10 text-[#22d3ee]"
+                ? "border-cyan-neon/40 bg-cyan-neon/10 text-cyan-neon"
                 : "border-white/10 text-slate-400"
             }`}
           >
@@ -280,8 +280,8 @@ export function StudioEditor({
         <div
           className={`mb-3 rounded-xl border px-4 py-2.5 text-[13px] ${
             msg.ok
-              ? "border-[#34f5a0]/30 bg-[#34f5a0]/8 text-[#34f5a0]"
-              : "border-[#fb7185]/30 bg-[#fb7185]/8 text-[#fb7185]"
+              ? "border-green-neon/30 bg-green-neon/8 text-green-neon"
+              : "border-rose-neon/30 bg-rose-neon/8 text-rose-neon"
           }`}
         >
           {msg.text}
@@ -315,19 +315,19 @@ export function StudioEditor({
               {section.title}
             </p>
             {progress.current.missing.length > 0 ? (
-              <span className="flex items-center gap-1.5 rounded-lg bg-[#ffc53d]/10 px-2 py-1 text-[11px] text-[#ffc53d]">
+              <span className="flex items-center gap-1.5 rounded-lg bg-amber-neon/10 px-2 py-1 text-[11px] text-amber-neon">
                 <TriangleAlert className="size-3" />
                 ยังขาด: {progress.current.missing.map(fieldLabel).join(", ")}
               </span>
             ) : (
-              <span className="flex items-center gap-1.5 rounded-lg bg-[#34f5a0]/10 px-2 py-1 text-[11px] text-[#34f5a0]">
+              <span className="flex items-center gap-1.5 rounded-lg bg-green-neon/10 px-2 py-1 text-[11px] text-green-neon">
                 <Check className="size-3" />
                 กรอกครบแล้ว
               </span>
             )}
             <button
               onClick={() => setShareOpen(true)}
-              className="ml-auto flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#22d3ee] to-[#a78bfa] px-3 py-1.5 text-[12px] font-semibold text-ink-950 transition hover:brightness-110"
+              className="ml-auto flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-neon to-violet-neon px-3 py-1.5 text-[12px] font-semibold text-ink-950 transition hover:brightness-110"
             >
               <ImageDown className="size-3.5" />
               สร้างรูปส่งลูกค้า
@@ -421,7 +421,7 @@ export function StudioEditor({
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-2 px-3 py-2 md:px-6">
           <span
             className={`flex items-center gap-1.5 text-[11.5px] ${
-              saveState === "saved" ? "text-slate-500" : "text-[#ffc53d]"
+              saveState === "saved" ? "text-slate-500" : "text-amber-neon"
             }`}
           >
             {saveState === "saved" ? (
@@ -440,7 +440,7 @@ export function StudioEditor({
           </span>
 
           {stored.restored && !edits && (
-            <span className="flex items-center gap-1.5 text-[11.5px] text-[#22d3ee]">
+            <span className="flex items-center gap-1.5 text-[11.5px] text-cyan-neon">
               <History className="size-3.5" /> กู้ร่างเดิมแล้ว
             </span>
           )}
@@ -475,7 +475,7 @@ export function StudioEditor({
 
             <button
               onClick={() => setShareOpen(true)}
-              className="flex items-center gap-1.5 rounded-lg border border-[#22d3ee]/40 bg-[#22d3ee]/10 px-3 py-2 text-[12.5px] text-[#22d3ee] transition hover:bg-[#22d3ee]/20"
+              className="flex items-center gap-1.5 rounded-lg border border-cyan-neon/40 bg-cyan-neon/10 px-3 py-2 text-[12.5px] text-cyan-neon transition hover:bg-cyan-neon/20"
             >
               <ImageDown className="size-4" />
               <span className="hidden sm:inline">รูปส่งลูกค้า</span>
@@ -485,7 +485,7 @@ export function StudioEditor({
               onClick={exportJson}
               className="flex items-center gap-1.5 rounded-lg border border-white/12 bg-white/5 px-3 py-2 text-[12.5px] text-slate-200 transition hover:border-white/25"
             >
-              {exported ? <Check className="size-4 text-[#34f5a0]" /> : <Download className="size-4" />}
+              {exported ? <Check className="size-4 text-green-neon" /> : <Download className="size-4" />}
               ส่งออก .json
             </button>
 
@@ -493,7 +493,7 @@ export function StudioEditor({
               <button
                 onClick={publish}
                 disabled={publishing}
-                className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#34f5a0] to-[#22d3ee] px-3.5 py-2 text-[12.5px] font-semibold text-ink-950 transition hover:brightness-110 disabled:opacity-60"
+                className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-green-neon to-cyan-neon px-3.5 py-2 text-[12.5px] font-semibold text-ink-950 transition hover:brightness-110 disabled:opacity-60"
               >
                 <Rocket className="size-4" />
                 {publishing ? "กำลังเผยแพร่…" : "เผยแพร่ขึ้นเว็บ"}

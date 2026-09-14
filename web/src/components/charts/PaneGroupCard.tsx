@@ -27,7 +27,7 @@ const RANGES = [
 export function PaneGroupCard({ group }: { group: PaneGroup }) {
   const [range, setRange] = useState<string>("3M");
   const n = RANGES.find((r) => r.key === range)?.n ?? Infinity;
-  const accent = group.accentHex ?? "#38bdf8";
+  const accent = group.accentHex ?? "var(--c-sky)";
 
   return (
     <div className="panel overflow-hidden">
@@ -48,8 +48,8 @@ export function PaneGroupCard({ group }: { group: PaneGroup }) {
               className="rounded-md px-2.5 py-1 text-[11.5px] transition"
               style={
                 range === r.key
-                  ? { background: `${accent}26`, color: accent }
-                  : { color: "#94a3b8" }
+                  ? { background: `color-mix(in srgb, ${accent} 15%, transparent)`, color: accent }
+                  : { color: "var(--color-slate-400)" }
               }
             >
               {r.key}
@@ -65,7 +65,7 @@ export function PaneGroupCard({ group }: { group: PaneGroup }) {
       </div>
 
       {!!group.footer?.length && (
-        <div className="grid gap-px border-t border-white/6 bg-white/6 sm:grid-cols-3">
+        <div data-share-cols="3" className="grid gap-px border-t border-white/6 bg-white/6 sm:grid-cols-3">
           {group.footer.map((f, i) => {
             const t = toneOf(f.tone);
             return (
@@ -123,8 +123,8 @@ function PaneChart({ pane, take, showTime = true }: { pane: Pane; take: number; 
           <span
             className="ml-auto rounded-md px-2 py-0.5 font-display text-[12.5px] font-bold"
             style={{
-              background: `${pane.series[0]?.color ?? "#22d3ee"}1f`,
-              color: pane.series[0]?.color ?? "#22d3ee",
+              background: `${pane.series[0]?.color ?? "var(--c-cyan)"}1f`,
+              color: pane.series[0]?.color ?? "var(--c-cyan)",
             }}
           >
             {num(lastValue, digits)}
@@ -170,10 +170,10 @@ function PaneChart({ pane, take, showTime = true }: { pane: Pane; take: number; 
             content={(p) => (
               <GlassTooltip {...(p as TipProps)} formatter={(_, v) => num(v, digits)} />
             )}
-            cursor={{ stroke: "rgba(255,255,255,0.18)", strokeDasharray: "4 4" }}
+            cursor={{ stroke: "var(--c-cursor)", strokeDasharray: "4 4" }}
           />
 
-          {pane.zeroLine && <ReferenceLine y={0} stroke="rgba(255,255,255,0.32)" />}
+          {pane.zeroLine && <ReferenceLine y={0} stroke="var(--c-zero)" />}
           {pane.refLines?.map((r, i) => (
             <ReferenceLine
               key={i}
@@ -224,7 +224,7 @@ function PaneChart({ pane, take, showTime = true }: { pane: Pane; take: number; 
           {lastValue !== undefined && pane.kind !== "candle" && (
             <ReferenceLine
               y={lastValue}
-              stroke={pane.series[0]?.color ?? "#22d3ee"}
+              stroke={pane.series[0]?.color ?? "var(--c-cyan)"}
               strokeOpacity={0.35}
               strokeDasharray="3 6"
             />
@@ -256,7 +256,7 @@ function CandleShape({ x = 0, y = 0, width = 0, height = 0, payload }: ShapeProp
   const toY = (v: number) => (span === 0 ? y + height / 2 : y + ((h - v) / span) * height);
 
   const up = c >= o;
-  const color = up ? "#34f5a0" : "#fb7185";
+  const color = up ? "var(--c-green)" : "var(--c-rose)";
   const bodyTop = toY(Math.max(o, c));
   const bodyH = Math.max(1, Math.abs(toY(o) - toY(c)));
   const bw = Math.max(1.5, Math.min(width * 0.62, 9));

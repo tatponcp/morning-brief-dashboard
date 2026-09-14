@@ -32,7 +32,7 @@ function NavCard({ section, dir }: { section: Section; dir: "prev" | "next" }) {
       className={`panel group flex items-center gap-3 px-4 py-2.5 transition hover:-translate-y-0.5 ${
         isNext ? "sm:flex-row-reverse sm:text-right" : ""
       }`}
-      style={{ borderColor: `${a.hex}22` }}
+      style={{ borderColor: `color-mix(in srgb, ${a.hex} 13%, transparent)` }}
     >
       {isNext ? (
         <ArrowRight className="size-4 shrink-0 text-slate-600 transition group-hover:text-white" />

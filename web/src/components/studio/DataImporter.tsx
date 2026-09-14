@@ -80,7 +80,7 @@ export function DataImporter({
           pickFile(e.dataTransfer.files?.[0]);
         }}
         onClick={() => fileRef.current?.click()}
-        className="grid cursor-pointer place-items-center rounded-xl border border-dashed border-white/15 bg-white/2 px-4 py-6 text-center transition hover:border-[#22d3ee]/50 hover:bg-[#22d3ee]/4"
+        className="grid cursor-pointer place-items-center rounded-xl border border-dashed border-white/15 bg-white/2 px-4 py-6 text-center transition hover:border-cyan-neon/50 hover:bg-cyan-neon/4"
       >
         <FileSpreadsheet className="mb-2 size-6 text-slate-500" />
         <p className="text-[13px] text-slate-300">
@@ -110,7 +110,7 @@ export function DataImporter({
               ? "วันที่,สัญญา,ราคาปิด,OI\n2026-08-05,S50U26,1076.30,582497"
               : "วันที่,กองทุน,ต่างชาติ,SET50\n2026-08-05,1200,-2400,1076.9"
           }
-          className="mt-2 w-full resize-y rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2 font-mono text-[11.5px] text-slate-200 outline-none focus:border-[#22d3ee]/60"
+          className="mt-2 w-full resize-y rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2 font-mono text-[11.5px] text-slate-200 outline-none focus:border-cyan-neon/60"
         />
       </details>
 
@@ -125,7 +125,7 @@ export function DataImporter({
                 <label key={String(f.key)} className="flex items-center gap-2">
                   <span className="w-32 shrink-0 text-[12px] text-slate-400">
                     {f.label}
-                    {f.required && <span className="text-[#fb7185]"> *</span>}
+                    {f.required && <span className="text-rose-neon"> *</span>}
                   </span>
                   <select
                     value={map[f.key] ?? -1}
@@ -135,7 +135,7 @@ export function DataImporter({
                         [f.key]: Number(e.target.value) < 0 ? undefined : Number(e.target.value),
                       }))
                     }
-                    className="min-w-0 flex-1 rounded-lg border border-white/10 bg-ink-950/60 px-2 py-1.5 text-[12px] text-slate-100 outline-none focus:border-[#22d3ee]/60"
+                    className="min-w-0 flex-1 rounded-lg border border-white/10 bg-ink-950/60 px-2 py-1.5 text-[12px] text-slate-100 outline-none focus:border-cyan-neon/60"
                   >
                     <option value={-1}>— ไม่ใช้ —</option>
                     {table.headers.map((h, i) => (
@@ -154,7 +154,7 @@ export function DataImporter({
                   type="checkbox"
                   checked={cumulative}
                   onChange={(e) => setCumulative(e.target.checked)}
-                  className="size-3.5 accent-[#22d3ee]"
+                  className="size-3.5 accent-cyan-neon"
                 />
                 <Sigma className="size-3.5 text-slate-500" />
                 ไฟล์นี้เป็นยอดสะสมอยู่แล้ว (ถ้าเป็นยอดรายวัน ให้เอาติ๊กออก ระบบจะบวกสะสมให้)
@@ -165,9 +165,9 @@ export function DataImporter({
           {/* พรีวิว */}
           <div className="overflow-hidden rounded-xl border border-white/10">
             <div className="flex flex-wrap items-center gap-2 border-b border-white/8 bg-white/3 px-3 py-2 text-[12px]">
-              <span className="text-[#34f5a0]">อ่านได้ {result.ok.toLocaleString()} แถว</span>
+              <span className="text-green-neon">อ่านได้ {result.ok.toLocaleString()} แถว</span>
               {result.issues.length > 0 && (
-                <span className="flex items-center gap-1 text-[#ffc53d]">
+                <span className="flex items-center gap-1 text-amber-neon">
                   <TriangleAlert className="size-3.5" />
                   ข้าม {result.issues.length} แถว ({result.issues[0].reason} บรรทัด{" "}
                   {result.issues[0].line})
@@ -207,7 +207,7 @@ export function DataImporter({
               );
               setApplied(true);
             }}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#22d3ee] to-[#34f5a0] py-2.5 text-[13px] font-semibold text-ink-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-700 disabled:text-slate-500"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-neon to-green-neon py-2.5 text-[13px] font-semibold text-ink-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-700 disabled:text-slate-500"
           >
             {applied ? <Check className="size-4" /> : <Upload className="size-4" />}
             {missing.length

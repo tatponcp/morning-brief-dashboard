@@ -30,11 +30,11 @@ export function NarrativeEditor({
   return (
     <div className="space-y-3">
       {/* 1 สรุปสั้น */}
-      <Block title="สรุปสั้น" step="1" color="#22d3ee" icon={<CheckCircle2 className="size-4" />}>
+      <Block title="สรุปสั้น" step="1" color="var(--c-cyan)" icon={<CheckCircle2 className="size-4" />}>
         <div className="space-y-2">
           {value.summary.map((s, i) => (
             <div key={i} className="flex gap-2">
-              <span className="mt-2.5 size-1.5 shrink-0 rounded-full bg-[#22d3ee]" />
+              <span className="mt-2.5 size-1.5 shrink-0 rounded-full bg-cyan-neon" />
               <input
                 value={s}
                 placeholder={`บูลเล็ตที่ ${i + 1}`}
@@ -47,7 +47,7 @@ export function NarrativeEditor({
                     onChange({ summary: [...value.summary, ""] });
                   }
                 }}
-                className="min-w-0 flex-1 rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2 text-[13.5px] text-slate-100 outline-none focus:border-[#22d3ee]/60"
+                className="min-w-0 flex-1 rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2 text-[13.5px] text-slate-100 outline-none focus:border-cyan-neon/60"
               />
               <IconBtn onClick={() => onChange({ summary: value.summary.filter((_, j) => j !== i) })} />
             </div>
@@ -62,7 +62,7 @@ export function NarrativeEditor({
       <Block
         title="แปลความ"
         step="2"
-        color="#a78bfa"
+        color="var(--c-violet)"
         icon={<MessageSquareText className="size-4" />}
         hint={`${value.interpretation.length} ตัวอักษร`}
       >
@@ -71,12 +71,12 @@ export function NarrativeEditor({
           onChange={(e) => onChange({ interpretation: e.target.value })}
           rows={5}
           placeholder="ภาพนี้แปลว่าอะไร ตลาดกำลังบอกอะไร"
-          className="w-full resize-y rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2.5 text-[13.5px] leading-relaxed text-slate-100 outline-none focus:border-[#a78bfa]/60"
+          className="w-full resize-y rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2.5 text-[13.5px] leading-relaxed text-slate-100 outline-none focus:border-violet-neon/60"
         />
       </Block>
 
       {/* 3 Action */}
-      <Block title="Action วันนี้" step="3" color="#ffc53d" icon={<Zap className="size-4" />}>
+      <Block title="Action วันนี้" step="3" color="var(--c-amber)" icon={<Zap className="size-4" />}>
         <div className="space-y-2">
           {value.actions.map((act, i) => (
             <div key={i} className="flex flex-wrap gap-1.5">
@@ -90,7 +90,7 @@ export function NarrativeEditor({
                     ),
                   })
                 }
-                className="w-32 rounded-lg border border-white/10 bg-ink-950/60 px-2.5 py-2 text-[12.5px] text-slate-300 outline-none focus:border-[#ffc53d]/60"
+                className="w-32 rounded-lg border border-white/10 bg-ink-950/60 px-2.5 py-2 text-[12.5px] text-slate-300 outline-none focus:border-amber-neon/60"
               />
               <input
                 value={act.value}
@@ -102,7 +102,7 @@ export function NarrativeEditor({
                     ),
                   })
                 }
-                className="min-w-0 flex-1 rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2 text-[13.5px] text-slate-100 outline-none focus:border-[#ffc53d]/60"
+                className="min-w-0 flex-1 rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2 text-[13.5px] text-slate-100 outline-none focus:border-amber-neon/60"
               />
               <ToneToggle
                 value={act.tone ?? "neutral"}
@@ -123,7 +123,7 @@ export function NarrativeEditor({
                 onClick={() =>
                   onChange({ actions: [...value.actions, { label: p, value: "", tone: "neutral" }] })
                 }
-                className="rounded-full border border-dashed border-white/15 px-2.5 py-1 text-[11.5px] text-slate-400 transition hover:border-[#ffc53d]/50 hover:text-[#ffc53d]"
+                className="rounded-full border border-dashed border-white/15 px-2.5 py-1 text-[11.5px] text-slate-400 transition hover:border-amber-neon/50 hover:text-amber-neon"
               >
                 + {p}
               </button>
@@ -133,12 +133,12 @@ export function NarrativeEditor({
       </Block>
 
       {/* Insight */}
-      <Block title="Insight ปิดท้าย" step="4" color="#34f5a0" icon={<Zap className="size-4" />}>
+      <Block title="Insight ปิดท้าย" step="4" color="var(--c-green)" icon={<Zap className="size-4" />}>
         <input
           value={value.insight}
           placeholder="ประโยคเดียวที่อยากให้ลูกค้าจำกลับไป"
           onChange={(e) => onChange({ insight: e.target.value })}
-          className="w-full rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2.5 text-[13.5px] text-slate-100 outline-none focus:border-[#34f5a0]/60"
+          className="w-full rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2.5 text-[13.5px] text-slate-100 outline-none focus:border-green-neon/60"
         />
       </Block>
     </div>
@@ -161,11 +161,11 @@ function Block({
   children: React.ReactNode;
 }) {
   return (
-    <div className="panel px-4 py-3" style={{ borderColor: `${color}2e` }}>
+    <div className="panel px-4 py-3" style={{ borderColor: `color-mix(in srgb, ${color} 18%, transparent)` }}>
       <div className="mb-2.5 flex items-center gap-2">
         <span
           className="grid size-6 place-items-center rounded-md"
-          style={{ background: `${color}1f`, color }}
+          style={{ background: `color-mix(in srgb, ${color} 12%, transparent)`, color }}
         >
           {icon}
         </span>
@@ -205,7 +205,7 @@ function IconBtn({ onClick }: { onClick: () => void }) {
     <button
       onClick={onClick}
       aria-label="ลบรายการนี้"
-      className="rounded-lg border border-white/8 px-2 text-slate-500 transition hover:border-[#fb7185]/40 hover:text-[#fb7185]"
+      className="rounded-lg border border-white/8 px-2 text-slate-500 transition hover:border-rose-neon/40 hover:text-rose-neon"
     >
       <Trash2 className="size-3.5" />
     </button>

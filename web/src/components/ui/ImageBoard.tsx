@@ -55,6 +55,7 @@ export function ImageBoard({ board, accent }: { board: Board; accent: Accent }) 
         </div>
 
         <div
+          data-share-cols={board.images.length > 1 ? "2" : undefined}
           className={`grid gap-2 p-2 ${board.images.length > 1 ? "lg:grid-cols-2" : ""}`}
         >
           {board.images.map((im, i) => (
@@ -69,7 +70,7 @@ export function ImageBoard({ board, accent }: { board: Board; accent: Accent }) 
         </div>
 
         {!!board.stats?.length && (
-          <div className="grid grid-cols-2 gap-px border-t border-white/6 bg-white/6 lg:grid-cols-4">
+          <div data-share-cols="4" className="grid grid-cols-2 gap-px border-t border-white/6 bg-white/6 lg:grid-cols-4">
             {board.stats.map((s, i) => {
               const t = toneOf(s.tone);
               return (
@@ -143,7 +144,7 @@ function Figure({
     <figure className="group relative">
       <div
         className="relative overflow-hidden rounded-xl border bg-ink-950"
-        style={{ borderColor: `${accentHex}2e` }}
+        style={{ borderColor: `color-mix(in srgb, ${accentHex} 18%, transparent)` }}
       >
         <Image
           src={image.src}
@@ -169,7 +170,7 @@ function Figure({
           <span
             key={cls}
             className={`pointer-events-none absolute size-4 ${cls}`}
-            style={{ borderColor: `${accentHex}88` }}
+            style={{ borderColor: `color-mix(in srgb, ${accentHex} 53%, transparent)` }}
           />
         ))}
 
@@ -245,7 +246,7 @@ function CalloutPin({
         className={`absolute top-0 w-max max-w-[230px] -translate-y-1/2 rounded-xl border bg-ink-900/94 px-3 py-2 text-[12px] leading-snug backdrop-blur ${
           side === "right" ? "left-8" : "right-8"
         }`}
-        style={{ borderColor: `${t.hex}66`, color: t.hex }}
+        style={{ borderColor: `color-mix(in srgb, ${t.hex} 40%, transparent)`, color: t.hex }}
       >
         {c.text}
       </div>

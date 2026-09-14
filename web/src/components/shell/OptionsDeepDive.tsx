@@ -53,9 +53,9 @@ export function OptionsDeepDive({ collapsed }: { collapsed: boolean }) {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="เปิด S50 Options Dashboard — Open Interest รายสไตรค์เชิงลึก (แท็บใหม่)"
-        className="group relative mx-auto mt-3 grid size-11 place-items-center rounded-xl border border-[#22d3ee]/40 bg-gradient-to-br from-[#22d3ee]/20 to-[#a78bfa]/20 text-[#22d3ee] shadow-[0_0_24px_-6px_rgba(34,211,238,0.7)] transition hover:scale-105"
+        className="group relative mx-auto mt-3 grid size-11 place-items-center rounded-xl border border-cyan-neon/40 bg-gradient-to-br from-cyan-neon/20 to-violet-neon/20 text-cyan-neon shadow-[0_0_24px_-6px_rgba(34,211,238,0.7)] transition hover:scale-105"
       >
-        <span className="absolute inset-0 animate-ping rounded-xl border border-[#22d3ee]/30 [animation-duration:2.6s]" />
+        <span className="absolute inset-0 animate-ping rounded-xl border border-cyan-neon/30 [animation-duration:2.6s]" />
         <Box className="size-5" />
         <span className="pointer-events-none absolute left-full z-50 ml-3 hidden whitespace-nowrap rounded-lg border border-white/10 bg-ink-800 px-3 py-1.5 text-[12px] text-white shadow-xl group-hover:block">
           S50 Options · OI เชิงลึก ↗
@@ -87,7 +87,7 @@ export function OptionsDeepDive({ collapsed }: { collapsed: boolean }) {
         {/* ขอบไล่สีหมุนรอบการ์ด */}
         <span
           aria-hidden
-          className="absolute inset-[-60%] animate-[spin_6s_linear_infinite] bg-[conic-gradient(from_0deg,#22d3ee,#a78bfa,#fb7185,#ffc53d,#34f5a0,#22d3ee)] opacity-70 transition-opacity duration-300 group-hover:opacity-100"
+          className="absolute inset-[-60%] animate-[spin_6s_linear_infinite] bg-[conic-gradient(from_0deg,var(--c-cyan),var(--c-violet),var(--c-rose),var(--c-amber),var(--c-green),var(--c-cyan))] opacity-70 transition-opacity duration-300 group-hover:opacity-100"
         />
 
         <span className="relative block overflow-hidden rounded-[15px] bg-ink-900/95 px-3 py-2.5">
@@ -100,7 +100,7 @@ export function OptionsDeepDive({ collapsed }: { collapsed: boolean }) {
 
           {/* หัวการ์ด */}
           <span className="relative flex items-center gap-2.5">
-            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#22d3ee] to-[#a78bfa] text-ink-950 shadow-[0_0_20px_-4px_rgba(34,211,238,0.8)]">
+            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-cyan-neon to-violet-neon text-ink-950 shadow-[0_0_20px_-4px_rgba(34,211,238,0.8)]">
               <Box className="size-[18px]" />
             </span>
             <span className="min-w-0 flex-1">
@@ -109,21 +109,21 @@ export function OptionsDeepDive({ collapsed }: { collapsed: boolean }) {
                   S50 Options
                 </span>
                 <span className="relative flex size-1.5">
-                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#34f5a0] opacity-75" />
-                  <span className="relative inline-flex size-1.5 rounded-full bg-[#34f5a0]" />
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-neon opacity-75" />
+                  <span className="relative inline-flex size-1.5 rounded-full bg-green-neon" />
                 </span>
               </span>
               <span className="block truncate text-[11px] text-slate-400">
                 OI รายสไตรค์ · อัปเดตทุกเย็น
               </span>
             </span>
-            <ArrowUpRight className="size-4 shrink-0 text-slate-500 transition duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-[#22d3ee]" />
+            <ArrowUpRight className="size-4 shrink-0 text-slate-500 transition duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-cyan-neon" />
           </span>
 
           {/* แท่ง OI จำลอง Call / Put — ขยับเมื่อ hover */}
           <span aria-hidden className="relative mt-2 flex h-7 items-end justify-center gap-[3px] [@media(max-height:860px)]:hidden">
-            <span className="absolute top-0 left-0 text-[8.5px] leading-none text-[#34f5a0]/80">Call</span>
-            <span className="absolute top-0 right-0 text-[8.5px] leading-none text-[#fb7185]/80">Put</span>
+            <span className="absolute top-0 left-0 text-[8.5px] leading-none text-green-neon/80">Call</span>
+            <span className="absolute top-0 right-0 text-[8.5px] leading-none text-rose-neon/80">Put</span>
             {[
               [30, 18],
               [46, 26],
@@ -137,12 +137,12 @@ export function OptionsDeepDive({ collapsed }: { collapsed: boolean }) {
             ].map(([call, put], i) => (
               <span key={i} className="flex h-full items-end gap-px">
                 <motion.span
-                  className="w-[5px] rounded-t-sm bg-[#34f5a0]/80"
+                  className="w-[5px] rounded-t-sm bg-green-neon/80"
                   animate={{ height: `${hover ? call : call * 0.55}%` }}
                   transition={{ type: "spring", stiffness: 180, damping: 16, delay: i * 0.025 }}
                 />
                 <motion.span
-                  className="w-[5px] rounded-t-sm bg-[#fb7185]/80"
+                  className="w-[5px] rounded-t-sm bg-rose-neon/80"
                   animate={{ height: `${hover ? put : put * 0.55}%` }}
                   transition={{ type: "spring", stiffness: 180, damping: 16, delay: i * 0.025 + 0.02 }}
                 />
@@ -165,7 +165,7 @@ export function OptionsDeepDive({ collapsed }: { collapsed: boolean }) {
           </span>
 
           {/* ปุ่มเรียกให้กด */}
-          <span className="relative mt-2 flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-[#22d3ee] to-[#a78bfa] py-1.5 text-[12px] font-semibold text-ink-950 transition group-hover:brightness-110">
+          <span className="relative mt-2 flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-neon to-violet-neon py-1.5 text-[12px] font-semibold text-ink-950 transition group-hover:brightness-110">
             เปิดดู OI เชิงลึก
             <ArrowUpRight className="size-3.5" />
           </span>

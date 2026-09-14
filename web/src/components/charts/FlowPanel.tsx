@@ -16,10 +16,10 @@ import type { FlowRow } from "@/lib/types";
 import { AXIS, GlassTooltip, int, num, thaiShortDate, type TipProps } from "./chart-bits";
 
 const KEYS = [
-  { key: "fund", name: "รวมกองทุน", color: "#34f5a0" },
-  { key: "foreign", name: "ต่างชาติ (ไม่รวมกองทุน)", color: "#38bdf8" },
-  { key: "total", name: "รวมต่างชาติ + กองทุน", color: "#ffc53d" },
-  { key: "set50", name: "SET50 Index (แกนขวา)", color: "#fb7185" },
+  { key: "fund", name: "รวมกองทุน", color: "var(--c-green)" },
+  { key: "foreign", name: "ต่างชาติ (ไม่รวมกองทุน)", color: "var(--c-sky)" },
+  { key: "total", name: "รวมต่างชาติ + กองทุน", color: "var(--c-amber)" },
+  { key: "set50", name: "SET50 Index (แกนขวา)", color: "var(--c-rose)" },
 ] as const;
 
 export function FlowPanel({ rows }: { rows: FlowRow[] }) {
@@ -31,7 +31,7 @@ export function FlowPanel({ rows }: { rows: FlowRow[] }) {
     <div className="panel overflow-hidden">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-white/6 px-5 py-4">
         <div>
-          <h3 className="font-display text-[17px] font-bold text-[#34f5a0]">
+          <h3 className="font-display text-[17px] font-bold text-green-neon">
             สะสม Long / Short ของต่างชาติและกองทุน (Cumulative)
           </h3>
           <p className="text-[11.5px] text-slate-500">หน่วย: ล้านบาท (สะสม) · คลิกที่ legend เพื่อซ่อน/แสดงเส้น</p>
@@ -80,14 +80,14 @@ export function FlowPanel({ rows }: { rows: FlowRow[] }) {
               axisLine={false}
               tickLine={false}
               width={56}
-              tick={{ fill: "#fb7185" }}
+              tick={{ fill: "var(--c-rose)" }}
             />
-            <ReferenceLine yAxisId="flow" y={0} stroke="rgba(255,255,255,0.35)" />
+            <ReferenceLine yAxisId="flow" y={0} stroke="var(--c-zero)" />
             <Tooltip
               content={(p) => (
                 <GlassTooltip {...(p as TipProps)} formatter={(k, v) => (k === "set50" ? num(v) : int(v))} />
               )}
-              cursor={{ stroke: "rgba(255,255,255,0.18)", strokeDasharray: "4 4" }}
+              cursor={{ stroke: "var(--c-cursor)", strokeDasharray: "4 4" }}
             />
             <Legend wrapperStyle={{ display: "none" }} />
             {KEYS.filter((k) => k.key !== "set50").map((k) => (
@@ -109,11 +109,11 @@ export function FlowPanel({ rows }: { rows: FlowRow[] }) {
               type="monotone"
               dataKey="set50"
               name="SET50 Index"
-              stroke="#fb7185"
+              stroke="var(--c-rose)"
               strokeWidth={2}
               dot={false}
               hide={hidden.set50}
-              activeDot={{ r: 4, fill: "#fb7185" }}
+              activeDot={{ r: 4, fill: "var(--c-rose)" }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -128,7 +128,7 @@ export function FlowPanel({ rows }: { rows: FlowRow[] }) {
               <p className="truncate text-[11px] text-slate-500">{k.name}</p>
               <p
                 className="font-display text-xl font-bold"
-                style={{ color: k.key === "set50" ? "#fb7185" : pos ? "#34f5a0" : "#fb7185" }}
+                style={{ color: k.key === "set50" ? "var(--c-rose)" : pos ? "var(--c-green)" : "var(--c-rose)" }}
               >
                 {k.key === "set50" ? num(v) : int(v)}
               </p>

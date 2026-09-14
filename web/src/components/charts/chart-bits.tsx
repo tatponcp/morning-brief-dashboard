@@ -80,7 +80,7 @@ export function Sparkline({
     const y = height - ((v - min) / span) * (height - 4) - 2;
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   });
-  const id = `sp-${color.replace("#", "")}`;
+  const id = `sp-${color.replace(/[^a-z0-9]/gi, "")}`;
   return (
     <svg width={width} height={height} className="overflow-visible">
       <defs>

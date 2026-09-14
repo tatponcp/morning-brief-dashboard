@@ -100,7 +100,7 @@ function ImageSlot({
           <button
             onClick={onRemove}
             aria-label="ลบภาพนี้"
-            className="ml-auto rounded-lg border border-white/8 px-2 py-1 text-slate-500 transition hover:border-[#fb7185]/40 hover:text-[#fb7185]"
+            className="ml-auto rounded-lg border border-white/8 px-2 py-1 text-slate-500 transition hover:border-rose-neon/40 hover:text-rose-neon"
           >
             <Trash2 className="size-3.5" />
           </button>
@@ -131,7 +131,7 @@ function ImageSlot({
         className={`relative overflow-hidden rounded-lg border border-dashed border-white/15 transition ${
           image.src
             ? "cursor-crosshair"
-            : "grid cursor-pointer place-items-center px-4 py-10 text-center hover:border-[#ffc53d]/50"
+            : "grid cursor-pointer place-items-center px-4 py-10 text-center hover:border-amber-neon/50"
         }`}
       >
         {image.src ? (
@@ -160,9 +160,9 @@ function ImageSlot({
                     left: `${c.x}%`,
                     top: `${c.y}%`,
                     borderColor: t.hex,
-                    background: `${t.hex}33`,
+                    background: `color-mix(in srgb, ${t.hex} 20%, transparent)`,
                     color: t.hex,
-                    boxShadow: `0 0 10px ${t.hex}66`,
+                    boxShadow: `0 0 10px color-mix(in srgb, ${t.hex} 40%, transparent)`,
                   }}
                 >
                   {ci + 1}
@@ -192,7 +192,7 @@ function ImageSlot({
           value={image.caption ?? ""}
           onChange={(e) => onPatch({ caption: e.target.value })}
           placeholder="คำกำกับใต้ภาพ เช่น S50U26 (Daily)"
-          className="mt-2 w-full rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2 text-[12.5px] text-slate-200 outline-none focus:border-[#22d3ee]/60"
+          className="mt-2 w-full rounded-lg border border-white/10 bg-ink-950/60 px-3 py-2 text-[12.5px] text-slate-200 outline-none focus:border-cyan-neon/60"
         />
       )}
 
@@ -212,7 +212,7 @@ function ImageSlot({
                   value={c.text}
                   placeholder="พิมพ์คำอธิบายจุดนี้"
                   onChange={(e) => patchCallout(ci, { text: e.target.value })}
-                  className="min-w-0 flex-1 rounded-lg border border-white/10 bg-ink-950/60 px-2.5 py-1.5 text-[12.5px] text-slate-100 outline-none focus:border-[#22d3ee]/60"
+                  className="min-w-0 flex-1 rounded-lg border border-white/10 bg-ink-950/60 px-2.5 py-1.5 text-[12.5px] text-slate-100 outline-none focus:border-cyan-neon/60"
                 />
                 <div className="flex overflow-hidden rounded-lg border border-white/10">
                   {TONES.map((tn) => (
@@ -239,7 +239,7 @@ function ImageSlot({
                 <button
                   onClick={() => onPatch({ callouts: callouts.filter((_, j) => j !== ci) })}
                   aria-label="ลบจุดอธิบายนี้"
-                  className="rounded-lg border border-white/8 px-2 py-1.5 text-slate-500 transition hover:border-[#fb7185]/40 hover:text-[#fb7185]"
+                  className="rounded-lg border border-white/8 px-2 py-1.5 text-slate-500 transition hover:border-rose-neon/40 hover:text-rose-neon"
                 >
                   <Trash2 className="size-3.5" />
                 </button>
@@ -274,19 +274,19 @@ function StatsEditor({
               value={s.label}
               placeholder="ชื่อ"
               onChange={(e) => patch(i, { label: e.target.value })}
-              className="w-32 rounded-lg border border-white/10 bg-ink-950/60 px-2.5 py-1.5 text-[12.5px] text-slate-300 outline-none focus:border-[#ffc53d]/60"
+              className="w-32 rounded-lg border border-white/10 bg-ink-950/60 px-2.5 py-1.5 text-[12.5px] text-slate-300 outline-none focus:border-amber-neon/60"
             />
             <input
               value={s.value}
               placeholder="ค่า"
               onChange={(e) => patch(i, { value: e.target.value })}
-              className="w-28 rounded-lg border border-white/10 bg-ink-950/60 px-2.5 py-1.5 text-[12.5px] text-white outline-none focus:border-[#ffc53d]/60"
+              className="w-28 rounded-lg border border-white/10 bg-ink-950/60 px-2.5 py-1.5 text-[12.5px] text-white outline-none focus:border-amber-neon/60"
             />
             <input
               value={s.delta ?? ""}
               placeholder="คำอธิบาย / % เปลี่ยนแปลง"
               onChange={(e) => patch(i, { delta: e.target.value })}
-              className="min-w-0 flex-1 rounded-lg border border-white/10 bg-ink-950/60 px-2.5 py-1.5 text-[12.5px] text-slate-200 outline-none focus:border-[#ffc53d]/60"
+              className="min-w-0 flex-1 rounded-lg border border-white/10 bg-ink-950/60 px-2.5 py-1.5 text-[12.5px] text-slate-200 outline-none focus:border-amber-neon/60"
             />
             <div className="flex overflow-hidden rounded-lg border border-white/10">
               {TONES.map((t) => (
@@ -306,7 +306,7 @@ function StatsEditor({
             <button
               onClick={() => onChange(stats.filter((_, j) => j !== i))}
               aria-label="ลบตัวเลขนี้"
-              className="rounded-lg border border-white/8 px-2 py-1.5 text-slate-500 transition hover:border-[#fb7185]/40 hover:text-[#fb7185]"
+              className="rounded-lg border border-white/8 px-2 py-1.5 text-slate-500 transition hover:border-rose-neon/40 hover:text-rose-neon"
             >
               <Trash2 className="size-3.5" />
             </button>

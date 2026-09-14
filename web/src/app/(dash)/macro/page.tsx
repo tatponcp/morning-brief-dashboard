@@ -24,7 +24,7 @@ export default async function MacroPage() {
     id: "gold",
     title: "GOLD (COMEX) — ราคาทองคำ",
     subtitle: "แท่งเทียนรายวัน 1 ปีย้อนหลัง · hover เพื่อดูราคาแต่ละวัน",
-    accentHex: "#ffc53d",
+    accentHex: "var(--c-amber)",
     panes: [
       {
         id: "gold-d",
@@ -32,12 +32,12 @@ export default async function MacroPage() {
         kind: "candle",
         height: 300,
         digits: 2,
-        series: [{ key: "c", name: "Gold", color: "#ffc53d" }],
+        series: [{ key: "c", name: "Gold", color: "var(--c-amber)" }],
         rows: macro.gold,
         refLines: [
           {
             y: macro.gold.at(-1)?.c ?? 0,
-            color: "#ffc53d",
+            color: "var(--c-amber)",
             label: String(macro.gold.at(-1)?.c?.toFixed(2) ?? ""),
           },
         ],
@@ -60,8 +60,8 @@ export default async function MacroPage() {
         <div
           className={`mb-3 flex flex-wrap items-center gap-2 rounded-xl border px-3 py-1.5 text-[12px] ${
             macro.live
-              ? "border-[#34f5a0]/30 bg-[#34f5a0]/8 text-[#34f5a0]"
-              : "border-[#ffc53d]/30 bg-[#ffc53d]/8 text-[#ffc53d]"
+              ? "border-green-neon/30 bg-green-neon/8 text-green-neon"
+              : "border-amber-neon/30 bg-amber-neon/8 text-amber-neon"
           }`}
         >
           <Radio className="size-4" />
