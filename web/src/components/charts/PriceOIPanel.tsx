@@ -146,7 +146,13 @@ export function PriceOIPanel({ series }: { series: ContractSeries }) {
             <XAxis dataKey="t" tickFormatter={thaiShortDate} axisLine={AXIS} tickLine={false} minTickGap={40} />
             <YAxis
               orientation="right"
-              tickFormatter={(v) => int(v)}
+              // OI เปลี่ยนแค่หลักหมื่นบนฐานหลักแสน ถ้าเริ่มที่ 0 เส้นจะแบนจนอ่านไม่ออก
+              domain={[
+                (min: number) => Math.floor((min * 0.97) / 10000) * 10000,
+                (max: number) => Math.ceil((max * 1.02) / 10000) * 10000,
+              ]}
+              tickCount={4}
+              tickFormatter={(v) => (v >= 1000 ? `${Math.round(v / 1000)}K` : int(v))}
               axisLine={false}
               tickLine={false}
               width={62}
@@ -159,6 +165,7 @@ export function PriceOIPanel({ series }: { series: ContractSeries }) {
               type="monotone"
               dataKey="oi"
               name="Open Interest"
+              baseValue="dataMin"
               stroke="var(--c-cyan)"
               strokeWidth={2}
               fill={`url(#oi-${series.symbol})`}
