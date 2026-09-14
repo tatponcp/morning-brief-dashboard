@@ -29,13 +29,11 @@ import {
   type SaveState,
 } from "@/lib/drafts";
 import { draftStatus, fieldLabel } from "@/lib/draft-status";
-import { thaiDate } from "@/lib/format";
+import { thaiDate, todayBangkok } from "@/lib/format";
 import type { Brief, Instrument } from "@/lib/types";
 import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
 import { ImageBoard } from "@/components/ui/ImageBoard";
-import { PriceOIPanel } from "@/components/charts/PriceOIPanel";
 import { FlowPanel } from "@/components/charts/FlowPanel";
-import { SpreadPanel } from "@/components/charts/SpreadPanel";
 import { BoardEditor } from "./BoardEditor";
 import { DataImporter } from "./DataImporter";
 import { DailySheetImporter } from "./DailySheetImporter";
@@ -46,6 +44,9 @@ import { ShareImageDialog } from "./ShareImageDialog";
 
 /** subscribe ที่ไม่เคยแจ้งเปลี่ยน — ใช้แค่ให้รู้ว่าอยู่ฝั่ง client แล้ว */
 const subscribeNever = () => () => {};
+
+/** ร่างเก็บคีย์เดียว ไม่ผูกกับวันที่ของ brief ในโค้ด (เปลี่ยนวันแล้วร่างไม่หาย) */
+const STUDIO_DRAFT = "studio";
 
 type Tab = "visual" | "data" | "text";
 
@@ -66,7 +67,7 @@ export function StudioEditor({
 
   const isClient = useSyncExternalStore(subscribeNever, () => true, () => false);
   const stored = useMemo(
-    () => (isClient ? loadDrafts(brief) : { drafts: initialDrafts(brief), restored: false }),
+    () => (isClient ? loadDrafts(brief, STUDIO_DRAFT) : { drafts: initialDrafts(brief), restored: false }),
     [isClient, brief],
   );
 
@@ -77,7 +78,8 @@ export function StudioEditor({
   const [past, setPast] = useState<DraftMap[]>([]);
   const [future, setFuture] = useState<DraftMap[]>([]);
   const [saveState, setSaveState] = useState<SaveState>("saved");
-  const [date, setDate] = useState(brief.date);
+  // วันที่ของ brief ที่จะเผยแพร่ ตั้งต้นเป็นวันนี้ (เวลาไทย) ไม่ใช่วันของ brief เดิม
+  const [date, setDate] = useState(() => todayBangkok());
   const [publishing, setPublishing] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [exported, setExported] = useState(false);
@@ -91,9 +93,9 @@ export function StudioEditor({
       setPast((p) => [...p.slice(-29), drafts]);
       setFuture([]);
       setEdits(next);
-      setSaveState(saveDrafts(brief.date, next));
+      setSaveState(saveDrafts(STUDIO_DRAFT, next));
     },
-    [drafts, brief.date],
+    [drafts],
   );
 
   const patch = useCallback(
@@ -101,30 +103,20 @@ export function StudioEditor({
     [commit, drafts, sectionId],
   );
 
-  /** ชีตประจำวันแผ่นเดียว → ข้อ 1 และข้อ 2 ใน commit เดียว (ย้อนกลับได้ในครั้งเดียว) */
+  /** ชีตประจำวัน → ยอดสะสมต่างชาติ/กองทุนของข้อ 2 */
   const applyDailySheet = useCallback(
     (sheet: DailySheet, withSummary: boolean) => {
-      const next = { ...drafts };
-      const s50 = next["s50-oi"];
-      const flow = next["flows"];
-      if (s50) {
-        next["s50-oi"] = {
-          ...s50,
-          contracts: sheet.contracts,
-          spread: sheet.spread ?? undefined,
-          asOfLabel: sheet.s50.asOfLabel,
-          ...(withSummary && sheet.s50.summary.length ? { summary: sheet.s50.summary } : {}),
-        };
-      }
-      if (flow) {
-        next["flows"] = {
+      const flow = drafts["flows"];
+      if (!flow) return;
+      commit({
+        ...drafts,
+        flows: {
           ...flow,
           flows: sheet.flows,
           asOfLabel: sheet.flow.asOfLabel,
           ...(withSummary && sheet.flow.summary.length ? { summary: sheet.flow.summary } : {}),
-        };
-      }
-      commit(next);
+        },
+      });
     },
     [commit, drafts],
   );
@@ -135,10 +127,10 @@ export function StudioEditor({
       const prev = p[p.length - 1];
       setFuture((f) => [drafts, ...f.slice(0, 29)]);
       setEdits(prev);
-      saveDrafts(brief.date, prev);
+      saveDrafts(STUDIO_DRAFT, prev);
       return p.slice(0, -1);
     });
-  }, [drafts, brief.date]);
+  }, [drafts]);
 
   const redo = useCallback(() => {
     setFuture((f) => {
@@ -146,10 +138,10 @@ export function StudioEditor({
       const next = f[0];
       setPast((p) => [...p, drafts]);
       setEdits(next);
-      saveDrafts(brief.date, next);
+      saveDrafts(STUDIO_DRAFT, next);
       return f.slice(1);
     });
-  }, [drafts, brief.date]);
+  }, [drafts]);
 
   /* ---------- คีย์ลัด ---------- */
 
@@ -177,9 +169,9 @@ export function StudioEditor({
   const tabs = useMemo(() => {
     const list: { key: Tab; label: string; icon: React.ReactNode }[] = [];
     if (section.mode === "image")
-      list.push({ key: "visual", label: "ภาพ + จุดอธิบาย", icon: <ImageIcon className="size-3.5" /> });
-    if (section.contracts || section.flows)
-      list.push({ key: "data", label: "นำเข้าข้อมูล", icon: <Table2 className="size-3.5" /> });
+      list.push({ key: "visual", label: "ใส่ภาพ", icon: <ImageIcon className="size-3.5" /> });
+    if (section.flows)
+      list.push({ key: "data", label: "วางชีต", icon: <Table2 className="size-3.5" /> });
     list.push({ key: "text", label: "ข้อความ", icon: <Type className="size-3.5" /> });
     return list;
   }, [section]);
@@ -206,12 +198,18 @@ export function StudioEditor({
         {
           date,
           dateLabelTH: thaiDate(date),
-          sections: brief.sections.map((s) => ({
-            id: s.id,
-            index: s.index,
-            title: s.title,
-            ...drafts[s.id],
-          })),
+          sections: brief.sections.map((s) => {
+            // วันที่กำกับข้อมูลใช้เฉพาะข้อ 2 (ยอด SET ประกาศช้ากว่า 1 วัน) ที่เหลือใช้วันที่ของ brief
+            const { asOfLabel, contracts, flows, spread, ...rest } = drafts[s.id];
+            return {
+              id: s.id,
+              index: s.index,
+              title: s.title,
+              ...rest,
+              ...(s.flows ? { flows, asOfLabel } : {}),
+              ...(s.contracts ? { contracts, spread } : {}),
+            };
+          }),
         },
         null,
         2,
@@ -395,10 +393,7 @@ export function StudioEditor({
                   จับคู่คอลัมน์เองเฉพาะ section นี้ (ใช้เมื่อระบบอ่านชีตไม่ถูก)
                 </summary>
                 <div className="pt-3">
-                  <DataImporter
-                    kind={section.contracts ? "contracts" : "flows"}
-                    onApply={(data) => patch(data)}
-                  />
+                  <DataImporter kind="flows" onApply={(data) => patch(data)} />
                 </div>
               </details>
             </div>
@@ -424,14 +419,6 @@ export function StudioEditor({
             สิ่งที่ลูกค้าจะเห็น
           </p>
           <div className="panel scroll-slim max-h-[calc(100dvh-9rem)] overflow-y-auto px-3 py-3">
-            {!!draft.contracts?.length && (
-              <div className="mb-3 space-y-3">
-                {draft.contracts.map((c) => (
-                  <PriceOIPanel key={c.symbol} series={c} />
-                ))}
-                {draft.spread && <SpreadPanel spread={draft.spread} />}
-              </div>
-            )}
             {!!draft.flows?.length && (
               <div className="mb-3">
                 <FlowPanel rows={draft.flows} />

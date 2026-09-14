@@ -39,9 +39,10 @@ export function mergePublished(brief: Brief, file: PublishedFile | null): Brief 
           o.board && o.board.images?.some((im) => im.src)
             ? { ...o.board, images: o.board.images.filter((im) => im.src) }
             : s.board,
-        contracts: o.contracts?.length ? o.contracts : s.contracts,
-        flows: o.flows?.length ? o.flows : s.flows,
-        spread: o.spread?.rows?.length ? o.spread : s.spread,
+        // ข้อมูลกราฟรับเฉพาะ section ที่ยังวาดกราฟ — ของที่เคยเผยแพร่ก่อนเปลี่ยนเป็นภาพจะไม่ย้อนกลับมา
+        contracts: s.contracts && o.contracts?.length ? o.contracts : s.contracts,
+        flows: s.flows && o.flows?.length ? o.flows : s.flows,
+        spread: s.spread && o.spread?.rows?.length ? o.spread : s.spread,
         asOfLabel: o.asOfLabel ?? s.asOfLabel,
       } satisfies Section;
     }),

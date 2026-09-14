@@ -9,6 +9,7 @@ import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
 import { SectionHero } from "@/components/ui/SectionHero";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionNav } from "@/components/ui/SectionNav";
+import { ImagePending } from "@/components/ui/ImagePending";
 
 export async function SectionView({ id }: { id: string }) {
   const { brief } = await loadBrief();
@@ -32,12 +33,17 @@ export async function SectionView({ id }: { id: string }) {
    * อ่านจบได้ในจอเดียว ไม่ต้องเลื่อนลงไปหาสรุป
    */
   if (s.board) {
+    const images = s.board.images.filter((im) => im.src);
     return (
       <div>
         {hero}
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] xl:items-start">
           <Reveal>
-            <ImageBoard board={s.board} accent={s.accent} />
+            {images.length ? (
+              <ImageBoard board={{ ...s.board, images }} accent={s.accent} />
+            ) : (
+              <ImagePending accent={s.accent} title={s.title} />
+            )}
           </Reveal>
           <Reveal delay={0.06}>
             <NarrativeGrid n={s.narrative} layout="stack" />

@@ -1,5 +1,5 @@
 import "server-only";
-import { getBrief } from "@/data";
+import { getBrief, getLatestBrief } from "@/data";
 import { mergePublished, type PublishedFile } from "./merge-brief";
 import { getSupabase, IMAGE_BUCKET, supabaseStatus } from "./supabase";
 import type { Brief } from "./types";
@@ -37,6 +37,10 @@ export async function loadBrief(date?: string): Promise<LoadedBrief> {
 
     const row = data[0];
     const payload = row.payload as PublishedFile;
+
+    // brief ในโค้ดใหม่กว่าที่เผยแพร่ล่าสุด → ใช้ของในโค้ด ไม่งั้นวันที่จะค้างที่วันที่เคยกดเผยแพร่
+    const latest = getLatestBrief();
+    if (!date && latest.date > row.date) return { brief: latest, source: "static" };
 
     // ใช้ brief ในโค้ดเป็นโครงตั้งต้น แล้วสวมวันที่ของแถวเข้าไป
     // (ถ้าเผยแพร่วันใหม่ที่ยังไม่มีในโค้ด จะได้ไม่ถูกมองว่าคนละวันแล้ว merge ไม่ติด)

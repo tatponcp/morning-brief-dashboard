@@ -25,7 +25,7 @@ export function initialDrafts(brief: Brief): DraftMap {
   for (const s of brief.sections) {
     out[s.id] = {
       ...structuredClone(s.narrative),
-      board: s.board ? structuredClone(s.board) : emptyBoard(),
+      board: s.board?.images.length ? structuredClone(s.board) : { ...emptyBoard(), stats: s.board?.stats ?? [] },
       ...(s.contracts ? { contracts: structuredClone(s.contracts) } : {}),
       ...(s.flows ? { flows: structuredClone(s.flows) } : {}),
       ...(s.spread ? { spread: structuredClone(s.spread) } : {}),
@@ -42,16 +42,23 @@ export function draftKey(date: string) {
 export type LoadResult = { drafts: DraftMap; restored: boolean };
 
 /** อ่านร่างที่ค้างไว้จากครั้งก่อน (ถ้ามี) แล้วเติมส่วนที่ขาดด้วยค่าตั้งต้น */
-export function loadDrafts(brief: Brief): LoadResult {
+export function loadDrafts(brief: Brief, key = brief.date): LoadResult {
   const base = initialDrafts(brief);
   try {
-    const raw = window.localStorage.getItem(draftKey(brief.date));
+    const raw = window.localStorage.getItem(draftKey(key));
     if (!raw) return { drafts: base, restored: false };
     const saved = JSON.parse(raw) as DraftMap;
     let restored = false;
     for (const id of Object.keys(base)) {
       if (saved[id]) {
-        base[id] = { ...base[id], ...saved[id] };
+        const { contracts, flows, spread, ...rest } = saved[id];
+        base[id] = {
+          ...base[id],
+          ...rest,
+          // ข้อมูลกราฟในร่างเก่ากู้คืนเฉพาะ section ที่ยังวาดกราฟอยู่
+          ...(base[id].contracts && contracts ? { contracts, spread } : {}),
+          ...(base[id].flows && flows ? { flows } : {}),
+        };
         restored = true;
       }
     }
