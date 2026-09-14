@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { loadBrief } from "@/lib/brief-store";
 import { PriceOIPanel } from "@/components/charts/PriceOIPanel";
+import { SpreadPanel } from "@/components/charts/SpreadPanel";
 import { FlowPanel } from "@/components/charts/FlowPanel";
 import { PaneGroupCard } from "@/components/charts/PaneGroupCard";
 import { ImageBoard } from "@/components/ui/ImageBoard";
@@ -52,12 +53,25 @@ export async function SectionView({ id }: { id: string }) {
       {hero}
 
       {s.contracts && (
-        <div className="grid gap-3 xl:grid-cols-2">
+        <div
+          className={`grid items-start gap-3 ${
+            s.contracts.length > 1
+              ? "xl:grid-cols-2"
+              : s.spread
+                ? "xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]"
+                : ""
+          }`}
+        >
           {s.contracts.map((c, i) => (
             <Reveal key={c.symbol} delay={i * 0.08}>
               <PriceOIPanel series={c} />
             </Reveal>
           ))}
+          {s.spread && (
+            <Reveal delay={0.08}>
+              <SpreadPanel spread={s.spread} />
+            </Reveal>
+          )}
         </div>
       )}
 

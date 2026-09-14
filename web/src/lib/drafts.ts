@@ -1,4 +1,4 @@
-import type { Brief, ContractSeries, FlowRow, ImageBoard, Narrative } from "./types";
+import type { Brief, ContractSeries, FlowRow, ImageBoard, Narrative, SpreadSeries } from "./types";
 
 /** ร่างของ 1 section ที่ IC กำลังแก้อยู่ */
 export type Draft = Narrative & {
@@ -7,6 +7,9 @@ export type Draft = Narrative & {
   contracts?: ContractSeries[];
   /** ข้อมูลที่ import เข้ามาใหม่ (ข้อ 2) */
   flows?: FlowRow[];
+  spread?: SpreadSeries;
+  /** วันที่ของข้อมูล เมื่อไม่ตรงกับวันที่ของ brief */
+  asOfLabel?: string;
 };
 
 export type DraftMap = Record<string, Draft>;
@@ -25,6 +28,8 @@ export function initialDrafts(brief: Brief): DraftMap {
       board: s.board ? structuredClone(s.board) : emptyBoard(),
       ...(s.contracts ? { contracts: structuredClone(s.contracts) } : {}),
       ...(s.flows ? { flows: structuredClone(s.flows) } : {}),
+      ...(s.spread ? { spread: structuredClone(s.spread) } : {}),
+      ...(s.asOfLabel ? { asOfLabel: s.asOfLabel } : {}),
     };
   }
   return out;

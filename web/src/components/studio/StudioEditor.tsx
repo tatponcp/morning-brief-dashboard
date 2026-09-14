@@ -35,8 +35,11 @@ import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
 import { ImageBoard } from "@/components/ui/ImageBoard";
 import { PriceOIPanel } from "@/components/charts/PriceOIPanel";
 import { FlowPanel } from "@/components/charts/FlowPanel";
+import { SpreadPanel } from "@/components/charts/SpreadPanel";
 import { BoardEditor } from "./BoardEditor";
 import { DataImporter } from "./DataImporter";
+import { DailySheetImporter } from "./DailySheetImporter";
+import type { DailySheet } from "@/lib/csv";
 import { NarrativeEditor } from "./NarrativeEditor";
 import { SectionRail } from "./SectionRail";
 import { ShareImageDialog } from "./ShareImageDialog";
@@ -96,6 +99,34 @@ export function StudioEditor({
   const patch = useCallback(
     (p: Partial<Draft>) => commit({ ...drafts, [sectionId]: { ...drafts[sectionId], ...p } }),
     [commit, drafts, sectionId],
+  );
+
+  /** ชีตประจำวันแผ่นเดียว → ข้อ 1 และข้อ 2 ใน commit เดียว (ย้อนกลับได้ในครั้งเดียว) */
+  const applyDailySheet = useCallback(
+    (sheet: DailySheet, withSummary: boolean) => {
+      const next = { ...drafts };
+      const s50 = next["s50-oi"];
+      const flow = next["flows"];
+      if (s50) {
+        next["s50-oi"] = {
+          ...s50,
+          contracts: sheet.contracts,
+          spread: sheet.spread ?? undefined,
+          asOfLabel: sheet.s50.asOfLabel,
+          ...(withSummary && sheet.s50.summary.length ? { summary: sheet.s50.summary } : {}),
+        };
+      }
+      if (flow) {
+        next["flows"] = {
+          ...flow,
+          flows: sheet.flows,
+          asOfLabel: sheet.flow.asOfLabel,
+          ...(withSummary && sheet.flow.summary.length ? { summary: sheet.flow.summary } : {}),
+        };
+      }
+      commit(next);
+    },
+    [commit, drafts],
   );
 
   const undo = useCallback(() => {
@@ -357,10 +388,20 @@ export function StudioEditor({
           )}
 
           {tab === "data" && (
-            <DataImporter
-              kind={section.contracts ? "contracts" : "flows"}
-              onApply={(data) => patch(data)}
-            />
+            <div className="space-y-3">
+              <DailySheetImporter onApply={applyDailySheet} />
+              <details className="rounded-xl border border-white/10 px-3 py-2">
+                <summary className="cursor-pointer text-[12px] text-slate-400">
+                  จับคู่คอลัมน์เองเฉพาะ section นี้ (ใช้เมื่อระบบอ่านชีตไม่ถูก)
+                </summary>
+                <div className="pt-3">
+                  <DataImporter
+                    kind={section.contracts ? "contracts" : "flows"}
+                    onApply={(data) => patch(data)}
+                  />
+                </div>
+              </details>
+            </div>
           )}
 
           {tab === "text" && (
@@ -388,6 +429,7 @@ export function StudioEditor({
                 {draft.contracts.map((c) => (
                   <PriceOIPanel key={c.symbol} series={c} />
                 ))}
+                {draft.spread && <SpreadPanel spread={draft.spread} />}
               </div>
             )}
             {!!draft.flows?.length && (

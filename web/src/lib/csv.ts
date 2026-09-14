@@ -1,4 +1,4 @@
-import type { ContractSeries, FlowRow } from "./types";
+import type { ContractSeries, FlowRow, SpreadSeries } from "./types";
 
 /**
  * ตัวอ่านไฟล์ CSV ของ Morning Brief
@@ -100,6 +100,8 @@ const PATTERNS: Record<string, RegExp> = {
   foreign: /foreign|ต่างชาติ|ตปท/i,
   total: /total|sum|รวม/i,
   set50: /set ?50|index|ดัชนี/i,
+  /** ชื่อ spread series มีรหัสเดือนสองชุด เช่น S50U26Z26 */
+  spread: /[A-Z0-9]{2,}[FGHJKMNQUVXZ]\d{2}[FGHJKMNQUVXZ]\d{2}/i,
 };
 
 export type ColumnMap = Partial<Record<keyof typeof PATTERNS, number>>;
@@ -121,6 +123,9 @@ export function guessColumns(headers: string[], rows: string[][] = []): ColumnMa
   take("foreign", headers.findIndex((h, i) => !used.has(i) && cum.test(h) && hasForeign.test(h) && !hasFund.test(h)));
   take("fund", headers.findIndex((h, i) => !used.has(i) && cum.test(h) && hasFund.test(h) && !hasForeign.test(h)));
 
+  // spread ต้องจับก่อน close ไม่งั้น "close S50U26Z26" จะถูกเข้าใจเป็นราคาปิด
+  take("spread", headers.findIndex((h) => PATTERNS.spread.test(h)));
+
   // หัวคอลัมน์วันที่ว่างบ่อย (ชีตที่วันที่อยู่คอลัมน์แรก) → ดูจากค่าข้างในแทน
   const dateByHeader = headers.findIndex((h) => PATTERNS.date.test(h.trim()));
   const dateByValue = headers.findIndex((_, i) => {
@@ -129,7 +134,7 @@ export function guessColumns(headers: string[], rows: string[][] = []): ColumnMa
   });
   take("date", dateByHeader >= 0 ? dateByHeader : dateByValue);
   // เรียงให้ตัวที่เจาะจงกว่ามาก่อน กัน "total" ไปคว้าคอลัมน์ "รวมกองทุน"
-  for (const key of ["date", "symbol", "oi", "close", "set50", "foreign", "fund", "total"] as const) {
+  for (const key of ["date", "symbol", "oi", "close", "foreign", "fund", "total"] as const) {
     if (map[key] !== undefined) continue;
     const idx = headers.findIndex((h, i) => !used.has(i) && PATTERNS[key].test(h.trim()));
     if (idx >= 0) {
@@ -217,4 +222,94 @@ export function accumulate(rows: FlowRow[]): FlowRow[] {
     foreign += r.foreign;
     return { ...r, fund, foreign, total: fund + foreign };
   });
+}
+
+/* ───────────────── ชีตประจำวันของ IC: ข้อ 1 + ข้อ 2 ในไฟล์เดียว ───────────────── */
+
+export function toSpread(table: Table, map: ColumnMap): SpreadSeries | null {
+  if (map.spread === undefined || map.date === undefined) return null;
+  const col = map.spread;
+  const dateCol = map.date;
+  const symbol = table.headers[col].match(PATTERNS.spread)?.[0]?.toUpperCase() ?? "SPREAD";
+  const rows = table.rows
+    .map((r) => ({ t: toIsoDate(r[dateCol] ?? ""), v: toNumber(r[col] ?? "") }))
+    .filter((x): x is { t: string; v: number } => !!x.t && x.v !== null)
+    .sort((a, b) => a.t.localeCompare(b.t));
+  return rows.length ? { symbol, rows } : null;
+}
+
+const TH_MONTHS = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+const thDate = (iso: string) => {
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${String(d).padStart(2, "0")} ${TH_MONTHS[m - 1]} ${y + 543}`;
+};
+const n2 = (v: number) => v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const n0 = (v: number) => Math.round(v).toLocaleString("en-US");
+const signed = (v: number) => (v > 0 ? "+" : "") + n0(v);
+
+export type DailySheet = {
+  contracts: ContractSeries[];
+  spread: SpreadSeries | null;
+  flows: FlowRow[];
+  /** แถวที่ข้าม เช่นวันนี้ที่ยังไม่มีราคาปิด — บอก IC ให้รู้ ไม่ใช่ error */
+  skipped: ImportIssue[];
+  missing: string[];
+  s50: { asOfLabel?: string; summary: string[] };
+  flow: { asOfLabel?: string; summary: string[] };
+};
+
+/**
+ * อ่านชีตทั้งแผ่นแล้วแยกเป็นข้อมูลข้อ 1 และข้อ 2
+ * สรุปสั้นที่ร่างให้เป็นข้อเท็จจริงจากตัวเลขเท่านั้น — มุมมองการลงทุนเป็นหน้าที่ IC
+ */
+export function toDailySheet(table: Table): DailySheet {
+  const map = guessColumns(table.headers, table.rows);
+  const missing: string[] = [];
+  if (map.date === undefined) missing.push("วันที่");
+  if (map.close === undefined) missing.push("ราคาปิด (close …)");
+  if (map.foreign === undefined || map.fund === undefined) missing.push("รวมต่างชาติ / รวมกองทุน");
+
+  const empty = { data: [], issues: [] as ImportIssue[] };
+  const c = map.close !== undefined ? toContracts(table, map) : { ...empty, data: [] as ContractSeries[] };
+  const f = map.foreign !== undefined || map.fund !== undefined ? toFlows(table, map) : { ...empty, data: [] as FlowRow[] };
+  const spread = toSpread(table, map);
+
+  const s50: DailySheet["s50"] = { summary: [] };
+  const main = c.data[0];
+  if (main?.rows.length) {
+    const last = main.rows[main.rows.length - 1];
+    const prev = main.rows[main.rows.length - 2];
+    s50.asOfLabel = thDate(last.t);
+    if (prev) {
+      const d = last.close - prev.close;
+      s50.summary.push(`${main.symbol} ${n2(last.close)} ${d >= 0 ? "เพิ่มขึ้น" : "ลดลง"} ${n2(Math.abs(d))} จุดจากวันก่อน (${n2(prev.close)})`);
+      if (last.oi && prev.oi) {
+        const doi = last.oi - prev.oi;
+        s50.summary.push(`OI ${n0(last.oi)} ${doi >= 0 ? "เพิ่มขึ้น" : "ลดลง"} ${n0(Math.abs(doi))} สัญญา`);
+      }
+    }
+    if (spread) {
+      const sl = spread.rows[spread.rows.length - 1];
+      s50.summary.push(`Spread ${spread.symbol} ${sl.v}${sl.t !== last.t ? ` (${thDate(sl.t)})` : ""}`);
+    }
+  }
+
+  const flow: DailySheet["flow"] = { summary: [] };
+  const fl = f.data[f.data.length - 1];
+  const fp = f.data[f.data.length - 2];
+  if (fl) {
+    flow.asOfLabel = thDate(fl.t);
+    if (fp) {
+      const df = fl.foreign - fp.foreign;
+      const dk = fl.fund - fp.fund;
+      flow.summary.push(`ต่างชาติสะสม ${signed(fl.foreign)} (${df >= 0 ? "ซื้อ" : "ขาย"}สุทธิ ${n0(Math.abs(df))} ในวันล่าสุด)`);
+      flow.summary.push(`กองทุนสะสม ${signed(fl.fund)} (${dk >= 0 ? "ซื้อ" : "ขาย"}สุทธิ ${n0(Math.abs(dk))} ในวันล่าสุด)`);
+      flow.summary.push(`ต่างชาติ + กองทุน ${signed(fl.total)} ${fl.total >= fp.total ? "เพิ่มขึ้น" : "ลดลง"}จาก ${signed(fp.total)}`);
+    }
+  }
+
+  const skipped = [...c.issues, ...f.issues].filter(
+    (x, i, all) => all.findIndex((y) => y.line === x.line) === i,
+  );
+  return { contracts: c.data, spread, flows: f.data, skipped, missing, s50, flow };
 }

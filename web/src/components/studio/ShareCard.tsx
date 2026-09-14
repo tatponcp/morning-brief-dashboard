@@ -9,6 +9,7 @@ import { StaticRender } from "@/components/ui/Reveal";
 import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
 import { ImageBoard } from "@/components/ui/ImageBoard";
 import { PriceOIPanel } from "@/components/charts/PriceOIPanel";
+import { SpreadPanel } from "@/components/charts/SpreadPanel";
 import { FlowPanel } from "@/components/charts/FlowPanel";
 import { PaneGroupCard } from "@/components/charts/PaneGroupCard";
 import { InstrumentCard } from "@/components/charts/InstrumentCard";
@@ -69,7 +70,7 @@ export const ShareCard = forwardRef<
           </div>
           <div className="shrink-0 rounded-2xl border border-white/10 bg-white/4 px-4 py-2 text-right">
             <p className="text-[12px] text-slate-500">ข้อมูล ณ</p>
-            <p className="font-display text-[20px] font-bold text-amber-neon">{dateLabel}</p>
+            <p className="font-display text-[20px] font-bold text-amber-neon">{draft.asOfLabel ?? dateLabel}</p>
           </div>
         </header>
 
@@ -83,10 +84,15 @@ export const ShareCard = forwardRef<
         {/* ---------- เนื้อหาหลัก ---------- */}
         <div className="relative space-y-3">
           {!!draft.contracts?.length && (
-            <div className="grid grid-cols-2 gap-3">
+            <div
+              className={`grid items-start gap-3 ${
+                draft.contracts.length > 1 || draft.spread ? "grid-cols-2" : "grid-cols-1"
+              }`}
+            >
               {draft.contracts.map((c) => (
                 <PriceOIPanel key={c.symbol} series={c} />
               ))}
+              {draft.spread && <SpreadPanel spread={draft.spread} />}
             </div>
           )}
 
