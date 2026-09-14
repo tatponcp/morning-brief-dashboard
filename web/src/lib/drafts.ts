@@ -45,7 +45,11 @@ export type LoadResult = { drafts: DraftMap; restored: boolean };
 export function loadDrafts(brief: Brief, key = brief.date): LoadResult {
   const base = initialDrafts(brief);
   try {
-    const raw = window.localStorage.getItem(draftKey(key));
+    // ร่างที่พิมพ์ไว้ใน Studio รุ่นก่อนเก็บคีย์ตามวันที่ของ brief — อ่านต่อได้ ไม่ให้หาย
+    const raw =
+      window.localStorage.getItem(draftKey(key)) ??
+      window.localStorage.getItem(draftKey("2026-08-05")) ??
+      window.localStorage.getItem(draftKey(brief.date));
     if (!raw) return { drafts: base, restored: false };
     const saved = JSON.parse(raw) as DraftMap;
     let restored = false;
