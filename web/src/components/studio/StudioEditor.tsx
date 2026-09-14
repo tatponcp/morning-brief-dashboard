@@ -6,6 +6,7 @@ import {
   Download,
   Eye,
   History,
+  ImageDown,
   ImageIcon,
   Redo2,
   Rocket,
@@ -29,7 +30,7 @@ import {
 } from "@/lib/drafts";
 import { draftStatus, fieldLabel } from "@/lib/draft-status";
 import { thaiDate } from "@/lib/format";
-import type { Brief } from "@/lib/types";
+import type { Brief, Instrument } from "@/lib/types";
 import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
 import { ImageBoard } from "@/components/ui/ImageBoard";
 import { PriceOIPanel } from "@/components/charts/PriceOIPanel";
@@ -38,6 +39,7 @@ import { BoardEditor } from "./BoardEditor";
 import { DataImporter } from "./DataImporter";
 import { NarrativeEditor } from "./NarrativeEditor";
 import { SectionRail } from "./SectionRail";
+import { ShareImageDialog } from "./ShareImageDialog";
 
 /** subscribe ที่ไม่เคยแจ้งเปลี่ยน — ใช้แค่ให้รู้ว่าอยู่ฝั่ง client แล้ว */
 const subscribeNever = () => () => {};
@@ -47,10 +49,13 @@ type Tab = "visual" | "data" | "text";
 export function StudioEditor({
   brief,
   canPublish,
+  instruments,
 }: {
   brief: Brief;
   /** true = ต่อ Supabase แล้ว กดเผยแพร่ขึ้นเว็บได้เลย */
   canPublish: boolean;
+  /** ราคา Gold / VIX / DXY / US10Y สำหรับใส่ในรูปข้อ 6 */
+  instruments?: Instrument[];
 }) {
   const [sectionId, setSectionId] = useState(brief.sections[0].id);
   const section = brief.sections.find((s) => s.id === sectionId)!;
@@ -74,6 +79,7 @@ export function StudioEditor({
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [exported, setExported] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
+  const [shareOpen, setShareOpen] = useState(false);
 
   /* ---------- แก้ไข + ประวัติ undo ---------- */
 
@@ -319,6 +325,13 @@ export function StudioEditor({
                 กรอกครบแล้ว
               </span>
             )}
+            <button
+              onClick={() => setShareOpen(true)}
+              className="ml-auto flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#22d3ee] to-[#a78bfa] px-3 py-1.5 text-[12px] font-semibold text-ink-950 transition hover:brightness-110"
+            >
+              <ImageDown className="size-3.5" />
+              สร้างรูปส่งลูกค้า
+            </button>
           </div>
 
           {/* แท็บ */}
@@ -461,6 +474,14 @@ export function StudioEditor({
             </button>
 
             <button
+              onClick={() => setShareOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg border border-[#22d3ee]/40 bg-[#22d3ee]/10 px-3 py-2 text-[12.5px] text-[#22d3ee] transition hover:bg-[#22d3ee]/20"
+            >
+              <ImageDown className="size-4" />
+              <span className="hidden sm:inline">รูปส่งลูกค้า</span>
+            </button>
+
+            <button
               onClick={exportJson}
               className="flex items-center gap-1.5 rounded-lg border border-white/12 bg-white/5 px-3 py-2 text-[12.5px] text-slate-200 transition hover:border-white/25"
             >
@@ -485,6 +506,16 @@ export function StudioEditor({
           </div>
         </div>
       </div>
+
+      <ShareImageDialog
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        section={section}
+        draft={draft}
+        dateLabel={thaiDate(date)}
+        dateISO={date}
+        instruments={section.id === "macro" ? instruments : undefined}
+      />
     </div>
   );
 }

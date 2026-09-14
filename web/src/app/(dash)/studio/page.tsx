@@ -1,5 +1,6 @@
 import { loadBrief } from "@/lib/brief-store";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { loadMacro } from "@/lib/market";
 import { StudioEditor } from "@/components/studio/StudioEditor";
 
 export const metadata = { title: "IC Studio", robots: { index: false } };
@@ -8,6 +9,12 @@ export const metadata = { title: "IC Studio", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 export default async function StudioPage() {
-  const { brief } = await loadBrief();
-  return <StudioEditor brief={brief} canPublish={isSupabaseConfigured()} />;
+  const [{ brief }, macro] = await Promise.all([loadBrief(), loadMacro()]);
+  return (
+    <StudioEditor
+      brief={brief}
+      canPublish={isSupabaseConfigured()}
+      instruments={macro.instruments}
+    />
+  );
 }

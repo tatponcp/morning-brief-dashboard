@@ -46,7 +46,7 @@ export function PriceOIPanel({ series }: { series: ContractSeries }) {
         <span className="rounded-lg bg-white/4 px-2.5 py-1 font-display text-lg font-bold text-[#ffc53d]">
           C: {num(last.close)}
         </span>
-        <div className="ml-auto flex gap-1 rounded-lg border border-white/8 bg-white/3 p-1">
+        <div data-export-hide className="ml-auto flex gap-1 rounded-lg border border-white/8 bg-white/3 p-1">
           {RANGES.map((r) => (
             <button
               key={r.key}

@@ -106,3 +106,8 @@ body {
 
 .recharts-cartesian-axis-tick text { font-size: 11px; fill: #7f93b5; }
 .recharts-surface { overflow: visible; }
+
+/* การ์ดรูปส่งลูกค้า: ซ่อนปุ่มควบคุมให้พรีวิวตรงกับรูปที่ได้จริง */
+.share-card [data-export-hide] {
+  display: none !important;
+}

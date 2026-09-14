@@ -14,12 +14,15 @@ export function NarrativeGrid({
   layout = "grid",
 }: {
   n: Narrative;
-  layout?: "grid" | "stack";
+  /** "row" = 3 คอลัมน์เสมอไม่ขึ้นกับขนาดจอ ใช้กับรูปส่งลูกค้าที่ความกว้างคงที่ */
+  layout?: "grid" | "stack" | "row";
 }) {
   const stack = layout === "stack";
+  const cols =
+    layout === "stack" ? "space-y-3" : layout === "row" ? "grid grid-cols-3 gap-3" : "grid gap-3 lg:grid-cols-3";
   return (
     <div className={stack ? "space-y-3" : "mt-4 space-y-3"}>
-      <div className={stack ? "space-y-3" : "grid gap-3 lg:grid-cols-3"}>
+      <div className={cols}>
         <Reveal>
           <Card
             title="สรุปสั้น"

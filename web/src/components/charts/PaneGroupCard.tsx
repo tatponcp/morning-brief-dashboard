@@ -31,16 +31,16 @@ export function PaneGroupCard({ group }: { group: PaneGroup }) {
 
   return (
     <div className="panel overflow-hidden">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-white/6 px-5 py-4">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-white/6 px-4 py-2.5">
         <div className="min-w-0">
-          <h3 className="font-display text-[17px] font-bold" style={{ color: accent }}>
+          <h3 className="font-display text-[15px] font-bold" style={{ color: accent }}>
             {group.title}
           </h3>
           {group.subtitle && (
             <p className="text-[12px] text-slate-500">{group.subtitle}</p>
           )}
         </div>
-        <div className="ml-auto flex gap-1 rounded-lg border border-white/8 bg-white/3 p-1">
+        <div data-export-hide className="ml-auto flex gap-1 rounded-lg border border-white/8 bg-white/3 p-1">
           {RANGES.map((r) => (
             <button
               key={r.key}
@@ -59,8 +59,8 @@ export function PaneGroupCard({ group }: { group: PaneGroup }) {
       </div>
 
       <div className="divide-y divide-white/6">
-        {group.panes.map((p) => (
-          <PaneChart key={p.id} pane={p} take={n} />
+        {group.panes.map((p, i) => (
+          <PaneChart key={p.id} pane={p} take={n} showTime={i === group.panes.length - 1} />
         ))}
       </div>
 
@@ -69,9 +69,9 @@ export function PaneGroupCard({ group }: { group: PaneGroup }) {
           {group.footer.map((f, i) => {
             const t = toneOf(f.tone);
             return (
-              <div key={i} className="bg-ink-900 px-4 py-3.5">
+              <div key={i} className="bg-ink-900 px-3 py-2">
                 <p className="truncate text-[11.5px] text-slate-500">{f.label}</p>
-                <p className={`font-display text-lg font-bold ${t.text}`}>{f.value}</p>
+                <p className={`font-display text-[15px] font-bold ${t.text}`}>{f.value}</p>
               </div>
             );
           })}
@@ -81,7 +81,7 @@ export function PaneGroupCard({ group }: { group: PaneGroup }) {
   );
 }
 
-function PaneChart({ pane, take }: { pane: Pane; take: number }) {
+function PaneChart({ pane, take, showTime = true }: { pane: Pane; take: number; showTime?: boolean }) {
   const rows = useMemo(
     () => (take === Infinity ? pane.rows : pane.rows.slice(-take)),
     [pane.rows, take],
@@ -115,10 +115,10 @@ function PaneChart({ pane, take }: { pane: Pane; take: number }) {
   );
 
   return (
-    <div className="px-2 py-3">
-      <div className="mb-1 flex flex-wrap items-baseline gap-x-2 gap-y-1 px-3">
+    <div className="px-2 py-1.5">
+      <div className="mb-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-1 px-3">
         <span className="text-[12.5px] font-semibold text-slate-200">{pane.title}</span>
-        {pane.note && <span className="text-[11.5px] text-slate-500">{pane.note}</span>}
+        {pane.note && <span className="hidden text-[11px] text-slate-500 2xl:inline">{pane.note}</span>}
         {pane.lastBadge !== false && lastValue !== undefined && (
           <span
             className="ml-auto rounded-md px-2 py-0.5 font-display text-[12.5px] font-bold"
@@ -132,7 +132,7 @@ function PaneChart({ pane, take }: { pane: Pane; take: number }) {
         )}
       </div>
 
-      <ResponsiveContainer width="100%" height={pane.height ?? 170}>
+      <ResponsiveContainer width="100%" height={pane.height ?? 120}>
         {/* _wick เก็บช่วง [low, high] ให้ Recharts คำนวณตำแหน่งแท่งเทียนให้ */}
         <ComposedChart
           data={data as unknown as PaneRow[]}
@@ -152,6 +152,7 @@ function PaneChart({ pane, take }: { pane: Pane; take: number }) {
           <CartesianGrid stroke="rgba(148,163,184,0.07)" vertical={false} />
           <XAxis
             dataKey="t"
+            hide={!showTime}
             tickFormatter={(v: string) => (v.includes("T") ? v.split("T")[1] : thaiShortDate(v))}
             axisLine={AXIS}
             tickLine={false}

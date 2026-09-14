@@ -39,7 +39,7 @@ export function InstrumentCard({ inst }: { inst: Instrument }) {
           </p>
           <p className="truncate text-[11px] text-slate-500">{inst.sub}</p>
         </div>
-        <div className="flex gap-0.5">
+        <div data-export-hide className="flex gap-0.5">
           {RANGES.map((r) => (
             <button
               key={r.key}

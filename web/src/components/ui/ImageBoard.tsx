@@ -40,6 +40,7 @@ export function ImageBoard({ board, accent }: { board: Board; accent: Accent }) 
           <p className="text-[12.5px] text-slate-300">ภาพจากระบบสัญญาณ</p>
           {hasCallouts && (
             <button
+              data-export-hide
               onClick={() => setShowCallouts((v) => !v)}
               className={`ml-auto flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11.5px] transition ${
                 showCallouts
@@ -115,7 +116,7 @@ export function ImageBoard({ board, accent }: { board: Board; accent: Accent }) 
                 alt={zoom.alt}
                 width={2400}
                 height={1400}
-                unoptimized={zoom.src.startsWith("data:")}
+                unoptimized={!zoom.src.startsWith("/")}
                 className="h-auto w-full"
               />
             </motion.div>
@@ -149,7 +150,7 @@ function Figure({
           alt={image.alt}
           width={1920}
           height={1080}
-          unoptimized={image.src.startsWith("data:")}
+          unoptimized={!image.src.startsWith("/")}
           className="mx-auto h-auto max-h-[58vh] w-full cursor-zoom-in object-contain"
           onClick={onZoom}
         />
@@ -173,6 +174,7 @@ function Figure({
         ))}
 
         <button
+          data-export-hide
           onClick={onZoom}
           aria-label="ขยายภาพ"
           className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-lg border border-white/12 bg-ink-900/80 px-2.5 py-1.5 text-[11.5px] text-slate-200 opacity-0 backdrop-blur transition group-hover:opacity-100"
@@ -240,7 +242,7 @@ function CalloutPin({
       </div>
 
       <div
-        className={`absolute top-0 max-w-[230px] -translate-y-1/2 rounded-xl border bg-ink-900/94 px-3 py-2 text-[12px] leading-snug backdrop-blur ${
+        className={`absolute top-0 w-max max-w-[230px] -translate-y-1/2 rounded-xl border bg-ink-900/94 px-3 py-2 text-[12px] leading-snug backdrop-blur ${
           side === "right" ? "left-8" : "right-8"
         }`}
         style={{ borderColor: `${t.hex}66`, color: t.hex }}
