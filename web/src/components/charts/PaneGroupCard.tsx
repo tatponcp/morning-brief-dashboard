@@ -182,7 +182,8 @@ function PaneChart({ pane, take, showTime = true }: { pane: Pane; take: number; 
               strokeOpacity={0.75}
               strokeDasharray={r.dash === false ? undefined : "5 5"}
               label={
-                r.label
+                // กราฟแท่งเทียน: ราคาล่าสุดอยู่ที่ป้ายหัวกราฟแล้ว ใส่ซ้ำจะทับแท่งเทียน
+                r.label && pane.kind !== "candle"
                   ? { value: r.label, position: "insideTopLeft", fill: r.color, fontSize: 10 }
                   : undefined
               }
@@ -257,23 +258,44 @@ function CandleShape({ x = 0, y = 0, width = 0, height = 0, payload }: ShapeProp
 
   const up = c >= o;
   const color = up ? "var(--c-green)" : "var(--c-rose)";
-  const bodyTop = toY(Math.max(o, c));
-  const bodyH = Math.max(1, Math.abs(toY(o) - toY(c)));
-  const bw = Math.max(1.5, Math.min(width * 0.62, 9));
-  const cx = x + width / 2;
+
+  // ตัวแท่งกว้าง ~78% ของช่อง แต่ไม่เกิน 12px — แท่งห่างกันพอดีตาไม่ติดเป็นพืด
+  const bodyW = Math.max(1, Math.min(width * 0.78, 12));
+  // จัดให้ตรงพิกเซล เส้นจะคม ไม่เบลอครึ่งพิกเซล
+  const cx = Math.round(x + width / 2) + 0.5;
+  const top = toY(Math.max(o, c));
+  const bottom = toY(Math.min(o, c));
+  // แท่งที่เปิด-ปิดเกือบเท่ากัน (doji) ยังต้องมองเห็นเป็นขีด
+  const bodyH = Math.max(1.5, bottom - top);
+
+  // ช่องแคบมาก (เลือกดูช่วงยาว): วาดเป็นเส้นเดียวจาก high ถึง low แทนแท่งจิ๋วที่อ่านไม่ออก
+  if (bodyW < 2.5) {
+    return (
+      <line
+        x1={cx}
+        x2={cx}
+        y1={y}
+        y2={y + Math.max(height, 1)}
+        stroke={color}
+        strokeWidth={Math.max(1, bodyW)}
+        shapeRendering="crispEdges"
+      />
+    );
+  }
 
   return (
-    <g>
+    <g shapeRendering="crispEdges">
+      {/* ไส้เทียนวาดก่อน ตัวแท่งทึบจะทับส่วนกลางไว้ — ไม่มีเส้นขีดผ่านกลางแท่ง */}
       <line x1={cx} x2={cx} y1={y} y2={y + height} stroke={color} strokeWidth={1} />
       <rect
-        x={cx - bw / 2}
-        y={bodyTop}
-        width={bw}
+        x={Math.round(cx - bodyW / 2)}
+        y={top}
+        width={Math.round(bodyW)}
         height={bodyH}
-        fill={up ? "transparent" : color}
+        fill={color}
         stroke={color}
-        strokeWidth={1.2}
-        rx={0.5}
+        strokeWidth={0.5}
+        rx={Math.round(bodyW) >= 6 ? 1 : 0}
       />
     </g>
   );

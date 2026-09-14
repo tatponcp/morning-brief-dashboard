@@ -141,7 +141,8 @@ export const brief20260805: Brief = {
               id: "usd-price-d",
               title: "USDU26 (Daily)",
               kind: "candle",
-              height: 132,
+              // แท่งเทียนต้องมีความสูงพอให้เห็นตัวแท่ง — เตี้ยกว่านี้จะเหลือแต่ขีด
+              height: 176,
               digits: 2,
               series: [{ key: "c", name: "USDU26", color: "var(--c-green)" }],
               rows: makeCandles(101, 58, 32.2, 33.55, 32.93),
