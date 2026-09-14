@@ -46,7 +46,7 @@ export function SectionHero({
 
         <div className="ml-auto flex items-center gap-2">
           {demo && (
-            <span className="inline-flex items-center gap-1 rounded-lg border border-amber-neon/40 bg-amber-neon/10 px-2 py-1 text-[10.5px] font-semibold text-amber-neon">
+            <span className="inline-flex items-center gap-1 rounded-lg border border-amber-neon/40 bg-amber-neon/10 px-2 py-1 text-[11px] font-semibold text-amber-neon">
               <TriangleAlert className="size-3" />
               ข้อมูลจำลอง
             </span>
@@ -59,7 +59,7 @@ export function SectionHero({
 
         {/* บรรทัดรองบนจอเล็ก — ไม่เบียดหัวข้อ */}
         <p className="w-full text-[12.5px] text-slate-400 lg:hidden">{subtitle}</p>
-        <p className="w-full text-[10.5px] text-slate-600">แหล่งข้อมูล · {source}</p>
+        <p className="w-full text-[11px] text-slate-600">แหล่งข้อมูล · {source}</p>
       </div>
     </div>
   );

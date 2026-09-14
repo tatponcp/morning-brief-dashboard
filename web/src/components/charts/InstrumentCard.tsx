@@ -44,7 +44,7 @@ export function InstrumentCard({ inst }: { inst: Instrument }) {
             <button
               key={r.key}
               onClick={() => setRange(r.key)}
-              className="rounded px-1.5 py-0.5 text-[10.5px] transition"
+              className="rounded px-1.5 py-0.5 text-[11px] transition"
               style={
                 range === r.key
                   ? { background: `color-mix(in srgb, ${inst.color} 13%, transparent)`, color: inst.color }
@@ -111,7 +111,7 @@ export function InstrumentCard({ inst }: { inst: Instrument }) {
         </p>
       )}
 
-      <p className="px-4 pb-3 text-[10px] text-slate-600">
+      <p className="px-4 pb-3 text-[11px] text-slate-600">
         {rows.length} จุด · ล่าสุด {thaiShortDate(rows.at(-1)?.t ?? "")}
       </p>
     </div>

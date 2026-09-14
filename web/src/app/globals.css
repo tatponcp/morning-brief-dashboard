@@ -128,14 +128,14 @@
   --color-slate-100: #0f172a;
   --color-slate-200: #1e293b;
   --color-slate-300: #334155;
-  --color-slate-400: #475569;
-  --color-slate-500: #556579;
-  --color-slate-600: #5a687b;
+  --color-slate-400: #3f4c5f;
+  --color-slate-500: #4a586c;
+  --color-slate-600: #566478;
   --color-slate-700: #cbd5e1;
 
   --panel-bg: linear-gradient(165deg, #ffffff, #fbfcfe);
-  --panel-border: rgba(15, 23, 42, 0.09);
-  --panel-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -12px rgba(15, 23, 42, 0.12);
+  --panel-border: rgba(15, 23, 42, 0.1);
+  --panel-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 10px 28px -14px rgba(15, 23, 42, 0.16);
   --glass-bg: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 253, 0.9));
   --grid-line: rgba(15, 23, 42, 0.035);
   --scroll-thumb: rgba(15, 23, 42, 0.18);
@@ -167,23 +167,22 @@ body {
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   background-image: var(--page-glow);
   background-attachment: fixed;
 }
 
-/* สลับธีมแล้วสีค่อย ๆ เปลี่ยน ไม่กระพริบ — ปิดถ้าผู้ใช้ตั้ง reduced motion */
-@media (prefers-reduced-motion: no-preference) {
-  html.theme-transition,
-  html.theme-transition *,
-  html.theme-transition *::before,
-  html.theme-transition *::after {
-    transition:
-      background-color 0.25s ease,
-      border-color 0.25s ease,
-      color 0.25s ease,
-      fill 0.25s ease,
-      stroke 0.25s ease !important;
-  }
+/*
+ * สลับธีมแบบ View Transitions: เบราว์เซอร์ถ่ายภาพหน้าเดิม แล้ว ThemeToggle
+ * เผยธีมใหม่เป็นวงกลม ต้องปิดแอนิเมชัน crossfade ตั้งต้นของเบราว์เซอร์ไม่ให้ซ้อนกัน
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(root) {
+  z-index: 2;
 }
 
 /* ---------- utilities ---------- */
@@ -261,3 +260,21 @@ body {
 .share-card [data-share-cols="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 .share-card [data-share-cols="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
 .share-card [data-share-cols="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+
+/* ─────────────── ปรับเฉพาะธีมสว่าง ─────────────── */
+
+/* antialiased ทำให้ตัวอักษรเข้มบนพื้นขาวบางลงบน macOS — ตัวไทยเล็ก ๆ จะจางเกิน */
+:root[data-theme="light"] body {
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
+}
+
+/* แสงเบลอสีต่าง ๆ สวยบนพื้นดำ แต่บนพื้นขาวดูเป็นรอยเปื้อน → เบาลง */
+:root[data-theme="light"] .blur-3xl {
+  opacity: 0.5;
+}
+
+/* ตัวอักษรไล่สี: ธีมสว่างเพิ่มเงาจาง ๆ ให้ขอบคม ไม่กลืนกับพื้น */
+:root[data-theme="light"] .text-gradient {
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.6));
+}

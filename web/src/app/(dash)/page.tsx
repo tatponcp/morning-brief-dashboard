@@ -84,7 +84,7 @@ export default async function SummaryPage() {
                     </span>
                     <p className="truncate text-[13px] font-semibold text-slate-100">{s.title}</p>
                     {s.demo && (
-                      <span className="shrink-0 rounded bg-amber-neon/15 px-1.5 py-0.5 text-[9.5px] font-semibold text-amber-neon">
+                      <span className="shrink-0 rounded bg-amber-neon/15 px-1.5 py-0.5 text-[10.5px] font-semibold text-amber-neon">
                         demo
                       </span>
                     )}

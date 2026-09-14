@@ -40,7 +40,7 @@ function NavCard({ section, dir }: { section: Section; dir: "prev" | "next" }) {
         <ArrowLeft className="size-4 shrink-0 text-slate-600 transition group-hover:text-white" />
       )}
       <span className="min-w-0 flex-1">
-        <span className="block text-[10.5px] text-slate-500">
+        <span className="block text-[11px] text-slate-500">
           {isNext ? "ถัดไป" : "ก่อนหน้า"}
         </span>
         <span className="block truncate text-[13px] font-semibold" style={{ color: a.hex }}>

@@ -67,7 +67,7 @@ export function OptionsDeepDive({ collapsed }: { collapsed: boolean }) {
   /* ---------- ตอนกางเมนู: การ์ดเต็ม ---------- */
   return (
     <div className="px-3 pt-3" style={{ perspective: 700 }}>
-      <p className="px-1 pb-1.5 text-[10px] font-semibold tracking-[0.18em] text-slate-500 uppercase">
+      <p className="px-1 pb-1.5 text-[11px] font-semibold tracking-[0.18em] text-slate-500 uppercase">
         เจาะลึกเพิ่มเติม
       </p>
 
@@ -157,7 +157,7 @@ export function OptionsDeepDive({ collapsed }: { collapsed: boolean }) {
                 key={c}
                 animate={{ y: hover ? -1 : 0, opacity: hover ? 1 : 0.75 }}
                 transition={{ delay: i * 0.03 }}
-                className="rounded-md border border-white/10 bg-white/4 px-1.5 py-0.5 text-[10px] text-slate-300"
+                className="rounded-md border border-white/10 bg-white/4 px-1.5 py-0.5 text-[11px] text-slate-300"
               >
                 {c}
               </motion.span>

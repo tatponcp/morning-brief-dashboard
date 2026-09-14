@@ -47,7 +47,7 @@ export function SectionRail({
               >
                 {s.title}
               </span>
-              <span className="hidden text-[10.5px] text-slate-400 lg:block">
+              <span className="hidden text-[11px] text-slate-400 lg:block">
                 {st.complete ? "กรอกครบแล้ว" : `เหลือ ${st.missing.length} ช่อง`}
               </span>
             </span>

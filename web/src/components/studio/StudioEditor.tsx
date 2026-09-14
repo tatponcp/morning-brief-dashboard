@@ -297,7 +297,7 @@ export function StudioEditor({
             activeId={sectionId}
             onSelect={setSectionId}
           />
-          <p className="mt-2 hidden text-[10.5px] leading-relaxed text-slate-600 lg:block">
+          <p className="mt-2 hidden text-[11px] leading-relaxed text-slate-600 lg:block">
             คีย์ลัด · Alt+1-6 สลับ section · Ctrl+Z ย้อนกลับ
           </p>
         </div>

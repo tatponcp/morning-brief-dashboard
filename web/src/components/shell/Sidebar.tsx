@@ -131,7 +131,7 @@ function SectionLabel({
 }) {
   return (
     <p
-      className={`px-3 pt-5 pb-2 text-[10px] font-semibold tracking-[0.18em] text-slate-500 uppercase transition ${
+      className={`px-3 pt-5 pb-2 text-[11px] font-semibold tracking-[0.18em] text-slate-500 uppercase transition ${
         collapsed ? "opacity-0" : "opacity-100"
       }`}
     >

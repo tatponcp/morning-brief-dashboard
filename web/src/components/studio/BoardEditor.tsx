@@ -87,7 +87,7 @@ function ImageSlot({
   return (
     <div className="rounded-xl border border-white/10 bg-white/2 p-2.5">
       <div className="mb-2 flex items-center gap-2">
-        <span className="rounded-md bg-white/6 px-2 py-0.5 text-[10.5px] text-slate-400">
+        <span className="rounded-md bg-white/6 px-2 py-0.5 text-[11px] text-slate-400">
           ภาพที่ {index + 1}
         </span>
         {image.src && (

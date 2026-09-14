@@ -161,7 +161,7 @@ export function CommandPalette() {
               })}
             </div>
 
-            <div className="flex items-center gap-3 border-t border-white/8 px-4 py-2 text-[10.5px] text-slate-600">
+            <div className="flex items-center gap-3 border-t border-white/8 px-4 py-2 text-[11px] text-slate-600">
               <span>↑ ↓ เลือก</span>
               <span>Enter เปิด</span>
               <span className="ml-auto">กดเลข 1-6 ข้ามไป section ได้เลย</span>
