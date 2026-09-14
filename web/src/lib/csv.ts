@@ -46,7 +46,8 @@ export type Table = { headers: string[]; rows: string[][] };
 export function parseCsv(text: string): Table {
   const clean = text.replace(/^﻿/, "");
   const delim = detectDelimiter(clean);
-  const lines = clean.split(/\r?\n/).filter((l) => l.trim());
+  // แถวว่างท้ายชีต (",,,,,") ไม่ใช่ข้อมูล
+  const lines = clean.split(/\r?\n/).filter((l) => l.replace(/[,;\t\s"]/g, ""));
   if (!lines.length) return { headers: [], rows: [] };
   return {
     headers: splitLine(lines[0], delim),
@@ -271,7 +272,11 @@ export function toDailySheet(table: Table): DailySheet {
 
   const empty = { data: [], issues: [] as ImportIssue[] };
   const c = map.close !== undefined ? toContracts(table, map) : { ...empty, data: [] as ContractSeries[] };
-  const f = map.foreign !== undefined || map.fund !== undefined ? toFlows(table, map) : { ...empty, data: [] as FlowRow[] };
+  // แกนขวาของข้อ 2 ใช้ราคาปิดสัญญาเดียวกับข้อ 1
+  const f =
+    map.foreign !== undefined || map.fund !== undefined
+      ? toFlows(table, { ...map, set50: map.set50 ?? map.close })
+      : { ...empty, data: [] as FlowRow[] };
   const spread = toSpread(table, map);
 
   const s50: DailySheet["s50"] = { summary: [] };
