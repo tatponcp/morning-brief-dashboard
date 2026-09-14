@@ -5,7 +5,7 @@ import { Check, ClipboardPaste, FileSpreadsheet, TriangleAlert, Upload } from "l
 import { parseCsv, toDailySheet, type DailySheet } from "@/lib/csv";
 
 /**
- * นำเข้าชีตประจำวันของ IC ใส่ยอดสะสมต่างชาติ/กองทุนของข้อ 2
+ * นำเข้าชีตประจำวันของ IC ครั้งเดียว ใส่ข้อ 1 (ราคา + OI + spread) และข้อ 2 (ต่างชาติ/กองทุน)
  * รับได้ทั้งไฟล์ CSV และการคัดลอกช่วงเซลล์จาก Google Sheets มาวางตรง ๆ
  */
 export function DailySheetImporter({
@@ -33,8 +33,8 @@ export function DailySheetImporter({
     reader.readAsText(file, "utf-8");
   }
 
-  const missing = sheet?.missing.filter((m) => !m.startsWith("ราคาปิด")) ?? [];
-  const ready = !!sheet && missing.length === 0 && sheet.flows.length > 0;
+  const main = sheet?.contracts[0];
+  const ready = !!sheet && sheet.missing.length === 0 && !!main && sheet.flows.length > 0;
 
   return (
     <div className="space-y-3">
@@ -55,7 +55,7 @@ export function DailySheetImporter({
       >
         <FileSpreadsheet className="mb-2 size-7 text-cyan-neon" />
         <p className="text-[14px] font-semibold text-slate-100">
-          วางชีตประจำวัน ใส่ยอดสะสมของข้อ 2
+          วางชีตประจำวัน ใส่ข้อ 1 และข้อ 2 พร้อมกัน
         </p>
         <p className="mt-1 flex items-center gap-1.5 text-[12px] text-slate-400">
           <ClipboardPaste className="size-3.5" />
@@ -74,14 +74,23 @@ export function DailySheetImporter({
         <div className="panel space-y-3 px-4 py-3">
           <p className="text-[11px] text-slate-500">ที่มา: {source}</p>
 
-          {missing.length > 0 && (
+          {sheet.missing.length > 0 && (
             <p className="flex items-center gap-1.5 rounded-lg border border-rose-neon/30 bg-rose-neon/10 px-3 py-2 text-[12.5px] text-rose-neon">
               <TriangleAlert className="size-4" />
-              หาคอลัมน์ไม่เจอ: {missing.join(", ")}
+              หาคอลัมน์ไม่เจอ: {sheet.missing.join(", ")}
             </p>
           )}
 
-          <div className="grid gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Result
+              title="ข้อ 1 · S50 + OI"
+              lines={[
+                main ? `${main.symbol} ${main.rows.length} วัน` : "ไม่พบราคาปิด",
+                sheet.spread ? `${sheet.spread.symbol} ${sheet.spread.rows.length} วัน` : "ไม่พบ spread",
+                sheet.s50.asOfLabel ? `ล่าสุด ${sheet.s50.asOfLabel}` : "",
+              ]}
+              summary={sheet.s50.summary}
+            />
             <Result
               title="ข้อ 2 · ต่างชาติ / กองทุน"
               lines={[
@@ -126,7 +135,7 @@ export function DailySheetImporter({
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-neon to-green-neon py-2.5 text-[13px] font-semibold text-ink-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {applied ? <Check className="size-4" /> : <Upload className="size-4" />}
-            {applied ? "ใส่ข้อ 2 แล้ว" : "ใส่ข้อ 2"}
+            {applied ? "ใส่ข้อ 1 และข้อ 2 แล้ว" : "ใส่ข้อ 1 และข้อ 2"}
           </button>
         </div>
       )}

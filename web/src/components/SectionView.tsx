@@ -63,9 +63,7 @@ export async function SectionView({ id }: { id: string }) {
           className={`grid items-start gap-3 ${
             s.contracts.length > 1
               ? "xl:grid-cols-2"
-              : s.spread
-                ? "xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]"
-                : ""
+              : ""
           }`}
         >
           {s.contracts.map((c, i) => (

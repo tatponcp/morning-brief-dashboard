@@ -86,7 +86,7 @@ export const ShareCard = forwardRef<
           {!!draft.contracts?.length && (
             <div
               className={`grid items-start gap-3 ${
-                draft.contracts.length > 1 || draft.spread ? "grid-cols-2" : "grid-cols-1"
+                draft.contracts.length > 1 ? "grid-cols-2" : "grid-cols-1"
               }`}
             >
               {draft.contracts.map((c) => (

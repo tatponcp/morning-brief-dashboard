@@ -33,7 +33,9 @@ import { thaiDate, todayBangkok } from "@/lib/format";
 import type { Brief, Instrument } from "@/lib/types";
 import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
 import { ImageBoard } from "@/components/ui/ImageBoard";
+import { PriceOIPanel } from "@/components/charts/PriceOIPanel";
 import { FlowPanel } from "@/components/charts/FlowPanel";
+import { SpreadPanel } from "@/components/charts/SpreadPanel";
 import { BoardEditor } from "./BoardEditor";
 import { DataImporter } from "./DataImporter";
 import { DailySheetImporter } from "./DailySheetImporter";
@@ -103,20 +105,30 @@ export function StudioEditor({
     [commit, drafts, sectionId],
   );
 
-  /** ชีตประจำวัน → ยอดสะสมต่างชาติ/กองทุนของข้อ 2 */
+  /** ชีตประจำวันแผ่นเดียว → ข้อ 1 และข้อ 2 ใน commit เดียว (ย้อนกลับได้ในครั้งเดียว) */
   const applyDailySheet = useCallback(
     (sheet: DailySheet, withSummary: boolean) => {
-      const flow = drafts["flows"];
-      if (!flow) return;
-      commit({
-        ...drafts,
-        flows: {
+      const next = { ...drafts };
+      const s50 = next["s50-oi"];
+      const flow = next["flows"];
+      if (s50) {
+        next["s50-oi"] = {
+          ...s50,
+          contracts: sheet.contracts,
+          spread: sheet.spread ?? undefined,
+          asOfLabel: sheet.s50.asOfLabel,
+          ...(withSummary && sheet.s50.summary.length ? { summary: sheet.s50.summary } : {}),
+        };
+      }
+      if (flow) {
+        next["flows"] = {
           ...flow,
           flows: sheet.flows,
           asOfLabel: sheet.flow.asOfLabel,
           ...(withSummary && sheet.flow.summary.length ? { summary: sheet.flow.summary } : {}),
-        },
-      });
+        };
+      }
+      commit(next);
     },
     [commit, drafts],
   );
@@ -170,7 +182,7 @@ export function StudioEditor({
     const list: { key: Tab; label: string; icon: React.ReactNode }[] = [];
     if (section.mode === "image")
       list.push({ key: "visual", label: "ใส่ภาพ", icon: <ImageIcon className="size-3.5" /> });
-    if (section.flows)
+    if (section.contracts || section.flows)
       list.push({ key: "data", label: "วางชีต", icon: <Table2 className="size-3.5" /> });
     list.push({ key: "text", label: "ข้อความ", icon: <Type className="size-3.5" /> });
     return list;
@@ -393,7 +405,7 @@ export function StudioEditor({
                   จับคู่คอลัมน์เองเฉพาะ section นี้ (ใช้เมื่อระบบอ่านชีตไม่ถูก)
                 </summary>
                 <div className="pt-3">
-                  <DataImporter kind="flows" onApply={(data) => patch(data)} />
+                  <DataImporter kind={section.contracts ? "contracts" : "flows"} onApply={(data) => patch(data)} />
                 </div>
               </details>
             </div>
@@ -419,6 +431,14 @@ export function StudioEditor({
             สิ่งที่ลูกค้าจะเห็น
           </p>
           <div className="panel scroll-slim max-h-[calc(100dvh-9rem)] overflow-y-auto px-3 py-3">
+            {!!draft.contracts?.length && (
+              <div className="mb-3 space-y-3">
+                {draft.contracts.map((c) => (
+                  <PriceOIPanel key={c.symbol} series={c} />
+                ))}
+                {draft.spread && <SpreadPanel spread={draft.spread} />}
+              </div>
+            )}
             {!!draft.flows?.length && (
               <div className="mb-3">
                 <FlowPanel rows={draft.flows} />
