@@ -1,0 +1,128 @@
+import type { Brief, ContractSeries, FlowRow, Section } from "@/lib/types";
+import { brief20260805 } from "./2026-08-05";
+
+/**
+ * Brief 14 ก.ย. 2569 — ข้อ 1, 2 เป็นข้อมูลจริงจากชีตของ IC
+ *
+ * ที่มา
+ *   11 ส.ค.–11 ก.ย. : ชีต IC (close S50U26, Oi Morning, รวมต่างชาติ, รวมกองทุน)
+ *   14 ก.ย.         : Oi Morning จากชีต · ราคา S50U26 1,070.10 จากหน้าจอ TQ Pro
+ *   ยอดต่างชาติ/กองทุนของ 14 ก.ย. ยังไม่ประกาศ ข้อ 2 จึงถึง 11 ก.ย.
+ *
+ * "แปลความ" และ "Action" เป็นมุมมองของ IC — เว้นไว้ให้กรอกใน /studio
+ */
+
+const PENDING = "รอ IC ใส่มุมมองใน /studio ก่อนเผยแพร่";
+
+const s50u26: ContractSeries = {
+  symbol: "S50U26",
+  rows: [
+    { t: "2026-08-11", close: 1076.5, oi: 509460 },
+    { t: "2026-08-13", close: 1077.0, oi: 501839 },
+    { t: "2026-08-14", close: 1071.6, oi: 508670 },
+    { t: "2026-08-17", close: 1084.9, oi: 504996 },
+    { t: "2026-08-18", close: 1077.9, oi: 508436 },
+    { t: "2026-08-19", close: 1072.6, oi: 507640 },
+    { t: "2026-08-20", close: 1072.9, oi: 515960 },
+    { t: "2026-08-21", close: 1080.7, oi: 514376 },
+    { t: "2026-08-24", close: 1071.6, oi: 505302 },
+    { t: "2026-08-25", close: 1072.9, oi: 502129 },
+    { t: "2026-08-26", close: 1075.0, oi: 502806 },
+    { t: "2026-08-27", close: 1070.5, oi: 500872 },
+    { t: "2026-08-28", close: 1065.3, oi: 498530 },
+    { t: "2026-08-31", close: 1068.3, oi: 510427 },
+    { t: "2026-09-01", close: 1065.0, oi: 506732 },
+    { t: "2026-09-02", close: 1058.1, oi: 494793 },
+    { t: "2026-09-03", close: 1062.4, oi: 498399 },
+    { t: "2026-09-04", close: 1072.2, oi: 490516 },
+    { t: "2026-09-07", close: 1079.4, oi: 492133 },
+    { t: "2026-09-08", close: 1083.5, oi: 490840 },
+    { t: "2026-09-09", close: 1081.8, oi: 488400 },
+    { t: "2026-09-10", close: 1082.3, oi: 491108 },
+    { t: "2026-09-11", close: 1075.5, oi: 486185 },
+    { t: "2026-09-14", close: 1070.1, oi: 481063 },
+  ],
+};
+
+const flowRows: FlowRow[] = [
+    { t: "2026-08-11", foreign: -23084, fund: 14246, total: -8838, set50: 1076.5 },
+    { t: "2026-08-13", foreign: -25367, fund: 15144, total: -10223, set50: 1077.0 },
+    { t: "2026-08-14", foreign: -34562, fund: 17801, total: -16761, set50: 1071.6 },
+    { t: "2026-08-17", foreign: -1572, fund: 10677, total: 9105, set50: 1084.9 },
+    { t: "2026-08-18", foreign: -24784, fund: 17765, total: -7019, set50: 1077.9 },
+    { t: "2026-08-19", foreign: -35681, fund: 19247, total: -16434, set50: 1072.6 },
+    { t: "2026-08-20", foreign: -37111, fund: 22262, total: -14849, set50: 1072.9 },
+    { t: "2026-08-21", foreign: -12551, fund: 16932, total: 4381, set50: 1080.7 },
+    { t: "2026-08-24", foreign: -41762, fund: 27642, total: -14120, set50: 1071.6 },
+    { t: "2026-08-25", foreign: -30757, fund: 25605, total: -5152, set50: 1072.9 },
+    { t: "2026-08-26", foreign: -20779, fund: 24406, total: 3627, set50: 1075.0 },
+    { t: "2026-08-27", foreign: -39404, fund: 27548, total: -11856, set50: 1070.5 },
+    { t: "2026-08-28", foreign: -51791, fund: 33088, total: -18703, set50: 1065.3 },
+    { t: "2026-08-31", foreign: -40683, fund: 31689, total: -8994, set50: 1068.3 },
+    { t: "2026-09-01", foreign: -40579, fund: 33766, total: -6813, set50: 1065.0 },
+    { t: "2026-09-02", foreign: -56675, fund: 38764, total: -17911, set50: 1058.1 },
+    { t: "2026-09-03", foreign: -41919, fund: 34140, total: -7779, set50: 1062.4 },
+    { t: "2026-09-04", foreign: -22858, fund: 30190, total: 7332, set50: 1072.2 },
+    { t: "2026-09-07", foreign: -11262, fund: 32667, total: 21405, set50: 1079.4 },
+    { t: "2026-09-08", foreign: -14179, fund: 34651, total: 20472, set50: 1083.5 },
+    { t: "2026-09-09", foreign: -24766, fund: 41799, total: 17033, set50: 1081.8 },
+    { t: "2026-09-10", foreign: -27155, fund: 44246, total: 17091, set50: 1082.3 },
+    { t: "2026-09-11", foreign: -38595, fund: 47391, total: 8796, set50: 1075.5 },
+];
+
+const sections: Section[] = brief20260805.sections.map((s) => {
+  if (s.id === "s50-oi") {
+    return {
+      ...s,
+      demo: false,
+      asOfLabel: "14 ก.ย. 2569",
+      source: "ชีต IC (close S50U26 · Oi Morning) · TQ Pro 14 ก.ย.",
+      contracts: [s50u26],
+      narrative: {
+        summary: [
+          "S50U26 1,070.10 ลดลง 5.40 จุดจากวันก่อน (1,075.50)",
+          "Oi Morning 481,063 ลดลง 5,122 สัญญา และลดลงจากจุดสูง 515,960 เมื่อ 20 ส.ค.",
+          "S50Z26 1,071.40 · OI 44,761 (TQ Pro) · Spread U26Z26 ล่าสุด 1.3",
+        ],
+        interpretation: PENDING,
+        actions: [{ label: "สถานะ", value: "รอ IC ยืนยัน", tone: "neutral" }],
+        insight: PENDING,
+      },
+    };
+  }
+  if (s.id === "flows") {
+    return {
+      ...s,
+      demo: false,
+      asOfLabel: "11 ก.ย. 2569",
+      source: "ชีต IC · ล้านบาท (สะสม) · แกนขวาคือราคาปิด S50U26",
+      flows: flowRows,
+      narrative: {
+        summary: [
+          "ต่างชาติสะสม -38,595 ขายเพิ่ม 11,440 ในวันล่าสุด",
+          "กองทุนสะสม +47,391 สูงสุดของช่วงข้อมูล ซื้อเพิ่มต่อเนื่อง 5 วันทำการ",
+          "ต่างชาติ + กองทุน +8,796 ลดลงจาก +17,091",
+        ],
+        interpretation: PENDING,
+        actions: [{ label: "สถานะ", value: "รอ IC ยืนยัน", tone: "neutral" }],
+        insight: PENDING,
+      },
+    };
+  }
+  // ข้อ 3–5 ยังไม่มีของใหม่ แสดงวันที่ของข้อมูลเดิมกำกับไว้ ไม่ให้ดูเหมือนเป็นของวันนี้
+  return { ...s, asOfLabel: s.id === "macro" ? undefined : brief20260805.dateLabelTH };
+});
+
+export const brief20260914: Brief = {
+  ...brief20260805,
+  date: "2026-09-14",
+  dateLabelTH: "14 ก.ย. 2569",
+  bigPicture: [{ rank: 1, title: "S50 / หุ้นใหญ่", body: PENDING, tone: "neutral" }],
+  dataSays: [
+    "S50U26 ลงมา 1,070.10 พร้อม Oi Morning ลดลง",
+    "ต่างชาติสะสม -38,595 · กองทุนสะสม +47,391",
+  ],
+  todayActions: [{ label: "สถานะ", value: "รอ IC ยืนยันก่อนเผยแพร่", tone: "neutral" }],
+  insight: PENDING,
+  sections,
+};

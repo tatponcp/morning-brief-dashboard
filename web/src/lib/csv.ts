@@ -104,11 +104,33 @@ const PATTERNS: Record<string, RegExp> = {
 
 export type ColumnMap = Partial<Record<keyof typeof PATTERNS, number>>;
 
-export function guessColumns(headers: string[]): ColumnMap {
+export function guessColumns(headers: string[], rows: string[][] = []): ColumnMap {
   const map: ColumnMap = {};
   const used = new Set<number>();
+  const take = (key: keyof ColumnMap, idx: number) => {
+    if (idx < 0 || used.has(idx)) return;
+    map[key] = idx;
+    used.add(idx);
+  };
+
+  // ชีตที่มีทั้งยอดรายวันและยอดสะสม ต้องใช้คอลัมน์สะสม ("รวม…", "สะสม", "cum")
+  const cum = /รวม|สะสม|cum/i;
+  const hasForeign = /foreign|ต่างชาติ/i;
+  const hasFund = /fund|กองทุน|สถาบัน/i;
+  take("total", headers.findIndex((h) => hasForeign.test(h) && hasFund.test(h)));
+  take("foreign", headers.findIndex((h, i) => !used.has(i) && cum.test(h) && hasForeign.test(h) && !hasFund.test(h)));
+  take("fund", headers.findIndex((h, i) => !used.has(i) && cum.test(h) && hasFund.test(h) && !hasForeign.test(h)));
+
+  // หัวคอลัมน์วันที่ว่างบ่อย (ชีตที่วันที่อยู่คอลัมน์แรก) → ดูจากค่าข้างในแทน
+  const dateByHeader = headers.findIndex((h) => PATTERNS.date.test(h.trim()));
+  const dateByValue = headers.findIndex((_, i) => {
+    const sample = rows.slice(0, 5).map((r) => r[i] ?? "").filter((v) => v.trim());
+    return sample.length > 0 && sample.every((v) => toIsoDate(v) !== null && toNumber(v) === null);
+  });
+  take("date", dateByHeader >= 0 ? dateByHeader : dateByValue);
   // เรียงให้ตัวที่เจาะจงกว่ามาก่อน กัน "total" ไปคว้าคอลัมน์ "รวมกองทุน"
   for (const key of ["date", "symbol", "oi", "close", "set50", "foreign", "fund", "total"] as const) {
+    if (map[key] !== undefined) continue;
     const idx = headers.findIndex((h, i) => !used.has(i) && PATTERNS[key].test(h.trim()));
     if (idx >= 0) {
       map[key] = idx;
@@ -139,9 +161,12 @@ export function toContracts(table: Table, map: ColumnMap): ImportResult<Contract
     const oi = map.oi !== undefined ? toNumber(r[map.oi] ?? "") : null;
 
     if (!t) return issues.push({ line: i + 2, reason: "อ่านวันที่ไม่ได้" });
-    if (close === null) return issues.push({ line: i + 2, reason: "อ่านราคาปิดไม่ได้" });
+    if (close === null) return issues.push({ line: i + 2, reason: "ยังไม่มีราคาปิด" });
 
-    const symbol = (map.symbol !== undefined ? r[map.symbol] : "")?.trim() || "SERIES";
+    // ไม่มีคอลัมน์ชื่อสัญญา: ลองอ่านจากหัวคอลัมน์ราคา เช่น "close S50U26"
+    const fromHeader =
+      map.close !== undefined ? table.headers[map.close]?.match(/[A-Z0-9]{2,}[FGHJKMNQUVXZ]\d{2}/)?.[0] : undefined;
+    const symbol = (map.symbol !== undefined ? r[map.symbol] : "")?.trim() || fromHeader || "SERIES";
     if (!bySymbol.has(symbol)) bySymbol.set(symbol, []);
     bySymbol.get(symbol)!.push({ t, close, oi: oi ?? 0 });
   });
@@ -163,8 +188,13 @@ export function toFlows(table: Table, map: ColumnMap): ImportResult<FlowRow[]> {
     const t = map.date !== undefined ? toIsoDate(r[map.date] ?? "") : null;
     if (!t) return issues.push({ line: i + 2, reason: "อ่านวันที่ไม่ได้" });
 
-    const fund = (map.fund !== undefined ? toNumber(r[map.fund] ?? "") : null) ?? 0;
-    const foreign = (map.foreign !== undefined ? toNumber(r[map.foreign] ?? "") : null) ?? 0;
+    const fundRaw = map.fund !== undefined ? toNumber(r[map.fund] ?? "") : null;
+    const foreignRaw = map.foreign !== undefined ? toNumber(r[map.foreign] ?? "") : null;
+    if (fundRaw === null && foreignRaw === null) {
+      return issues.push({ line: i + 2, reason: "ยังไม่มียอดกองทุน/ต่างชาติ" });
+    }
+    const fund = fundRaw ?? 0;
+    const foreign = foreignRaw ?? 0;
     const total = (map.total !== undefined ? toNumber(r[map.total] ?? "") : null) ?? fund + foreign;
     const set50 = (map.set50 !== undefined ? toNumber(r[map.set50] ?? "") : null) ?? 0;
 

@@ -128,6 +128,8 @@ export type Section = {
   mode: "data" | "image";
   /** true = ตัวเลขยังเป็นข้อมูลจำลอง ยังไม่ใช่ของจริง (จะขึ้นป้ายเตือนบนหน้าเว็บ) */
   demo?: boolean;
+  /** วันที่ของข้อมูล section นี้ ถ้าไม่ตรงกับวันที่ของ brief (เช่นยอด SET ประกาศช้ากว่า 1 วัน) */
+  asOfLabel?: string;
   narrative: Narrative;
   contracts?: ContractSeries[];
   flows?: FlowRow[];

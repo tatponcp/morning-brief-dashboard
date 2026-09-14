@@ -21,7 +21,7 @@ export async function SectionView({ id }: { id: string }) {
       subtitle={s.subtitle}
       source={s.source}
       accent={s.accent}
-      dateLabel={brief.dateLabelTH}
+      dateLabel={s.asOfLabel ?? brief.dateLabelTH}
       demo={s.demo}
     />
   );
