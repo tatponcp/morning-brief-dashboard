@@ -1,20 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import {
+  ArrowRight,
   Check,
+  Compass,
   Download,
   Eye,
   History,
   ImageDown,
-  ImageIcon,
   Redo2,
   Rocket,
   RotateCcw,
   Save,
-  Table2,
   TriangleAlert,
-  Type,
   Undo2,
   Wand2,
 } from "lucide-react";
@@ -30,7 +30,7 @@ import {
 } from "@/lib/drafts";
 import { draftStatus, fieldLabel } from "@/lib/draft-status";
 import { thaiDate, todayBangkok } from "@/lib/format";
-import type { Brief, Instrument } from "@/lib/types";
+import type { Brief, Instrument, Section } from "@/lib/types";
 import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
 import { ImageBoard } from "@/components/ui/ImageBoard";
 import { PriceOIPanel } from "@/components/charts/PriceOIPanel";
@@ -42,6 +42,7 @@ import { DailySheetImporter } from "./DailySheetImporter";
 import type { DailySheet } from "@/lib/csv";
 import { NarrativeEditor } from "./NarrativeEditor";
 import { SectionRail } from "./SectionRail";
+import { ScenarioPicker } from "./ScenarioPicker";
 import { ShareImageDialog } from "./ShareImageDialog";
 
 /** subscribe ที่ไม่เคยแจ้งเปลี่ยน — ใช้แค่ให้รู้ว่าอยู่ฝั่ง client แล้ว */
@@ -50,7 +51,20 @@ const subscribeNever = () => () => {};
 /** ร่างเก็บคีย์เดียว ไม่ผูกกับวันที่ของ brief ในโค้ด (เปลี่ยนวันแล้วร่างไม่หาย) */
 const STUDIO_DRAFT = "studio";
 
-type Tab = "visual" | "data" | "text";
+type Step = "media" | "scenario" | "text";
+
+/** ขั้นของแต่ละ section: (ใส่ภาพ/วางชีต) → เลือกสถานการณ์ → ตรวจและแก้คำ */
+function stepsFor(s: Section, d: Draft) {
+  const list: { key: Step; label: string; done: boolean }[] = [];
+  if (s.mode === "image") list.push({ key: "media", label: "ใส่ภาพ", done: d.board.images.some((im) => im.src) });
+  else if (s.contracts || s.flows)
+    list.push({ key: "media", label: "วางชีต", done: !!(d.contracts?.length || d.flows?.length) });
+  list.push({ key: "scenario", label: "เลือกสถานการณ์", done: !!d.scenario });
+  list.push({ key: "text", label: "ตรวจและแก้คำ", done: draftStatus(s, d).complete });
+  return list;
+}
+
+const firstOpen = (s: Section, d: Draft): Step => stepsFor(s, d).find((x) => !x.done)?.key ?? "scenario";
 
 export function StudioEditor({
   brief,
@@ -155,6 +169,24 @@ export function StudioEditor({
     });
   }, [drafts]);
 
+  /* ---------- ขั้นของ section นี้ ---------- */
+
+  const steps = useMemo(() => stepsFor(section, draft), [section, draft]);
+  const [stepPref, setStepPref] = useState<Step>(() =>
+    firstOpen(brief.sections[0], initialDrafts(brief)[brief.sections[0].id]),
+  );
+  const step = steps.some((x) => x.key === stepPref) ? stepPref : steps[0].key;
+
+  const selectSection = useCallback(
+    (id: string) => {
+      const s = brief.sections.find((x) => x.id === id);
+      if (!s) return;
+      setSectionId(id);
+      setStepPref(firstOpen(s, drafts[id]));
+    },
+    [brief.sections, drafts],
+  );
+
   /* ---------- คีย์ลัด ---------- */
 
   useEffect(() => {
@@ -169,29 +201,13 @@ export function StudioEditor({
       if (e.altKey && /^[1-6]$/.test(e.key)) {
         e.preventDefault();
         const s = brief.sections[Number(e.key) - 1];
-        if (s) setSectionId(s.id);
+        if (s) selectSection(s.id);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [undo, redo, brief.sections]);
+  }, [undo, redo, brief.sections, selectSection]);
 
-  /* ---------- แท็บของ section นี้ ---------- */
-
-  const tabs = useMemo(() => {
-    const list: { key: Tab; label: string; icon: React.ReactNode }[] = [];
-    if (section.mode === "image")
-      list.push({ key: "visual", label: "ใส่ภาพ", icon: <ImageIcon className="size-3.5" /> });
-    if (section.contracts || section.flows)
-      list.push({ key: "data", label: "วางชีต", icon: <Table2 className="size-3.5" /> });
-    list.push({ key: "text", label: "ข้อความ", icon: <Type className="size-3.5" /> });
-    return list;
-  }, [section]);
-
-  // จำแท็บที่เลือกไว้ ถ้า section ใหม่ไม่มีแท็บนั้นค่อยถอยไปแท็บแรก
-  const [tabPref, setTabPref] = useState<Tab>("text");
-  const tab = tabs.some((t) => t.key === tabPref) ? tabPref : tabs[0].key;
-  const setTab = setTabPref;
 
   /* ---------- ความคืบหน้ารวม ---------- */
 
@@ -273,13 +289,21 @@ export function StudioEditor({
   return (
     <div className="pb-16">
       {/* ---------- header ---------- */}
-      <div className="panel mb-3 flex flex-wrap items-center gap-3 px-4 py-2.5">
-        <span className="grid size-8 place-items-center rounded-xl bg-amber-neon/15 text-amber-neon">
-          <Wand2 className="size-4" />
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="panel relative mb-3 flex flex-wrap items-center gap-3 overflow-hidden px-4 py-3"
+      >
+        <div className="pointer-events-none absolute -top-20 -left-10 size-56 rounded-full bg-amber-neon/10 blur-3xl" />
+        <span className="relative grid size-10 place-items-center rounded-2xl bg-gradient-to-br from-amber-neon/25 to-rose-neon/20 text-amber-neon">
+          <Wand2 className="size-5" />
         </span>
-        <h1 className="font-display text-[17px] font-bold text-white">IC Studio</h1>
+        <div className="relative">
+          <h1 className="font-display text-[18px] leading-tight font-bold text-white">IC Studio</h1>
+          <p className="text-[11.5px] text-slate-400">เลือกสถานการณ์ แก้คำ แล้วเผยแพร่</p>
+        </div>
 
-        <label className="flex items-center gap-2 rounded-lg border border-white/10 bg-ink-950/60 px-2.5 py-1.5">
+        <label className="relative flex items-center gap-2 rounded-xl border border-white/10 bg-ink-950/60 px-3 py-1.5 transition focus-within:border-amber-neon/50">
           <span className="text-[11.5px] text-slate-500">วันที่</span>
           <input
             type="date"
@@ -287,22 +311,11 @@ export function StudioEditor({
             onChange={(e) => setDate(e.target.value)}
             className="bg-transparent text-[12.5px] text-white outline-none"
           />
-          <span className="text-[11.5px] font-semibold text-amber-neon">{thaiDate(date)}</span>
+          <span className="text-[12px] font-semibold text-amber-neon">{thaiDate(date)}</span>
         </label>
 
-        <div className="ml-auto flex items-center gap-2">
-          <div className="hidden items-center gap-2 sm:flex">
-            <div className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-cyan-neon to-green-neon transition-all"
-                style={{ width: `${(progress.done / progress.total) * 100}%` }}
-              />
-            </div>
-            <span className="text-[11.5px] text-slate-400">
-              กรอกครบ {progress.done}/{progress.total}
-            </span>
-          </div>
-
+        <div className="relative ml-auto flex items-center gap-3">
+          <ProgressRing done={progress.done} total={progress.total} />
           <button
             onClick={() => setShowPreview((v) => !v)}
             className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11.5px] transition xl:hidden ${
@@ -315,19 +328,29 @@ export function StudioEditor({
             พรีวิว
           </button>
         </div>
-      </div>
+      </motion.div>
 
+      <AnimatePresence>
       {msg && (
-        <div
-          className={`mb-3 rounded-xl border px-4 py-2.5 text-[13px] ${
+        <motion.div
+          key={msg.text}
+          initial={{ opacity: 0, y: -8, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -8 }}
+          className={`mb-3 flex items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] ${
             msg.ok
               ? "border-green-neon/30 bg-green-neon/8 text-green-neon"
               : "border-rose-neon/30 bg-rose-neon/8 text-rose-neon"
           }`}
         >
+          {msg.ok ? <Check className="size-4" /> : <TriangleAlert className="size-4" />}
           {msg.text}
-        </div>
+          <button onClick={() => setMsg(null)} className="ml-auto text-[11.5px] opacity-70 hover:opacity-100">
+            ปิด
+          </button>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* ---------- 3 คอลัมน์: rail / editor / preview ---------- */}
       <div className="grid gap-3 lg:grid-cols-[190px_minmax(0,1fr)] xl:grid-cols-[190px_minmax(0,1fr)_minmax(0,0.85fr)]">
@@ -336,7 +359,7 @@ export function StudioEditor({
             sections={brief.sections}
             drafts={drafts}
             activeId={sectionId}
-            onSelect={setSectionId}
+            onSelect={selectSection}
           />
           <p className="mt-2 hidden text-[11px] leading-relaxed text-slate-600 lg:block">
             คีย์ลัด · Alt+1-6 สลับ section · Ctrl+Z ย้อนกลับ
@@ -344,84 +367,130 @@ export function StudioEditor({
         </div>
 
         <div className="min-w-0">
-          {/* หัว section + สิ่งที่ยังขาด */}
-          <div className="panel mb-3 flex flex-wrap items-center gap-2 px-3 py-2">
-            <span
-              className="grid size-6 place-items-center rounded-md font-display text-[11px] font-bold"
-              style={{ background: a.soft, color: a.hex }}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={sectionId}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             >
-              {section.index}
-            </span>
-            <p className="font-display text-[14px] font-bold" style={{ color: a.hex }}>
-              {section.title}
-            </p>
-            {progress.current.missing.length > 0 ? (
-              <span className="flex items-center gap-1.5 rounded-lg bg-amber-neon/10 px-2 py-1 text-[11px] text-amber-neon">
-                <TriangleAlert className="size-3" />
-                ยังขาด: {progress.current.missing.map(fieldLabel).join(", ")}
-              </span>
-            ) : (
-              <span className="flex items-center gap-1.5 rounded-lg bg-green-neon/10 px-2 py-1 text-[11px] text-green-neon">
-                <Check className="size-3" />
-                กรอกครบแล้ว
-              </span>
-            )}
-            <button
-              onClick={() => setShareOpen(true)}
-              className="ml-auto flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-neon to-violet-neon px-3 py-1.5 text-[12px] font-semibold text-ink-950 transition hover:brightness-110"
-            >
-              <ImageDown className="size-3.5" />
-              สร้างรูปส่งลูกค้า
-            </button>
-          </div>
-
-          {/* แท็บ */}
-          {tabs.length > 1 && (
-            <div className="mb-3 flex gap-1 rounded-xl border border-white/8 bg-white/3 p-1">
-              {tabs.map((t) => (
-                <button
-                  key={t.key}
-                  onClick={() => setTab(t.key)}
-                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[12.5px] transition ${
-                    tab === t.key ? "bg-white/10 text-white" : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  {t.icon}
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {tab === "visual" && (
-            <BoardEditor board={draft.board} onChange={(board) => patch({ board })} />
-          )}
-
-          {tab === "data" && (
-            <div className="space-y-3">
-              <DailySheetImporter onApply={applyDailySheet} />
-              <details className="rounded-xl border border-white/10 px-3 py-2">
-                <summary className="cursor-pointer text-[12px] text-slate-400">
-                  จับคู่คอลัมน์เองเฉพาะ section นี้ (ใช้เมื่อระบบอ่านชีตไม่ถูก)
-                </summary>
-                <div className="pt-3">
-                  <DataImporter kind={section.contracts ? "contracts" : "flows"} onApply={(data) => patch(data)} />
+              {/* หัว section */}
+              <div
+                className="panel relative mb-3 overflow-hidden px-4 py-3"
+                style={{ borderColor: `color-mix(in srgb, ${a.hex} 30%, transparent)` }}
+              >
+                <div
+                  className="pointer-events-none absolute -top-16 -right-10 size-44 rounded-full blur-3xl"
+                  style={{ background: a.soft }}
+                />
+                <div className="relative flex flex-wrap items-center gap-2.5">
+                  <span
+                    className="grid size-8 place-items-center rounded-xl font-display text-[13px] font-bold"
+                    style={{ background: a.hex, color: "var(--ink-950)" }}
+                  >
+                    {section.index}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-display text-[16px] leading-tight font-bold" style={{ color: a.hex }}>
+                      {section.title}
+                    </p>
+                    <p className="truncate text-[11.5px] text-slate-400">{section.subtitle}</p>
+                  </div>
+                  <span className="ml-auto">
+                    {progress.current.missing.length > 0 ? (
+                      <span className="flex items-center gap-1.5 rounded-lg bg-amber-neon/10 px-2 py-1 text-[11px] text-amber-neon">
+                        <TriangleAlert className="size-3" />
+                        ยังขาด: {progress.current.missing.map(fieldLabel).join(", ")}
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1.5 rounded-lg bg-green-neon/10 px-2 py-1 text-[11px] text-green-neon">
+                        <Check className="size-3" />
+                        พร้อมเผยแพร่
+                      </span>
+                    )}
+                  </span>
                 </div>
-              </details>
-            </div>
-          )}
 
-          {tab === "text" && (
-            <NarrativeEditor
-              value={{
-                summary: draft.summary,
-                interpretation: draft.interpretation,
-                actions: draft.actions,
-                insight: draft.insight,
-              }}
-              onChange={patch}
-            />
-          )}
+                <Stepper steps={steps} current={step} onSelect={setStepPref} accent={a.hex} />
+              </div>
+
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={step}
+                  initial={{ opacity: 0, x: 14 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -14 }}
+                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {step === "media" && (
+                    <div className="space-y-3">
+                      {section.mode === "image" ? (
+                        <BoardEditor board={draft.board} onChange={(board) => patch({ board })} />
+                      ) : (
+                        <>
+                          <DailySheetImporter onApply={applyDailySheet} />
+                          <details className="rounded-xl border border-white/10 px-3 py-2">
+                            <summary className="cursor-pointer text-[12px] text-slate-400">
+                              จับคู่คอลัมน์เองเฉพาะ section นี้ (ใช้เมื่อระบบอ่านชีตไม่ถูก)
+                            </summary>
+                            <div className="pt-3">
+                              <DataImporter
+                                kind={section.contracts ? "contracts" : "flows"}
+                                onApply={(data) => patch(data)}
+                              />
+                            </div>
+                          </details>
+                        </>
+                      )}
+                      <NextButton onClick={() => setStepPref("scenario")} label="ไปเลือกสถานการณ์" />
+                    </div>
+                  )}
+
+                  {step === "scenario" && (
+                    <ScenarioPicker
+                      sectionId={section.id}
+                      value={draft}
+                      data={{ contracts: draft.contracts, flows: draft.flows, instruments }}
+                      onApply={patch}
+                      onNext={() => setStepPref("text")}
+                    />
+                  )}
+
+                  {step === "text" && (
+                    <div className="space-y-3">
+                      {draft.scenario && (
+                        <button
+                          onClick={() => setStepPref("scenario")}
+                          className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/3 px-3 py-2 text-left text-[12.5px] text-slate-300 transition hover:border-white/20"
+                        >
+                          <Compass className="size-4 text-violet-neon" />
+                          สถานการณ์: <span className="font-semibold text-white">{draft.scenario.title}</span>
+                          <span className="ml-auto text-[11.5px] text-slate-500">เปลี่ยน</span>
+                        </button>
+                      )}
+                      <NarrativeEditor
+                        value={{
+                          summary: draft.summary,
+                          interpretation: draft.interpretation,
+                          actions: draft.actions,
+                          insight: draft.insight,
+                        }}
+                        onChange={patch}
+                      />
+                      {(() => {
+                        const i = brief.sections.findIndex((x) => x.id === sectionId);
+                        const next = brief.sections[i + 1];
+                        return next ? (
+                          <NextButton onClick={() => selectSection(next.id)} label={`ไปข้อ ${next.index} ${next.title}`} />
+                        ) : null;
+                      })()}
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         {/* พรีวิว */}
@@ -532,21 +601,29 @@ export function StudioEditor({
 
             <button
               onClick={exportJson}
-              className="flex items-center gap-1.5 rounded-lg border border-white/12 bg-white/5 px-3 py-2 text-[12.5px] text-slate-200 transition hover:border-white/25"
+              title="ส่งออก .json (สำรอง)"
+              aria-label="ส่งออก .json"
+              className="rounded-lg border border-white/10 p-2 text-slate-400 transition hover:text-white"
             >
               {exported ? <Check className="size-4 text-green-neon" /> : <Download className="size-4" />}
-              ส่งออก .json
             </button>
 
             {canPublish ? (
-              <button
+              <motion.button
                 onClick={publish}
                 disabled={publishing}
-                className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-green-neon to-cyan-neon px-3.5 py-2 text-[12.5px] font-semibold text-ink-950 transition hover:brightness-110 disabled:opacity-60"
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.97 }}
+                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-green-neon to-cyan-neon px-4 py-2 text-[13px] font-semibold text-ink-950 shadow-[0_0_24px_-6px_var(--c-green)] transition hover:brightness-110 disabled:opacity-60"
               >
-                <Rocket className="size-4" />
-                {publishing ? "กำลังเผยแพร่…" : "เผยแพร่ขึ้นเว็บ"}
-              </button>
+                <motion.span
+                  animate={publishing ? { y: [0, -3, 0] } : { y: 0 }}
+                  transition={publishing ? { repeat: Infinity, duration: 0.6 } : undefined}
+                >
+                  <Rocket className="size-4" />
+                </motion.span>
+                {publishing ? "กำลังเผยแพร่…" : `เผยแพร่ขึ้นเว็บ · ${progress.done}/${progress.total}`}
+              </motion.button>
             ) : (
               <span className="hidden text-[11px] text-slate-600 lg:block">
                 เผยแพร่: วางไฟล์ทับ src/data/published.json แล้ว push
@@ -565,6 +642,101 @@ export function StudioEditor({
         dateISO={date}
         instruments={section.id === "macro" ? instruments : undefined}
       />
+    </div>
+  );
+}
+
+function Stepper({
+  steps,
+  current,
+  onSelect,
+  accent,
+}: {
+  steps: { key: Step; label: string; done: boolean }[];
+  current: Step;
+  onSelect: (s: Step) => void;
+  accent: string;
+}) {
+  return (
+    <div className="relative mt-3 flex items-center gap-1 rounded-xl border border-white/8 bg-ink-950/40 p-1">
+      {steps.map((st, i) => {
+        const on = st.key === current;
+        return (
+          <button
+            key={st.key}
+            onClick={() => onSelect(st.key)}
+            className="relative flex flex-1 items-center justify-center gap-2 rounded-lg px-2 py-2 text-[12.5px] transition-colors"
+          >
+            {on && (
+              <motion.span
+                layoutId="studio-step"
+                transition={{ type: "spring", stiffness: 420, damping: 36 }}
+                className="absolute inset-0 rounded-lg"
+                style={{ background: `color-mix(in srgb, ${accent} 16%, transparent)`, boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${accent} 45%, transparent)` }}
+              />
+            )}
+            <span
+              className="relative grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-bold transition-colors"
+              style={
+                st.done
+                  ? { background: "var(--c-green)", color: "var(--ink-950)" }
+                  : on
+                    ? { background: accent, color: "var(--ink-950)" }
+                    : { background: "var(--c-hover)", color: "var(--c-neutral)" }
+              }
+            >
+              {st.done ? <Check className="size-3" /> : i + 1}
+            </span>
+            <span className={`relative truncate ${on ? "font-semibold text-white" : "text-slate-400"}`}>{st.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function NextButton({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <div className="flex justify-end pt-1">
+      <motion.button
+        whileHover={{ x: 2 }}
+        whileTap={{ scale: 0.97 }}
+        onClick={onClick}
+        className="flex items-center gap-1.5 rounded-xl border border-white/12 bg-white/5 px-4 py-2 text-[13px] text-slate-100 transition-colors hover:border-white/25"
+      >
+        {label} <ArrowRight className="size-4" />
+      </motion.button>
+    </div>
+  );
+}
+
+function ProgressRing({ done, total }: { done: number; total: number }) {
+  const r = 15;
+  const c = 2 * Math.PI * r;
+  const ratio = total ? done / total : 0;
+  return (
+    <div className="flex items-center gap-2">
+      <svg viewBox="0 0 36 36" className="size-9 -rotate-90">
+        <circle cx="18" cy="18" r={r} fill="none" stroke="var(--c-hover)" strokeWidth="3.5" />
+        <motion.circle
+          cx="18"
+          cy="18"
+          r={r}
+          fill="none"
+          stroke={ratio === 1 ? "var(--c-green)" : "var(--c-cyan)"}
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          strokeDasharray={c}
+          animate={{ strokeDashoffset: c * (1 - ratio) }}
+          transition={{ type: "spring", stiffness: 120, damping: 20 }}
+        />
+      </svg>
+      <div className="leading-tight">
+        <p className="font-display text-[14px] font-bold text-white">
+          {done}/{total}
+        </p>
+        <p className="text-[11px] text-slate-400">section พร้อม</p>
+      </div>
     </div>
   );
 }
