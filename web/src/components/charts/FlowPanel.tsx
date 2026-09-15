@@ -19,7 +19,7 @@ const KEYS = [
   { key: "fund", name: "รวมกองทุน", color: "var(--c-green)" },
   { key: "foreign", name: "ต่างชาติ (ไม่รวมกองทุน)", color: "var(--c-sky)" },
   { key: "total", name: "รวมต่างชาติ + กองทุน", color: "var(--c-amber)" },
-  { key: "set50", name: "SET50 Index (แกนขวา)", color: "var(--c-rose)" },
+  { key: "set50", name: "ราคา S50 (แกนขวา)", color: "var(--c-rose)" },
 ] as const;
 
 export function FlowPanel({ rows }: { rows: FlowRow[] }) {
@@ -108,7 +108,7 @@ export function FlowPanel({ rows }: { rows: FlowRow[] }) {
               yAxisId="idx"
               type="monotone"
               dataKey="set50"
-              name="SET50 Index"
+              name="ราคา S50"
               stroke="var(--c-rose)"
               strokeWidth={2}
               dot={false}

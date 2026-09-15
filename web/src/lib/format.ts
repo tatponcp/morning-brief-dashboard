@@ -12,3 +12,8 @@ export function thaiDate(iso: string) {
     d.getUTCFullYear() + 543
   }`;
 }
+
+/** วันนี้ตามเวลาไทย (ISO) — เครื่องของ IC อาจตั้งเขตเวลาอื่นไว้ */
+export function todayBangkok(now = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Bangkok" }).format(now);
+}

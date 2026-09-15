@@ -75,6 +75,12 @@ export type ContractSeries = {
   rows: { t: string; close: number; oi: number }[];
 };
 
+/** ราคา spread series เช่น S50U26Z26 — ใช้ดูจังหวะ rollover ช่วงใกล้หมดอายุ */
+export type SpreadSeries = {
+  symbol: string;
+  rows: { t: string; v: number }[];
+};
+
 /** Section 2 — สะสม Long/Short ต่างชาติและกองทุน (กรอกข้อมูลย้อนหลังได้) */
 export type FlowRow = {
   t: string;
@@ -128,6 +134,10 @@ export type Section = {
   mode: "data" | "image";
   /** true = ตัวเลขยังเป็นข้อมูลจำลอง ยังไม่ใช่ของจริง (จะขึ้นป้ายเตือนบนหน้าเว็บ) */
   demo?: boolean;
+  /** วันที่ของข้อมูล section นี้ ถ้าไม่ตรงกับวันที่ของ brief (เช่นยอด SET ประกาศช้ากว่า 1 วัน) */
+  asOfLabel?: string;
+  /** ข้อ 1 — spread series จากชีต */
+  spread?: SpreadSeries;
   narrative: Narrative;
   contracts?: ContractSeries[];
   flows?: FlowRow[];

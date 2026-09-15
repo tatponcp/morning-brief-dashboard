@@ -2,7 +2,7 @@ import type { Brief, Narrative, Section } from "./types";
 
 /** รูปร่างของไฟล์ที่กด "ส่งออก Brief" ออกมาจาก /studio (narrative ถูกแบให้แบนอยู่ระดับเดียวกับ id) */
 export type PublishedSection = { id: string } & Partial<Narrative> &
-  Partial<Pick<Section, "board" | "contracts" | "flows">>;
+  Partial<Pick<Section, "board" | "contracts" | "flows" | "spread" | "asOfLabel">>;
 
 export type PublishedFile = {
   date?: string;
@@ -39,8 +39,25 @@ export function mergePublished(brief: Brief, file: PublishedFile | null): Brief 
           o.board && o.board.images?.some((im) => im.src)
             ? { ...o.board, images: o.board.images.filter((im) => im.src) }
             : s.board,
-        contracts: o.contracts?.length ? o.contracts : s.contracts,
-        flows: o.flows?.length ? o.flows : s.flows,
+        // ข้อมูลกราฟรับเฉพาะ section ที่ยังวาดกราฟ — ของที่เคยเผยแพร่ก่อนเปลี่ยนเป็นภาพจะไม่ย้อนกลับมา
+        contracts:
+          s.contracts && o.contracts?.length
+            ? o.contracts.map((c, i) => ({
+                ...c,
+                // importer รุ่นแรกตั้งชื่อจากหัวคอลัมน์ "SERIES" — ใช้ชื่อสัญญาจริงแทน
+                symbol: /^series$/i.test(c.symbol) ? (s.contracts?.[i]?.symbol ?? c.symbol) : c.symbol,
+              }))
+            : s.contracts,
+        flows: s.flows && o.flows?.length ? o.flows : s.flows,
+        spread: s.spread && o.spread?.rows?.length ? o.spread : s.spread,
+        asOfLabel: o.asOfLabel ?? s.asOfLabel,
+        // IC ใส่ข้อมูลหรือภาพจริงมาแล้ว → ไม่ขึ้นป้าย "ข้อมูลจำลอง"
+        demo:
+          (s.contracts && !!o.contracts?.length) ||
+          (s.flows && !!o.flows?.length) ||
+          !!o.board?.images?.some((im) => im.src)
+            ? false
+            : s.demo,
       } satisfies Section;
     }),
   };

@@ -1,10 +1,11 @@
 import type { Brief, Section } from "@/lib/types";
 import { mergePublished, type PublishedFile } from "@/lib/merge-brief";
 import { brief20260805 } from "./2026-08-05";
+import { brief20260914 } from "./2026-09-14";
 import published from "./published.json";
 
 /** ที่เดียวที่ต้องเปลี่ยนเมื่อเพิ่ม brief วันใหม่แบบไม่ใช้ DB */
-const ALL: Brief[] = [brief20260805];
+const ALL: Brief[] = [brief20260805, brief20260914];
 
 /**
  * ข้อมูลตั้งต้น + ของที่วางไว้ใน published.json

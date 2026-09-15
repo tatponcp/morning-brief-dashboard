@@ -1,4 +1,4 @@
-import type { Brief, ContractSeries, FlowRow, ImageBoard, Narrative } from "./types";
+import type { Brief, ContractSeries, FlowRow, ImageBoard, Narrative, SpreadSeries } from "./types";
 
 /** ร่างของ 1 section ที่ IC กำลังแก้อยู่ */
 export type Draft = Narrative & {
@@ -7,6 +7,9 @@ export type Draft = Narrative & {
   contracts?: ContractSeries[];
   /** ข้อมูลที่ import เข้ามาใหม่ (ข้อ 2) */
   flows?: FlowRow[];
+  spread?: SpreadSeries;
+  /** วันที่ของข้อมูล เมื่อไม่ตรงกับวันที่ของ brief */
+  asOfLabel?: string;
 };
 
 export type DraftMap = Record<string, Draft>;
@@ -22,9 +25,11 @@ export function initialDrafts(brief: Brief): DraftMap {
   for (const s of brief.sections) {
     out[s.id] = {
       ...structuredClone(s.narrative),
-      board: s.board ? structuredClone(s.board) : emptyBoard(),
+      board: s.board?.images.length ? structuredClone(s.board) : { ...emptyBoard(), stats: s.board?.stats ?? [] },
       ...(s.contracts ? { contracts: structuredClone(s.contracts) } : {}),
       ...(s.flows ? { flows: structuredClone(s.flows) } : {}),
+      ...(s.spread ? { spread: structuredClone(s.spread) } : {}),
+      ...(s.asOfLabel ? { asOfLabel: s.asOfLabel } : {}),
     };
   }
   return out;
@@ -37,16 +42,27 @@ export function draftKey(date: string) {
 export type LoadResult = { drafts: DraftMap; restored: boolean };
 
 /** อ่านร่างที่ค้างไว้จากครั้งก่อน (ถ้ามี) แล้วเติมส่วนที่ขาดด้วยค่าตั้งต้น */
-export function loadDrafts(brief: Brief): LoadResult {
+export function loadDrafts(brief: Brief, key = brief.date): LoadResult {
   const base = initialDrafts(brief);
   try {
-    const raw = window.localStorage.getItem(draftKey(brief.date));
+    // ร่างที่พิมพ์ไว้ใน Studio รุ่นก่อนเก็บคีย์ตามวันที่ของ brief — อ่านต่อได้ ไม่ให้หาย
+    const raw =
+      window.localStorage.getItem(draftKey(key)) ??
+      window.localStorage.getItem(draftKey("2026-08-05")) ??
+      window.localStorage.getItem(draftKey(brief.date));
     if (!raw) return { drafts: base, restored: false };
     const saved = JSON.parse(raw) as DraftMap;
     let restored = false;
     for (const id of Object.keys(base)) {
       if (saved[id]) {
-        base[id] = { ...base[id], ...saved[id] };
+        const { contracts, flows, spread, ...rest } = saved[id];
+        base[id] = {
+          ...base[id],
+          ...rest,
+          // ข้อมูลกราฟในร่างเก่ากู้คืนเฉพาะ section ที่ยังวาดกราฟอยู่
+          ...(base[id].contracts && contracts ? { contracts, spread } : {}),
+          ...(base[id].flows && flows ? { flows } : {}),
+        };
         restored = true;
       }
     }

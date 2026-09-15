@@ -48,7 +48,7 @@ export function DataImporter({
   function ingest(text: string, name = "") {
     const t = parseCsv(text);
     setTable(t);
-    setMap(guessColumns(t.headers));
+    setMap(guessColumns(t.headers, t.rows));
     setFileName(name);
     setApplied(false);
   }
