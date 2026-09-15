@@ -9,7 +9,7 @@ import { motion, useReducedMotion } from "motion/react";
 export function BiasGauge({ score, label, sub }: { score: number; label: string; sub: string }) {
   const reduce = useReducedMotion();
   const angle = Math.max(-1, Math.min(1, score)) * 80;
-  const color = score > 0.15 ? "var(--c-green)" : score < -0.15 ? "var(--c-rose)" : "var(--c-amber)";
+  const color = score > 0.25 ? "var(--c-green)" : score < -0.25 ? "var(--c-rose)" : "var(--c-amber)";
 
   return (
     <div className="flex flex-col items-center">
