@@ -5,7 +5,7 @@ import type { Section } from "@/lib/types";
 /** เส้นตัวอย่างเล็ก ๆ ในการ์ดหน้าสรุป — server component, วาดด้วย SVG ล้วน */
 export function MiniSpark({ section }: { section: Section }) {
   const a = ACCENT[section.accent];
-  const values = pick(section);
+  const values = sparkValues(section);
   if (!values.length) return <div className="h-[42px]" />;
 
   const w = 220;
@@ -41,7 +41,7 @@ export function MiniSpark({ section }: { section: Section }) {
   );
 }
 
-function pick(section: Section): number[] {
+export function sparkValues(section: Section): number[] {
   if (section.contracts?.length) return section.contracts[0].rows.map((r) => r.close);
   if (section.flows?.length) return section.flows.map((r) => r.total);
 
