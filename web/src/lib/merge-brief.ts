@@ -1,4 +1,4 @@
-import type { Brief, Narrative, Section } from "./types";
+import type { Brief, ContractSeries, FlowRow, Narrative, Section } from "./types";
 
 /** รูปร่างของไฟล์ที่กด "ส่งออก Brief" ออกมาจาก /studio (narrative ถูกแบให้แบนอยู่ระดับเดียวกับ id) */
 export type PublishedSection = { id: string } & Partial<Narrative> &
@@ -21,7 +21,7 @@ export function mergePublished(brief: Brief, file: PublishedFile | null): Brief 
   if (!overrides.length) return brief;
   if (file?.date && file.date !== brief.date) return brief;
 
-  return {
+  const merged = {
     ...brief,
     dateLabelTH: file?.dateLabelTH || brief.dateLabelTH,
     sections: brief.sections.map((s) => {
@@ -62,4 +62,29 @@ export function mergePublished(brief: Brief, file: PublishedFile | null): Brief 
       } satisfies Section;
     }),
   };
+
+  const contracts = merged.sections.find((s) => s.contracts?.length)?.contracts;
+  return {
+    ...merged,
+    sections: merged.sections.map((s) => (s.flows ? { ...s, flows: repairFlows(s.flows, contracts) } : s)),
+  };
+}
+
+/**
+ * ซ่อมยอดสะสมที่เผยแพร่ด้วย importer รุ่นแรก
+ *  - แถวที่ชีตยังไม่มียอด (เช่นวันนี้ที่มีแค่ OI) ถูกเติมเป็นค่าซ้ำของวันก่อนและราคา 0
+ *  - คอลัมน์ราคา (แกนขวา) ถูกจับคู่กับ spread S50U26Z26 แทนราคาปิด
+ */
+export function repairFlows(flows: FlowRow[], contracts?: ContractSeries[]): FlowRow[] {
+  const rows: FlowRow[] = [];
+  for (const r of flows) {
+    const p = rows[rows.length - 1];
+    if (p && !r.set50 && r.foreign === p.foreign && r.fund === p.fund) continue;
+    rows.push(r);
+  }
+  const close = new Map((contracts?.[0]?.rows ?? []).map((r) => [r.t, r.close]));
+  // ราคา S50 อยู่หลักพัน ถ้าทุกแถวต่ำกว่า 100 แปลว่าเป็น spread ไม่ใช่ราคา
+  const wrongColumn = rows.length > 0 && close.size > 0 && rows.every((r) => Math.abs(r.set50) < 100);
+  if (!wrongColumn) return rows;
+  return rows.filter((r) => close.has(r.t)).map((r) => ({ ...r, set50: close.get(r.t)! }));
 }
