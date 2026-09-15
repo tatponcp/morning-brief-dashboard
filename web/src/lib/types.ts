@@ -10,6 +10,16 @@ export type Narrative = {
   actions: { label: string; value: string; tone?: Bias }[];
   /** แถบ Insight ปิดท้าย section */
   insight: string;
+  /** สถานการณ์ที่ IC เลือกใน Studio — หน้าสรุปภาพรวมใช้รวมเป็นภาพใหญ่ของวัน */
+  scenario?: ScenarioPick;
+};
+
+export type ScenarioPick = {
+  id: string;
+  title: string;
+  bias: Bias;
+  views?: string[];
+  levels?: Record<string, string>;
 };
 
 export type Candle = {

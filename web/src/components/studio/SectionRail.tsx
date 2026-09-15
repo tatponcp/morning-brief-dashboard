@@ -1,6 +1,8 @@
 "use client";
 
+import { motion } from "motion/react";
 import { Check, CircleDashed } from "lucide-react";
+import { toneOf } from "@/lib/accent";
 import { ACCENT } from "@/lib/accent";
 import { draftStatus } from "@/lib/draft-status";
 import type { DraftMap } from "@/lib/drafts";
@@ -25,39 +27,53 @@ export function SectionRail({
         const on = s.id === activeId;
         const st = draftStatus(s, drafts[s.id]);
         return (
-          <button
+          <motion.button
             key={s.id}
             onClick={() => onSelect(s.id)}
-            className="group flex shrink-0 items-center gap-2.5 rounded-xl border px-3 py-2 text-left transition lg:w-full"
-            style={{
-              borderColor: on ? a.hex : "rgba(148,163,184,0.14)",
-              background: on ? a.soft : "var(--c-hover)",
-            }}
+            whileHover={{ x: on ? 0 : 3 }}
+            whileTap={{ scale: 0.98 }}
+            className="group relative flex shrink-0 items-center gap-2.5 rounded-xl border border-white/8 bg-[var(--c-hover)] px-3 py-2 text-left lg:w-full"
           >
+            {on && (
+              <motion.span
+                layoutId="studio-rail"
+                transition={{ type: "spring", stiffness: 420, damping: 36 }}
+                className="absolute inset-0 rounded-xl border"
+                style={{ borderColor: a.hex, background: a.soft }}
+              />
+            )}
             <span
-              className="grid size-6 shrink-0 place-items-center rounded-md font-display text-[11px] font-bold"
+              className="relative grid size-6 shrink-0 place-items-center rounded-md font-display text-[11px] font-bold"
               style={{ background: on ? a.hex : "var(--c-hover)", color: on ? "var(--ink-950)" : a.hex }}
             >
               {s.index}
             </span>
 
-            <span className="min-w-0 flex-1">
+            <span className="relative min-w-0 flex-1">
               <span
                 className={`block truncate text-[12.5px] ${on ? "font-semibold text-white" : "text-slate-300"}`}
               >
                 {s.title}
               </span>
-              <span className="hidden text-[11px] text-slate-400 lg:block">
-                {st.complete ? "กรอกครบแล้ว" : `เหลือ ${st.missing.length} ช่อง`}
+              <span className="hidden truncate text-[11px] lg:block">
+                {drafts[s.id]?.scenario ? (
+                  <span className={toneOf(drafts[s.id].scenario!.bias).text}>{drafts[s.id].scenario!.title}</span>
+                ) : (
+                  <span className="text-slate-400">
+                    {st.complete ? "กรอกครบแล้ว" : `เหลือ ${st.missing.length} ช่อง`}
+                  </span>
+                )}
               </span>
             </span>
 
             {st.complete ? (
-              <Check className="size-4 shrink-0 text-green-neon" />
+              <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="relative">
+                <Check className="size-4 shrink-0 text-green-neon" />
+              </motion.span>
             ) : (
-              <CircleDashed className="size-4 shrink-0 text-slate-600" />
+              <CircleDashed className="relative size-4 shrink-0 text-slate-600" />
             )}
-          </button>
+          </motion.button>
         );
       })}
     </div>

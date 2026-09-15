@@ -57,7 +57,7 @@ export function PriceOIPanel({ series }: { series: ContractSeries }) {
   const rangeLabel = range === "ทั้งหมด" ? `ตั้งแต่ ${thaiShortDate(rows[0].t)}` : range;
 
   return (
-    <div className="panel overflow-hidden">
+    <div className="panel @container overflow-hidden">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/6 px-5 py-3">
         <h3 className="font-display text-xl font-bold text-green-neon">{series.symbol}</h3>
         <span className="text-[12px] text-slate-500">
@@ -78,7 +78,7 @@ export function PriceOIPanel({ series }: { series: ContractSeries }) {
         </div>
       </div>
 
-      <div data-share-cols="2" className="grid divide-y divide-white/6 lg:grid-cols-2 lg:divide-x lg:divide-y-0">
+      <div data-share-cols="2" className="grid divide-y divide-white/6 @2xl:grid-cols-2 @2xl:divide-x @2xl:divide-y-0">
         <Half
           icon={<TrendingUp className="size-4" />}
           title="Price"

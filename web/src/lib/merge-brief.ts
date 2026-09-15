@@ -34,6 +34,7 @@ export function mergePublished(brief: Brief, file: PublishedFile | null): Brief 
           interpretation: o.interpretation ?? s.narrative.interpretation,
           actions: o.actions ?? s.narrative.actions,
           insight: o.insight ?? s.narrative.insight,
+          scenario: o.scenario ?? s.narrative.scenario,
         },
         board:
           o.board && o.board.images?.some((im) => im.src)
