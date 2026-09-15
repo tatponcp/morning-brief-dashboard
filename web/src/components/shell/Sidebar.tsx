@@ -28,13 +28,13 @@ type Item = {
 };
 
 const NAV: Item[] = [
-  { href: "/", label: "สรุปภาพรวม", hint: "Action วันนี้", icon: LayoutGrid, accent: "cyan" },
-  { href: "/s50-oi", label: "S50 Futures + OI", hint: "TQ Pro · SET", icon: BarChart3, accent: "cyan", badge: "1" },
-  { href: "/flows", label: "สะสม Long / Short", hint: "ต่างชาติ · กองทุน", icon: Users, accent: "green", badge: "2" },
-  { href: "/usd-futures", label: "USD Futures Flow", hint: "VM", icon: DollarSign, accent: "sky", badge: "3" },
-  { href: "/confirm", label: "Confirm Up / Down", hint: "Website", icon: Activity, accent: "amber", badge: "4" },
-  { href: "/breadth", label: "Market Breadth", hint: "VM · Indy 2090", icon: Radar, accent: "violet", badge: "5" },
-  { href: "/macro", label: "Global Macro", hint: "Gold · VIX · DXY", icon: Globe2, accent: "rose", badge: "6" },
+  { href: "/", label: "สรุปภาพรวม", hint: "ภาพรวมและสิ่งที่ควรทำ", icon: LayoutGrid, accent: "cyan" },
+  { href: "/s50-oi", label: "S50 Futures + OI", hint: "ราคาและสถานะคงค้าง", icon: BarChart3, accent: "cyan", badge: "1" },
+  { href: "/flows", label: "สะสม Long / Short", hint: "เงินต่างชาติและกองทุน", icon: Users, accent: "green", badge: "2" },
+  { href: "/usd-futures", label: "USD Futures Flow", hint: "ทิศทางค่าเงินบาท", icon: DollarSign, accent: "sky", badge: "3" },
+  { href: "/confirm", label: "Confirm Up / Down", hint: "แรงเงินยืนยันราคา", icon: Activity, accent: "amber", badge: "4" },
+  { href: "/breadth", label: "Market Breadth", hint: "หุ้นทั้งตลาดไปทางไหน", icon: Radar, accent: "violet", badge: "5" },
+  { href: "/macro", label: "Global Macro", hint: "บรรยากาศตลาดโลก", icon: Globe2, accent: "rose", badge: "6" },
 ];
 
 /**
@@ -190,7 +190,7 @@ function NavRow({
             >
               {item.label}
             </span>
-            <span className="block truncate text-[11px] text-slate-500">{item.hint}</span>
+            <span className="block truncate text-[11.5px] text-slate-400">{item.hint}</span>
           </span>
         )}
 

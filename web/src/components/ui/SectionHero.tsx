@@ -42,7 +42,7 @@ export function SectionHero({
         </h1>
 
         <span className="hidden h-4 w-px bg-white/12 lg:block" />
-        <p className="hidden max-w-md truncate text-[13px] text-slate-400 lg:block">{subtitle}</p>
+        <p className="hidden max-w-lg truncate text-[14px] text-slate-300 lg:block">{subtitle}</p>
 
         <div className="ml-auto flex items-center gap-2">
           {demo && (
@@ -58,8 +58,8 @@ export function SectionHero({
         </div>
 
         {/* บรรทัดรองบนจอเล็ก — ไม่เบียดหัวข้อ */}
-        <p className="w-full text-[12.5px] text-slate-400 lg:hidden">{subtitle}</p>
-        <p className="w-full text-[11px] text-slate-600">แหล่งข้อมูล · {source}</p>
+        <p className="w-full text-[14px] text-slate-300 lg:hidden">{subtitle}</p>
+        <p className="w-full text-[12px] text-slate-500">แหล่งข้อมูล · {source}</p>
       </div>
     </div>
   );
