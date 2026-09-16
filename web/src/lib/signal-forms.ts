@@ -66,7 +66,11 @@ export const SIGNAL_FORMS: Record<string, SignalForm> = {
       if (!list) return null;
       const up = count(list, "bull");
       const down = count(list, "bear");
-      const summary = list.map((x) => `${x.label}: ${x.opt.label}`);
+      const names = (tone: Bias) =>
+        list
+          .filter((x) => x.opt.tone === tone)
+          .map((x) => x.label)
+          .join(" และ ");
 
       if (up === 3 || down === 3) {
         const bull = up === 3;
@@ -74,7 +78,11 @@ export const SIGNAL_FORMS: Record<string, SignalForm> = {
           id: bull ? "confirm-all-up" : "confirm-all-down",
           title: bull ? "ขาขึ้นทั้งสามเส้น" : "ขาลงทั้งสามเส้น",
           bias: bull ? "bull" : "bear",
-          summary,
+          summary: [
+            `ทั้ง 3 เส้นเป็น${bull ? "ขาขึ้น" : "ขาลง"}พร้อมกัน`,
+            "ราคาและแรงเงินยืนยันไปทางเดียวกัน",
+            bull ? "ขาขึ้นน่าเชื่อถือ ถือสถานะต่อได้" : "แรงขายยังมีต่อ ยังไม่ใช่จังหวะรับ",
+          ],
           interpretation: bull
             ? "ทั้งสามเส้นเป็นขาขึ้นพร้อมกัน ราคาและแรงเงินยืนยันไปทางเดียวกัน ขาขึ้นจึงน่าเชื่อถือ"
             : "ทั้งสามเส้นเป็นขาลงพร้อมกัน แรงเงินยืนยันฝั่งลง ยังไม่ใช่จังหวะรับ",
@@ -87,7 +95,11 @@ export const SIGNAL_FORMS: Record<string, SignalForm> = {
           id: "confirm-lean-up",
           title: "เอียงขาขึ้น",
           bias: "bull",
-          summary,
+          summary: [
+            `${up} ใน 3 เส้นเป็นขาขึ้น และไม่มีเส้นไหนสวนลง`,
+            `ยังเหลือ ${names("neutral")} ที่ยังไม่ยืนยัน`,
+            "ภาพเอียงขึ้น แต่ยังไม่เต็มแรง",
+          ],
           interpretation: "ส่วนใหญ่เป็นขาขึ้นและไม่มีเส้นไหนสวนลง ภาพรวมเอียงขึ้น แต่ยังรอเส้นที่เหลือยืนยัน",
           insight: "เอียงขาขึ้น รอเส้นที่เหลือตาม",
           views: ["selective-long"],
@@ -98,7 +110,11 @@ export const SIGNAL_FORMS: Record<string, SignalForm> = {
           id: "confirm-lean-down",
           title: "เอียงขาลง",
           bias: "bear",
-          summary,
+          summary: [
+            `${down} ใน 3 เส้นเป็นขาลง และไม่มีเส้นไหนสวนขึ้น`,
+            `ยังเหลือ ${names("neutral")} ที่ยังไม่ยืนยัน`,
+            "ภาพเอียงลง ควรระวังการลงต่อ",
+          ],
           interpretation: "ส่วนใหญ่เป็นขาลงและไม่มีเส้นไหนสวนขึ้น ภาพรวมเอียงลง ควรระวังการลงต่อ",
           insight: "เอียงขาลง ยังไม่ควรรีบรับ",
           views: ["reduce-long"],
@@ -108,7 +124,11 @@ export const SIGNAL_FORMS: Record<string, SignalForm> = {
         id: "confirm-mixed",
         title: "สัญญาณขัดกัน",
         bias: "neutral",
-        summary,
+        summary: [
+          `ขาขึ้น ${up} เส้น · ขาลง ${down} เส้น`,
+          "สัญญาณสวนกัน ยังไม่ยืนยันทิศทาง",
+          "รอให้ตรงกันก่อนค่อยเพิ่มสถานะ",
+        ],
         interpretation: "เส้นแต่ละอันไปคนละทาง ยังไม่มีการยืนยันทิศทาง รอให้สัญญาณตรงกันก่อนค่อยเพิ่มสถานะ",
         insight: "สัญญาณขัดกัน รอความชัดเจน",
         views: ["wait"],
@@ -132,14 +152,22 @@ export const SIGNAL_FORMS: Record<string, SignalForm> = {
       const ovb = count(list, "bull");
       const ovs = count(list, "bear");
       const side = count(list, "neutral");
-      const summary = list.map((x) => `${x.label}: ${x.opt.label.split(" (")[0]}`);
+      const others = (tone: Bias) =>
+        list
+          .filter((x) => x.opt.tone !== tone)
+          .map((x) => x.label)
+          .join(" และ ");
 
       if (ovb >= 3) {
         return {
           id: "breadth-ovb",
           title: `Overbought ${ovb} ใน 4 เส้น`,
           bias: "bull",
-          summary,
+          summary: [
+            `หุ้นส่วนใหญ่อยู่โซน Overbought (${ovb} ใน 4 เส้น)`,
+            "ตลาดขึ้นกว้างทั้งกระดาน ไม่ได้ขึ้นเฉพาะหุ้นใหญ่ไม่กี่ตัว",
+            ovb === 4 ? "ขึ้นมามากแล้ว ระวังจังหวะพักตัวระยะสั้น" : `ยังเหลือ ${others("bull")} ที่ยังไม่ตาม`,
+          ],
           interpretation:
             "หุ้นส่วนใหญ่อยู่โซน Overbought ตลาดแข็งแรงทั้งกระดาน แต่ขึ้นมามากแล้ว ให้ระวังจังหวะพักตัวระยะสั้น",
           insight: "แรงซื้อกว้างทั้งกระดาน แต่เริ่มร้อน",
@@ -151,7 +179,11 @@ export const SIGNAL_FORMS: Record<string, SignalForm> = {
           id: "breadth-ovs",
           title: `Oversold ${ovs} ใน 4 เส้น`,
           bias: "bear",
-          summary,
+          summary: [
+            `หุ้นส่วนใหญ่อยู่โซน Oversold (${ovs} ใน 4 เส้น)`,
+            "แรงขายกระจายทั้งกระดาน ไม่ใช่แค่หุ้นบางตัว",
+            ovs === 4 ? "ลงมาลึกแล้ว มีโอกาสเด้งทางเทคนิค" : `ยังเหลือ ${others("bear")} ที่ยังไม่ตาม`,
+          ],
           interpretation:
             "หุ้นส่วนใหญ่อยู่โซน Oversold แรงขายกระจายทั้งกระดาน ยังไม่ควรรีบรับจนกว่าจะเห็นสัญญาณฟื้น",
           insight: "แรงขายกระจายทั้งกระดาน",
@@ -163,7 +195,11 @@ export const SIGNAL_FORMS: Record<string, SignalForm> = {
           id: "breadth-side",
           title: "Sideway ทั้ง 4 เส้น",
           bias: "neutral",
-          summary,
+          summary: [
+            "ทั้ง 4 เส้นอยู่ในโซน Sideway",
+            "ยังไม่มีฝั่งไหนคุมตลาดได้",
+            "รอสัญญาณระหว่างวันก่อนตัดสินใจ",
+          ],
           interpretation: "ทุกเส้นอยู่ระหว่างเส้นเขียวและเส้นแดง ตลาดยังไม่มีทิศทางชัดเจน รอสัญญาณภายในวัน",
           insight: "ยังไม่มีทิศทางชัดเจน รอสัญญาณ",
           views: ["wait"],
@@ -173,7 +209,11 @@ export const SIGNAL_FORMS: Record<string, SignalForm> = {
         id: "breadth-mixed",
         title: "ทิศทางขัดกัน",
         bias: "neutral",
-        summary,
+        summary: [
+          `Overbought ${ovb} เส้น · Sideway ${side} เส้น · Oversold ${ovs} เส้น`,
+          "เส้นยังไปคนละทาง ภาพรวมตลาดจึงยังไม่ชัด",
+          "รอให้ส่วนใหญ่ไปทางเดียวกันก่อน",
+        ],
         interpretation: "เส้นแต่ละอันอยู่คนละโซน ภาพรวมของตลาดยังไม่ชัด ควรรอให้เส้นส่วนใหญ่ไปทางเดียวกันก่อน",
         insight: "เส้นขัดกัน ภาพยังไม่ชัด",
         views: ["wait"],
