@@ -40,7 +40,29 @@ export function AnswerBar({ id, accent, n }: { id: string; accent: Accent; n: Na
                 {n.insight}
               </span>
             </p>
-            {sc && (
+            {!!sc?.signals?.length && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {sc.signals.map((sig, i) => {
+                  const st = toneOf(sig.tone);
+                  return (
+                    <Reveal key={sig.label} delay={0.05 + i * 0.05}>
+                      <span
+                        className="flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[13px] transition-transform duration-300 hover:-translate-y-0.5"
+                        style={{
+                          borderColor: `color-mix(in srgb, ${st.hex} 35%, transparent)`,
+                          background: `color-mix(in srgb, ${st.hex} 8%, transparent)`,
+                        }}
+                      >
+                        <span className="text-slate-400">{sig.label}</span>
+                        <span className={`font-semibold ${st.text}`}>{sig.value}</span>
+                      </span>
+                    </Reveal>
+                  );
+                })}
+              </div>
+            )}
+
+            {sc && sc.id !== "pending" && (
               <span className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12.5px] font-semibold ${t.bg} ${t.text}`}>
                 <Compass className="size-3.5" />
                 {sc.title} · สัญญาณ{BIAS_LABEL[sc.bias]}
