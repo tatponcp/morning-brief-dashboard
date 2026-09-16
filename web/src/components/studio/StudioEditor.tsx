@@ -30,11 +30,13 @@ import {
 } from "@/lib/drafts";
 import { draftStatus, fieldLabel } from "@/lib/draft-status";
 import { thaiDate, todayBangkok } from "@/lib/format";
-import type { Brief, Instrument, Section } from "@/lib/types";
+import type { Brief, Instrument, PaneGroup, Section } from "@/lib/types";
 import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
 import { ImageBoard } from "@/components/ui/ImageBoard";
 import { PriceOIPanel } from "@/components/charts/PriceOIPanel";
 import { FlowPanel } from "@/components/charts/FlowPanel";
+import { PaneGroupCard } from "@/components/charts/PaneGroupCard";
+import { InstrumentCard } from "@/components/charts/InstrumentCard";
 import { SpreadPanel } from "@/components/charts/SpreadPanel";
 import { BoardEditor } from "./BoardEditor";
 import { DataImporter } from "./DataImporter";
@@ -70,12 +72,15 @@ export function StudioEditor({
   brief,
   canPublish,
   instruments,
+  macroGroup,
 }: {
   brief: Brief;
   /** true = ต่อ Supabase แล้ว กดเผยแพร่ขึ้นเว็บได้เลย */
   canPublish: boolean;
   /** ราคา Gold / VIX / DXY / US10Y สำหรับใส่ในรูปข้อ 6 */
   instruments?: Instrument[];
+  /** กราฟทองคำของข้อ 6 — ใส่ในพรีวิวและรูปส่งลูกค้า */
+  macroGroup?: PaneGroup;
 }) {
   const [sectionId, setSectionId] = useState(brief.sections[0].id);
   const section = brief.sections.find((s) => s.id === sectionId)!;
@@ -508,6 +513,16 @@ export function StudioEditor({
                 {draft.spread && <SpreadPanel spread={draft.spread} />}
               </div>
             )}
+            {section.id === "macro" && macroGroup && (
+              <div className="mb-3 space-y-3">
+                <PaneGroupCard group={macroGroup} />
+                <div className="grid grid-cols-2 gap-2">
+                  {instruments?.map((inst) => (
+                    <InstrumentCard key={inst.id} inst={inst} />
+                  ))}
+                </div>
+              </div>
+            )}
             {!!draft.flows?.length && (
               <div className="mb-3">
                 <FlowPanel rows={draft.flows} />
@@ -641,6 +656,7 @@ export function StudioEditor({
         dateLabel={thaiDate(date)}
         dateISO={date}
         instruments={section.id === "macro" ? instruments : undefined}
+        macroGroup={section.id === "macro" ? macroGroup : undefined}
       />
     </div>
   );
