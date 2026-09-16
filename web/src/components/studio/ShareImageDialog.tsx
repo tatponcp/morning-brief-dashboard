@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } fr
 import { AnimatePresence, motion } from "motion/react";
 import { Check, Copy, Download, ImageDown, Loader2, Share2, X } from "lucide-react";
 import type { Draft } from "@/lib/drafts";
-import type { Instrument, Section } from "@/lib/types";
+import type { Instrument, PaneGroup, Section } from "@/lib/types";
 import {
   canCopyImage,
   canShareFiles,
@@ -34,6 +34,7 @@ export function ShareImageDialog({
   dateLabel,
   dateISO,
   instruments,
+  macroGroup,
 }: {
   open: boolean;
   onClose: () => void;
@@ -42,6 +43,7 @@ export function ShareImageDialog({
   dateLabel: string;
   dateISO: string;
   instruments?: Instrument[];
+  macroGroup?: PaneGroup;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -171,6 +173,7 @@ export function ShareImageDialog({
                     draft={draft}
                     dateLabel={dateLabel}
                     instruments={instruments}
+                    macroGroup={macroGroup}
                     options={options}
                   />
                 </div>

@@ -8,7 +8,8 @@ import { SectionHero } from "@/components/ui/SectionHero";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionNav } from "@/components/ui/SectionNav";
 import { thaiDate } from "@/lib/format";
-import type { PaneGroup } from "@/lib/types";
+import { goldGroup } from "@/lib/macro-view";
+import { AnswerBar } from "@/components/ui/AnswerBar";
 
 export const metadata = { title: "6 · Global Macro Signals" };
 
@@ -20,31 +21,6 @@ export default async function MacroPage() {
   const s = brief.sections.find((x) => x.id === "macro")!;
   const macro = await loadMacro();
 
-  const goldGroup: PaneGroup = {
-    id: "gold",
-    title: "GOLD (COMEX) — ราคาทองคำ",
-    subtitle: "แท่งเทียนรายวัน 1 ปีย้อนหลัง · hover เพื่อดูราคาแต่ละวัน",
-    accentHex: "var(--c-amber)",
-    panes: [
-      {
-        id: "gold-d",
-        title: "GOLD (Daily)",
-        kind: "candle",
-        height: 300,
-        digits: 2,
-        series: [{ key: "c", name: "Gold", color: "var(--c-amber)" }],
-        rows: macro.gold,
-        refLines: [
-          {
-            y: macro.gold.at(-1)?.c ?? 0,
-            color: "var(--c-amber)",
-            label: String(macro.gold.at(-1)?.c?.toFixed(2) ?? ""),
-          },
-        ],
-      },
-    ],
-  };
-
   return (
     <div>
       <SectionHero
@@ -55,6 +31,8 @@ export default async function MacroPage() {
         accent={s.accent}
         dateLabel={thaiDate(macro.asOf)}
       />
+
+      <AnswerBar id={s.id} accent={s.accent} n={s.narrative} />
 
       <Reveal>
         <div
@@ -75,7 +53,7 @@ export default async function MacroPage() {
       </Reveal>
 
       <Reveal>
-        <PaneGroupCard group={goldGroup} />
+        <PaneGroupCard group={goldGroup(macro)} />
       </Reveal>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -86,7 +64,7 @@ export default async function MacroPage() {
         ))}
       </div>
 
-      <NarrativeGrid n={s.narrative} />
+      <NarrativeGrid n={s.narrative} hideInsight />
       <SectionNav sections={brief.sections} currentId={s.id} />
     </div>
   );

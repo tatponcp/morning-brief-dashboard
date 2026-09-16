@@ -4,7 +4,7 @@ import { forwardRef } from "react";
 import { TriangleAlert } from "lucide-react";
 import { ACCENT } from "@/lib/accent";
 import type { Draft } from "@/lib/drafts";
-import type { Instrument, Section } from "@/lib/types";
+import type { Instrument, PaneGroup, Section } from "@/lib/types";
 import { StaticRender } from "@/components/ui/Reveal";
 import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
 import { ImageBoard } from "@/components/ui/ImageBoard";
@@ -32,9 +32,11 @@ export const ShareCard = forwardRef<
     draft: Draft;
     dateLabel: string;
     instruments?: Instrument[];
+    /** ข้อ 6 — กราฟทองคำที่โหลดสด ไม่ได้อยู่ใน section */
+    macroGroup?: PaneGroup;
     options: ShareOptions;
   }
->(function ShareCard({ section, draft, dateLabel, instruments, options }, ref) {
+>(function ShareCard({ section, draft, dateLabel, instruments, macroGroup, options }, ref) {
   const a = ACCENT[section.accent];
   const hasImages = draft.board.images.some((im) => im.src);
 
@@ -97,6 +99,8 @@ export const ShareCard = forwardRef<
           )}
 
           {!!draft.flows?.length && <FlowPanel rows={draft.flows} />}
+
+          {macroGroup && <PaneGroupCard group={macroGroup} />}
 
           {!!section.groups?.length && (
             <div className="grid grid-cols-2 gap-3">
