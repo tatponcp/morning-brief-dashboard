@@ -1,9 +1,10 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, ChevronDown, Minus, TrendingDown, TrendingUp } from "lucide-react";
 import { toneOf } from "@/lib/accent";
-import { optionOf, type SignalForm as Form } from "@/lib/signal-forms";
+import { optionOf, type SignalForm as Form, type SignalOption } from "@/lib/signal-forms";
 import type { Bias } from "@/lib/types";
 
 const ICON: Record<Bias, React.ReactNode> = {
@@ -14,7 +15,7 @@ const ICON: Record<Bias, React.ReactNode> = {
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-/** ข้อ 4 และ 5: เลือกจาก dropdown ทีละเส้น ระบบสรุปให้ทันทีเมื่อครบ */
+/** ข้อ 4 และ 5: เลือกทิศทางของแต่ละเส้น ระบบสรุปให้ทันทีเมื่อครบ */
 export function SignalForm({
   form,
   values,
@@ -38,55 +39,21 @@ export function SignalForm({
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2">
-        {form.fields.map((f, i) => {
-          const opt = optionOf(form, values[f.key]);
-          const t = toneOf(opt?.tone);
-          return (
-            <motion.label
-              key={f.key}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05, ease }}
-              className="relative flex items-center gap-2.5 rounded-2xl border px-3 py-2.5 transition-colors duration-300"
-              style={{
-                borderColor: opt ? `color-mix(in srgb, ${t.hex} 45%, transparent)` : "rgba(148,163,184,0.16)",
-                background: opt ? `color-mix(in srgb, ${t.hex} 8%, transparent)` : "var(--c-hover)",
-              }}
-            >
-              <motion.span
-                key={opt?.value ?? "empty"}
-                initial={{ scale: 0.6, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 420, damping: 26 }}
-                className={`grid size-8 shrink-0 place-items-center rounded-xl ${t.bg} ${t.text}`}
-              >
-                {opt ? ICON[opt.tone] : <Minus className="size-4 opacity-40" />}
-              </motion.span>
-
-              <span className="min-w-0 flex-1">
-                <span className="block text-[12px] text-slate-400">{f.label}</span>
-                <span className={`block truncate text-[14px] font-semibold ${opt ? t.text : "text-slate-500"}`}>
-                  {opt?.label ?? "เลือกทิศทาง"}
-                </span>
-              </span>
-              <ChevronDown className="size-4 shrink-0 text-slate-500" />
-
-              <select
-                aria-label={f.label}
-                value={values[f.key] ?? ""}
-                onChange={(e) => onChange({ ...values, [f.key]: e.target.value })}
-                className="absolute inset-0 cursor-pointer opacity-0"
-              >
-                <option value="">เลือกทิศทาง</option>
-                {form.options.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </motion.label>
-          );
-        })}
+        {form.fields.map((f, i) => (
+          <motion.div
+            key={f.key}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05, ease }}
+          >
+            <Dropdown
+              label={f.label}
+              options={form.options}
+              value={optionOf(form, values[f.key])}
+              onPick={(o) => onChange({ ...values, [f.key]: o.value })}
+            />
+          </motion.div>
+        ))}
       </div>
 
       <p className="text-[12px] leading-relaxed text-slate-500">กติกาสรุป · {form.rule}</p>
@@ -112,6 +79,115 @@ export function SignalForm({
             <p className={`font-display text-[18px] font-bold ${rt.text}`}>{result.title}</p>
             <p className="mt-1 text-[13.5px] leading-relaxed text-slate-200">{result.interpretation}</p>
           </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/** dropdown ที่วาดเอง — หน้าตาเข้าธีมเว็บ ไม่ใช่กล่องขาวของระบบปฏิบัติการ */
+function Dropdown({
+  label,
+  options,
+  value,
+  onPick,
+}: {
+  label: string;
+  options: SignalOption[];
+  value?: SignalOption;
+  onPick: (o: SignalOption) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const t = toneOf(value?.tone);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: Event) => {
+      if (!box.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("pointerdown", close);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={box} className="relative">
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-left transition-colors duration-300 hover:border-white/25"
+        style={{
+          borderColor: value ? `color-mix(in srgb, ${t.hex} 45%, transparent)` : "rgba(148,163,184,0.16)",
+          background: value ? `color-mix(in srgb, ${t.hex} 8%, transparent)` : "var(--c-hover)",
+        }}
+      >
+        <motion.span
+          key={value?.value ?? "empty"}
+          initial={{ scale: 0.6, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 420, damping: 26 }}
+          className={`grid size-8 shrink-0 place-items-center rounded-xl ${t.bg} ${t.text}`}
+        >
+          {value ? ICON[value.tone] : <Minus className="size-4 opacity-40" />}
+        </motion.span>
+
+        <span className="min-w-0 flex-1">
+          <span className="block text-[12px] text-slate-400">{label}</span>
+          <span className={`block truncate text-[14px] font-semibold ${value ? t.text : "text-slate-500"}`}>
+            {value?.label ?? "เลือกทิศทาง"}
+          </span>
+        </span>
+
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronDown className="size-4 shrink-0 text-slate-400" />
+        </motion.span>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.ul
+            role="listbox"
+            aria-label={label}
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.18, ease }}
+            className="absolute inset-x-0 top-[calc(100%+6px)] z-30 overflow-hidden rounded-2xl border border-white/12 bg-ink-900/95 p-1 shadow-2xl backdrop-blur-xl"
+          >
+            {options.map((o) => {
+              const ot = toneOf(o.tone);
+              const on = o.value === value?.value;
+              return (
+                <li key={o.value}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={on}
+                    onClick={() => {
+                      onPick(o);
+                      setOpen(false);
+                    }}
+                    className={`flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13.5px] transition-colors ${
+                      on ? `${ot.bg} ${ot.text}` : "text-slate-200 hover:bg-white/6"
+                    }`}
+                  >
+                    <span className={`grid size-6 shrink-0 place-items-center rounded-lg ${ot.bg} ${ot.text}`}>
+                      {ICON[o.tone]}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">{o.label}</span>
+                    {on && <Check className="size-4 shrink-0" />}
+                  </button>
+                </li>
+              );
+            })}
+          </motion.ul>
         )}
       </AnimatePresence>
     </div>
