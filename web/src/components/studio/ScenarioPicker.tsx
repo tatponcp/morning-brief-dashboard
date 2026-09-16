@@ -11,6 +11,8 @@ import {
   suggestScenario,
   type ViewId,
 } from "@/lib/scenarios";
+import { SIGNAL_FORMS, optionOf } from "@/lib/signal-forms";
+import { SignalForm } from "./SignalForm";
 import type { Bias, ContractSeries, FlowRow, Instrument, Narrative } from "@/lib/types";
 
 const BIAS_LABEL: Record<Bias, string> = { bull: "บวก", neutral: "กลาง", bear: "ลบ" };
@@ -40,43 +42,91 @@ export function ScenarioPicker({
   onNext: () => void;
 }) {
   const guide = GUIDES[sectionId];
+  const form = SIGNAL_FORMS[sectionId];
   if (!guide) return null;
 
   const picked = value.scenario;
   const current = guide.scenarios.find((s) => s.id === picked?.id);
   const views = (picked?.views ?? []) as ViewId[];
   const levels = picked?.levels ?? {};
-  const suggestion = suggestScenario(sectionId, data);
+  const suggestion = form ? null : suggestScenario(sectionId, data);
+  const bias = current?.bias ?? picked?.bias ?? "neutral";
+  const ready = !!current || (!!form && !!form.conclude(picked?.values ?? {}));
+
+  /** เลือก dropdown ครบเมื่อไหร่ ระบบเขียนสรุป/แปลความ/Action ให้ทันที */
+  function applySignals(nextValues: Record<string, string>) {
+    const result = form.conclude(nextValues);
+    const signals = form.fields
+      .map((f) => ({ label: f.label, opt: optionOf(form, nextValues[f.key]) }))
+      .filter((x) => x.opt)
+      .map((x) => ({ label: x.label, value: x.opt!.label.split(" (")[0], tone: x.opt!.tone }));
+
+    if (!result) {
+      onApply({
+        scenario: {
+          id: "pending",
+          title: "ยังเลือกไม่ครบ",
+          bias: "neutral",
+          views,
+          levels,
+          values: nextValues,
+          signals,
+        },
+      });
+      return;
+    }
+    onApply({
+      summary: [...result.summary],
+      interpretation: result.interpretation,
+      insight: result.insight,
+      actions: buildActions(result.views, levels, result.bias),
+      scenario: {
+        id: result.id,
+        title: result.title,
+        bias: result.bias,
+        views: result.views,
+        levels,
+        values: nextValues,
+        signals,
+      },
+    });
+  }
 
   /** เปลี่ยนเฉพาะแถวที่มาจากการ์ด — แถวที่ IC เพิ่มเองในขั้นแก้คำยังอยู่ */
   function updateActions(nextViews: ViewId[], nextLevels: Record<string, string>) {
-    if (!current || !picked) return;
+    if (!picked || !ready) return;
     const managed = new Set(["มุมมอง", ...guide.levels.map((l) => l.label)]);
     const kept = value.actions.filter((a) => !managed.has(a.label) && (a.label || a.value));
     onApply({
-      actions: [...buildActions(nextViews, nextLevels, current.bias), ...kept],
+      actions: [...buildActions(nextViews, nextLevels, bias), ...kept],
       scenario: { ...picked, views: nextViews, levels: nextLevels },
     });
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <p className="text-[14px] font-semibold text-slate-100">{guide.question}</p>
-        {suggestion && (
-          <motion.span
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center gap-1.5 rounded-full border border-violet-neon/30 bg-violet-neon/10 px-2.5 py-1 text-[11.5px] text-violet-neon"
-          >
-            <Sparkles className="size-3.5" />
-            จากข้อมูล: {suggestion.reason}
-          </motion.span>
-        )}
-      </div>
+      {!form && (
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-[14px] font-semibold text-slate-100">{guide.question}</p>
+          {suggestion && (
+            <motion.span
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center gap-1.5 rounded-full border border-violet-neon/30 bg-violet-neon/10 px-2.5 py-1 text-[11.5px] text-violet-neon"
+            >
+              <Sparkles className="size-3.5" />
+              จากข้อมูล: {suggestion.reason}
+            </motion.span>
+          )}
+        </div>
+      )}
+
+      {form && (
+        <SignalForm form={form} values={picked?.values ?? {}} onChange={applySignals} />
+      )}
 
       {/* การ์ดสถานการณ์ */}
-      <div className="grid gap-2.5 sm:grid-cols-2">
+      <div className={`grid gap-2.5 sm:grid-cols-2 ${form ? "hidden" : ""}`}>
         {guide.scenarios.map((sc, i) => {
           const on = sc.id === picked?.id;
           const t = toneOf(sc.bias);
@@ -142,7 +192,7 @@ export function ScenarioPicker({
 
       {/* มุมมอง + ตัวเลข — โผล่หลังเลือกการ์ด */}
       <AnimatePresence initial={false}>
-        {current && (
+        {ready && (
           <motion.div
             key="detail"
             initial={{ opacity: 0, height: 0 }}
@@ -213,7 +263,9 @@ export function ScenarioPicker({
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-[11.5px] text-slate-500">กดการ์ดใหม่จะแทนข้อความเดิม · Ctrl+Z ย้อนได้</p>
+                <p className="text-[11.5px] text-slate-500">
+                  {form ? "เปลี่ยน dropdown จะเขียนข้อความให้ใหม่" : "กดการ์ดใหม่จะแทนข้อความเดิม"} · Ctrl+Z ย้อนได้
+                </p>
                 <motion.button
                   type="button"
                   whileHover={{ x: 2 }}

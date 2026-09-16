@@ -20,6 +20,9 @@ export type ScenarioPick = {
   bias: Bias;
   views?: string[];
   levels?: Record<string, string>;
+  /** ข้อ 4 · 5 — คำตอบจาก dropdown ของแต่ละเส้น (ค่าที่เลือก + ที่แสดงให้ลูกค้า) */
+  values?: Record<string, string>;
+  signals?: { label: string; value: string; tone: Bias }[];
 };
 
 export type Candle = {
