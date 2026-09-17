@@ -12,6 +12,12 @@ export type PublishedFile = {
 };
 
 /**
+ * ชื่อหัวข้อตั้งต้นรุ่นก่อน — Studio รุ่นเก่าส่งชื่อนี้ติดมาทุกครั้งที่เผยแพร่
+ * ถ้าเจอให้ใช้ชื่อใหม่ในโค้ด (เช่น "Series + Open Interest") แทน ไม่ใช่ชื่อที่ IC ตั้งเอง
+ */
+const LEGACY_TITLES = ["S50 Futures + Open Interest"];
+
+/**
  * ทับข้อมูลตั้งต้นด้วยของที่ IC เผยแพร่
  *
  * ใช้ร่วมกันทั้งสองทาง — อ่านจาก published.json (ไม่มี DB) และอ่านจาก Supabase
@@ -31,7 +37,7 @@ export function mergePublished(brief: Brief, file: PublishedFile | null): Brief 
       return {
         ...s,
         // ชื่อหัวข้อ คำโปรย และ series ที่ IC ปรับใน Studio
-        title: o.title?.trim() || s.title,
+        title: o.title?.trim() && !LEGACY_TITLES.includes(o.title.trim()) ? o.title.trim() : s.title,
         subtitle: o.subtitle?.trim() || s.subtitle,
         series: o.series?.trim() || s.series,
         narrative: {
