@@ -16,7 +16,6 @@ import {
   Users,
 } from "lucide-react";
 import { ACCENT, type Accent } from "@/lib/accent";
-import { OptionsDeepDive } from "./OptionsDeepDive";
 
 type Item = {
   href: string;
@@ -106,7 +105,6 @@ export function Sidebar() {
           ))}
         </ul>
 
-        <OptionsDeepDive collapsed={collapsed} />
       </nav>
 
       <button

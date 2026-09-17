@@ -10,6 +10,7 @@ export function SectionHero({
   accent,
   dateLabel,
   demo,
+  series,
 }: {
   index: number;
   title: string;
@@ -19,6 +20,8 @@ export function SectionHero({
   dateLabel: string;
   /** true = ตัวเลขยังเป็นข้อมูลจำลอง */
   demo?: boolean;
+  /** ชื่อสัญญาที่ใช้อยู่ เช่น S50Z26 */
+  series?: string;
 }) {
   const a = ACCENT[accent];
   return (
@@ -40,6 +43,15 @@ export function SectionHero({
         >
           {title}
         </h1>
+
+        {series && (
+          <span
+            className="rounded-lg border px-2 py-0.5 font-display text-[13px] font-bold"
+            style={{ borderColor: a.hex, color: a.hex, background: a.soft }}
+          >
+            {series}
+          </span>
+        )}
 
         <span className="hidden h-4 w-px bg-white/12 lg:block" />
         <p className="hidden max-w-lg truncate text-[14px] text-slate-300 lg:block">{subtitle}</p>

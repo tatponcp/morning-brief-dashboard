@@ -16,7 +16,6 @@ const ENTRIES: Entry[] = [
   { href: "/confirm", label: "4 · Confirm Up / Down S50", hint: "Website", accent: "amber", keys: "confirm trend" },
   { href: "/breadth", label: "5 · Market Breadth SET50", hint: "Indy 2090", accent: "violet", keys: "breadth ma200 rsi" },
   { href: "/macro", label: "6 · Global Macro Signals", hint: "Gold · VIX · DXY", accent: "rose", keys: "macro gold vix dxy bond" },
-  { href: "https://s50-dashboard.vercel.app/", label: "S50 Options · OI เชิงลึก ↗", hint: "OI รายสไตรค์ · Max Pain · PCR · IV (เปิดแท็บใหม่)", accent: "cyan", keys: "options oi strike max pain pcr iv ออปชัน", external: true },
 ];
 
 /** เปิด entry — ลิงก์นอกเว็บเปิดแท็บใหม่ ลูกค้าจะได้ไม่หลุดจาก Morning Brief */

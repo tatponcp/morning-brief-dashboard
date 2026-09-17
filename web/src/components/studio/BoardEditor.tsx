@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRef, useState } from "react";
-import { ImagePlus, MousePointerClick, Plus, Trash2 } from "lucide-react";
+import { Eraser, ImagePlus, MousePointerClick, Plus, Trash2 } from "lucide-react";
 import { toneOf } from "@/lib/accent";
 import type { Bias, BoardImage, BoardStat, Callout, ImageBoard } from "@/lib/types";
 
@@ -20,9 +20,25 @@ export function BoardEditor({
   onChange: (b: ImageBoard) => void;
 }) {
   const setImages = (images: BoardImage[]) => onChange({ ...board, images });
+  const filled = board.images.filter((im) => im.src).length;
 
   return (
     <div className="space-y-3">
+      {filled > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-rose-neon/25 bg-rose-neon/6 px-3 py-2">
+          <p className="min-w-0 flex-1 text-[12.5px] text-slate-300">
+            มีรูปอยู่ {filled} รูป · ถ้าเป็นรูปของวันก่อน ล้างทิ้งแล้วใส่รูปใหม่ได้เลย
+          </p>
+          <button
+            onClick={() => setImages([{ src: "", alt: "", callouts: [] }])}
+            className="flex items-center gap-1.5 rounded-lg bg-rose-neon/15 px-3 py-1.5 text-[12.5px] font-semibold text-rose-neon transition hover:bg-rose-neon/25"
+          >
+            <Eraser className="size-4" />
+            ล้างรูปทั้งหมดในข้อนี้
+          </button>
+        </div>
+      )}
+
       {board.images.map((im, i) => (
         <ImageSlot
           key={i}
@@ -30,7 +46,11 @@ export function BoardEditor({
           index={i}
           canRemove={board.images.length > 1}
           onPatch={(p) => setImages(board.images.map((x, j) => (j === i ? { ...x, ...p } : x)))}
-          onRemove={() => setImages(board.images.filter((_, j) => j !== i))}
+          onRemove={() =>
+            board.images.length > 1
+              ? setImages(board.images.filter((_, j) => j !== i))
+              : setImages([{ src: "", alt: "", callouts: [] }])
+          }
         />
       ))}
 
@@ -96,13 +116,13 @@ function ImageSlot({
             คลิกบนภาพเพื่อเพิ่มคำอธิบาย · ลากจุดเพื่อย้าย
           </span>
         )}
-        {canRemove && (
+        {(canRemove || image.src) && (
           <button
             onClick={onRemove}
-            aria-label="ลบภาพนี้"
-            className="ml-auto rounded-lg border border-white/8 px-2 py-1 text-slate-500 transition hover:border-rose-neon/40 hover:text-rose-neon"
+            className="ml-auto flex items-center gap-1.5 rounded-lg border border-rose-neon/30 px-2.5 py-1 text-[12px] text-rose-neon transition hover:bg-rose-neon/10"
           >
             <Trash2 className="size-3.5" />
+            {image.src ? "ลบรูปนี้" : "เอาช่องนี้ออก"}
           </button>
         )}
       </div>
@@ -136,6 +156,17 @@ function ImageSlot({
       >
         {image.src ? (
           <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove();
+              }}
+              className="absolute top-2 right-2 z-10 flex items-center gap-1.5 rounded-lg bg-ink-950/85 px-2.5 py-1.5 text-[12px] font-semibold text-rose-neon opacity-90 shadow-lg backdrop-blur transition hover:bg-rose-neon hover:text-ink-950"
+            >
+              <Trash2 className="size-3.5" />
+              ลบรูป
+            </button>
             <Image
               src={image.src}
               alt={image.alt || "preview"}

@@ -23,6 +23,8 @@ export type ScenarioPick = {
   /** ข้อ 4 · 5 — คำตอบจาก dropdown ของแต่ละเส้น (ค่าที่เลือก + ที่แสดงให้ลูกค้า) */
   values?: Record<string, string>;
   signals?: { label: string; value: string; tone: Bias }[];
+  /** คะแนน 0–100 ของ section นี้ ใช้คำนวณภาพรวมบนหน้าแรก */
+  score?: number;
 };
 
 export type Candle = {
@@ -151,6 +153,8 @@ export type Section = {
   asOfLabel?: string;
   /** ข้อ 1 — spread series จากชีต */
   spread?: SpreadSeries;
+  /** ชื่อสัญญาที่ใช้อยู่ เช่น S50U26 — IC เปลี่ยนเองใน Studio เมื่อย้ายสัญญา */
+  series?: string;
   narrative: Narrative;
   contracts?: ContractSeries[];
   flows?: FlowRow[];

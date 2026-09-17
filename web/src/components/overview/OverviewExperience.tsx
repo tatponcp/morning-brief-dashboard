@@ -2,19 +2,27 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
-  AnimatePresence,
-  motion,
-  useMotionTemplate,
-  useMotionValue,
-  useReducedMotion,
-  useSpring,
-  useTransform,
-} from "motion/react";
-import { ArrowLeft, ArrowRight, ArrowUpRight, Hand, Minus, Quote, TrendingDown, TrendingUp } from "lucide-react";
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  Calculator,
+  ChevronDown,
+  Clock3,
+  Hand,
+  Minus,
+  Quote,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
 import { ACCENT, toneOf, type Accent } from "@/lib/accent";
+import { BANDS, bandOf, overallScore } from "@/lib/market-score";
+import { pendingReason } from "@/lib/freshness";
 import type { Bias } from "@/lib/types";
 import { BiasGauge } from "@/components/ui/BiasGauge";
+import { Tilt } from "@/components/ui/Tilt3D";
+import { NotUpdatedScene, usePending } from "@/components/ui/NotUpdated";
 
 export type SignalCard = {
   id: string;
@@ -24,6 +32,8 @@ export type SignalCard = {
   accent: Accent;
   bias?: Bias;
   scenario?: string;
+  score: number | null;
+  empty: boolean;
   insight: string;
   summary: string[];
   view?: { value: string; tone?: Bias };
@@ -31,73 +41,93 @@ export type SignalCard = {
   spark: number[];
 };
 
-const BIAS_LABEL: Record<Bias, string> = { bull: "บวก", neutral: "กลาง", bear: "ลบ" };
 const BIAS_ICON: Record<Bias, typeof TrendingUp> = { bull: TrendingUp, neutral: Minus, bear: TrendingDown };
 const ease = [0.16, 1, 0.3, 1] as const;
 
-/** คำตัดสินของวันจากสถานการณ์ที่ IC เลือก — ประโยคเดียวที่ลูกค้าอ่านแล้วรู้เลย */
-function verdict(cards: SignalCard[]) {
-  const picked = cards.filter((c) => c.bias);
-  const count: Record<Bias, number> = { bull: 0, neutral: 0, bear: 0 };
-  for (const c of picked) count[c.bias!]++;
-  const score = picked.length ? (count.bull - count.bear) / picked.length : 0;
-  // ต้องเอียงชัดเกินหนึ่งในสี่ถึงนับว่าเอียง — บวก 2 ลบ 1 กลาง 3 ยังถือว่ากลาง
-  const tone: Bias = score > 0.25 ? "bull" : score < -0.25 ? "bear" : "neutral";
-  const strength = Math.abs(score) >= 0.6 ? "ชัดเจน" : tone === "neutral" ? "" : "เล็กน้อย";
+export function OverviewExperience({
+  dateLabel,
+  briefDate,
+  cards: raw,
+}: {
+  dateLabel: string;
+  briefDate: string;
+  cards: SignalCard[];
+}) {
+  // ตัดสินว่าข้อไหนยังไม่อัปเดตด้วยนาฬิกาของลูกค้า
+  const { tick } = usePending({ briefDate, empty: false });
+  const cards = useMemo(
+    () =>
+      raw.map((c) => ({ ...c, pending: pendingReason({ briefDate, empty: c.empty }, new Date(tick * 30_000)) })),
+    [raw, briefDate, tick],
+  );
 
-  // มุมมองที่ IC ใช้บ่อยที่สุดในวันนี้
+  const live = cards.filter((c) => !c.pending);
+  const { score, counted, band } = overallScore(live.map((c) => c.score));
+  const allPending = live.length === 0;
+  const [peek, setPeek] = useState(false);
+
+  // มุมมองที่ IC ใช้บ่อยที่สุดในข้อที่อัปเดตแล้ว
+  // ตอนแอบดูของวันก่อน (ทุกข้อยังไม่อัปเดต) ใช้ข้อที่มีข้อมูลแทน
+  const basis = allPending ? cards.filter((c) => !c.empty) : live;
   const freq = new Map<string, { n: number; tone?: Bias }>();
-  for (const c of cards)
+  for (const c of basis)
     for (const v of c.view?.value.split(" / ") ?? []) {
       const cur = freq.get(v) ?? { n: 0, tone: c.view?.tone };
       freq.set(v, { n: cur.n + 1, tone: cur.tone });
     }
   const topView = [...freq.entries()].sort((a, b) => b[1].n - a[1].n)[0];
 
-  const headline = !picked.length
-    ? { big: "รอสรุปสัญญาณเช้านี้", small: "IC กำลังอ่าน 6 ชุดข้อมูลก่อนตลาดเปิด" }
-    : tone === "bull"
-      ? { big: "ตลาดเอียงบวก", small: "สัญญาณส่วนใหญ่หนุนฝั่ง Long" }
-      : tone === "bear"
-        ? { big: "ตลาดเอียงลบ", small: "สัญญาณส่วนใหญ่กดดัน ระวังความเสี่ยง" }
-        : { big: "ตลาดยังไม่เลือกทาง", small: "สัญญาณผสม รอการยืนยันก่อน" };
-
-  return { picked, count, score, tone, strength, headline, topView };
-}
-
-export function OverviewExperience({ dateLabel, cards }: { dateLabel: string; cards: SignalCard[] }) {
-  const v = useMemo(() => verdict(cards), [cards]);
-  const [active, setActive] = useState(() => cards.find((c) => c.bias)?.id ?? cards[0].id);
+  const [active, setActive] = useState(() => raw.find((c) => c.bias)?.id ?? raw[0].id);
   const detailRef = useRef<HTMLDivElement>(null);
   const i = cards.findIndex((c) => c.id === active);
   const card = cards[i];
-
   const go = (dir: 1 | -1) => setActive(cards[(i + dir + cards.length) % cards.length].id);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const el = e.target as HTMLElement;
-      if (el.closest("input, textarea, [contenteditable]")) return;
-      if (e.key === "ArrowRight") setActive((id) => cards[(cards.findIndex((c) => c.id === id) + 1) % cards.length].id);
+      if ((e.target as HTMLElement).closest("input, textarea, [contenteditable]")) return;
+      if (e.key === "ArrowRight") setActive((id) => raw[(raw.findIndex((c) => c.id === id) + 1) % raw.length].id);
       if (e.key === "ArrowLeft")
-        setActive((id) => cards[(cards.findIndex((c) => c.id === id) - 1 + cards.length) % cards.length].id);
+        setActive((id) => raw[(raw.findIndex((c) => c.id === id) - 1 + raw.length) % raw.length].id);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [cards]);
+  }, [raw]);
 
   function select(id: string) {
     setActive(id);
-    // จอเล็ก: เลื่อนไปที่รายละเอียดให้เห็นทันที
     if (window.matchMedia("(max-width: 1023px)").matches)
       requestAnimationFrame(() => detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
 
-  const t = toneOf(v.tone);
+  if (allPending && !peek) {
+    return (
+      <NotUpdatedScene
+        title="Morning Brief วันนี้"
+        accent="cyan"
+        lastLabel={dateLabel}
+        reason="stale"
+        onPeek={raw.some((c) => !c.empty) ? () => setPeek(true) : undefined}
+      />
+    );
+  }
+
+  const shownScore = allPending ? overallScore(basis.map((c) => c.score)) : { score, counted, band };
+  const t = toneOf(shownScore.band?.tone);
 
   return (
     <div className="space-y-5">
-      {/* ───────── คำตัดสินของวัน ───────── */}
+      {allPending && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-neon/30 bg-amber-neon/8 px-4 py-2.5 text-[13px] text-amber-neon">
+          <Clock3 className="size-4" />
+          กำลังดูข้อมูลล่าสุดของ {dateLabel} · วันนี้ยังไม่อัปเดต
+          <button onClick={() => setPeek(false)} className="ml-auto text-[12px] underline-offset-2 hover:underline">
+            กลับ
+          </button>
+        </div>
+      )}
+
+      {/* ───────── คะแนนภาพรวม ───────── */}
       <Tilt className="rounded-3xl" max={4}>
         <div className="panel relative overflow-hidden rounded-3xl px-6 py-7 md:px-10 md:py-9">
           <motion.div
@@ -122,78 +152,56 @@ export function OverviewExperience({ dateLabel, cards }: { dateLabel: string; ca
               </motion.p>
 
               <motion.h1
+                key={shownScore.band?.label}
                 initial={{ opacity: 0, y: 16, rotateX: 30 }}
                 animate={{ opacity: 1, y: 0, rotateX: 0 }}
                 transition={{ duration: 0.8, ease }}
-                className="font-display text-[38px] leading-[1.05] font-bold md:text-[58px]"
+                className="font-display text-[36px] leading-[1.05] font-bold md:text-[54px]"
                 style={{ color: t.hex, textShadow: `0 0 40px color-mix(in srgb, ${t.hex} 35%, transparent)` }}
               >
-                {v.headline.big}
+                {shownScore.band?.label ?? "รอสรุปสัญญาณ"}
               </motion.h1>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.25 }}
-                className="mt-2 text-[16px] text-slate-300 md:text-[18px]"
-              >
-                {v.headline.small}
-              </motion.p>
+              <p className="mt-2 text-[16px] text-slate-300 md:text-[18px]">
+                {shownScore.band?.hint ?? "IC กำลังอ่าน 6 ชุดข้อมูลก่อนตลาดเปิด"}
+              </p>
 
-              {v.topView && (
+              {topView && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.35, ease }}
                   className="mt-5 inline-flex items-center gap-3 rounded-2xl border px-4 py-3"
                   style={{
-                    borderColor: `color-mix(in srgb, ${toneOf(v.topView[1].tone).hex} 35%, transparent)`,
-                    background: `color-mix(in srgb, ${toneOf(v.topView[1].tone).hex} 8%, transparent)`,
+                    borderColor: `color-mix(in srgb, ${toneOf(topView[1].tone).hex} 35%, transparent)`,
+                    background: `color-mix(in srgb, ${toneOf(topView[1].tone).hex} 8%, transparent)`,
                   }}
                 >
                   <span className="text-[13px] text-slate-400">กลยุทธ์หลักวันนี้</span>
-                  <span className={`font-display text-[20px] font-bold ${toneOf(v.topView[1].tone).text}`}>
-                    {v.topView[0]}
+                  <span className={`font-display text-[20px] font-bold ${toneOf(topView[1].tone).text}`}>
+                    {topView[0]}
                   </span>
                 </motion.div>
               )}
 
-              {/* แถบสัดส่วนสัญญาณ */}
-              <div className="mt-6 max-w-md">
-                <div className="flex h-2.5 overflow-hidden rounded-full bg-white/6">
-                  {(["bull", "neutral", "bear"] as Bias[]).map((b, k) => (
-                    <motion.span
-                      key={b}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(v.count[b] / cards.length) * 100}%` }}
-                      transition={{ duration: 0.9, delay: 0.4 + k * 0.1, ease }}
-                      style={{ background: toneOf(b).hex }}
-                    />
-                  ))}
-                </div>
-                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12.5px]">
-                  {(["bull", "neutral", "bear"] as Bias[]).map((b) => (
-                    <span key={b} className="flex items-center gap-1.5 text-slate-400">
-                      <span className="size-2 rounded-full" style={{ background: toneOf(b).hex }} />
-                      {BIAS_LABEL[b]} <span className="font-semibold text-slate-100">{v.count[b]}</span>
-                    </span>
-                  ))}
-                  {v.picked.length < cards.length && (
-                    <span className="text-slate-500">รอสรุป {cards.length - v.picked.length}</span>
-                  )}
-                </div>
-              </div>
+              <p className="mt-4 text-[12.5px] text-slate-500">
+                คิดจาก {shownScore.counted} จาก {cards.length} ข้อที่อัปเดตแล้ว · น้ำหนักเท่ากันทุกข้อ
+              </p>
             </div>
 
             <div style={{ transform: "translateZ(60px)" }} className="justify-self-center">
-              <BiasGauge
-                score={v.score}
-                label={!v.picked.length ? "—" : v.tone === "neutral" ? "สมดุล" : `${BIAS_LABEL[v.tone]}${v.strength}`}
-                sub="น้ำหนักสัญญาณรวม"
-              />
+              <BiasGauge percent={shownScore.score} color={t.hex} label="คะแนนภาพรวม" />
             </div>
           </div>
+
+          <Criteria score={shownScore.score} />
         </div>
       </Tilt>
+
+      <HowScored
+        // ตอนแอบดูของวันก่อน นับข้อที่มีข้อมูล ไม่ใช่ข้อที่อัปเดตวันนี้
+        cards={cards.map((c) => ({ ...c, pending: allPending ? (c.empty ? "empty" : null) : c.pending }))}
+        onSelect={select}
+      />
 
       {/* ───────── 6 สัญญาณ ───────── */}
       <div className="flex items-center gap-2 px-1 text-[13px] text-slate-400">
@@ -211,7 +219,7 @@ export function OverviewExperience({ dateLabel, cards }: { dateLabel: string; ca
               animate={{ opacity: 1, y: 0, rotateX: 0 }}
               transition={{ duration: 0.7, delay: 0.1 + k * 0.06, ease }}
             >
-              <SignalTile card={c} active={c.id === active} onSelect={() => select(c.id)} />
+              <SignalTile card={c} pending={!!c.pending && !allPending} active={c.id === active} onSelect={() => select(c.id)} />
             </motion.div>
           ))}
         </div>
@@ -226,7 +234,27 @@ export function OverviewExperience({ dateLabel, cards }: { dateLabel: string; ca
               transition={{ duration: 0.45, ease }}
               style={{ transformPerspective: 1200 }}
             >
-              <Detail card={card} onPrev={() => go(-1)} onNext={() => go(1)} />
+              {card.pending && !allPending ? (
+                <div className="space-y-2">
+                  <NotUpdatedScene
+                    compact
+                    title={card.title}
+                    accent={card.accent}
+                    lastLabel={dateLabel}
+                    reason={card.pending}
+                  />
+                  <div className="flex justify-between gap-2">
+                    <IconBtn label="ข้อก่อนหน้า" onClick={() => go(-1)}>
+                      <ArrowLeft className="size-4" />
+                    </IconBtn>
+                    <IconBtn label="ข้อถัดไป" onClick={() => go(1)}>
+                      <ArrowRight className="size-4" />
+                    </IconBtn>
+                  </div>
+                </div>
+              ) : (
+                <Detail card={card} onPrev={() => go(-1)} onNext={() => go(1)} />
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -235,13 +263,140 @@ export function OverviewExperience({ dateLabel, cards }: { dateLabel: string; ca
   );
 }
 
+/* ───────── เกณฑ์คะแนน ───────── */
+
+function Criteria({ score }: { score: number | null }) {
+  const reduce = useReducedMotion();
+  const ordered = [...BANDS].reverse();
+  return (
+    <div className="relative mt-7" style={{ transform: "translateZ(20px)" }}>
+      <p className="mb-2 text-[12.5px] text-slate-400">เกณฑ์คะแนนภาพรวม</p>
+      <div className="relative grid grid-cols-5 gap-1">
+        {ordered.map((b) => {
+          const on = score !== null && bandOf(score).label === b.label;
+          const bt = toneOf(b.tone);
+          return (
+            <div
+              key={b.label}
+              className="rounded-xl border px-2 py-2 text-center transition-all duration-500"
+              style={{
+                borderColor: on ? bt.hex : "rgba(148,163,184,0.12)",
+                background: on ? `color-mix(in srgb, ${bt.hex} 16%, transparent)` : "var(--c-hover)",
+                transform: on ? "translateY(-3px)" : undefined,
+              }}
+            >
+              <p className={`text-[12px] leading-tight font-semibold ${on ? bt.text : "text-slate-300"}`}>{b.label}</p>
+              <p className="text-[11px] text-slate-500">
+                {b.min}–{b.max}%
+              </p>
+            </div>
+          );
+        })}
+        {score !== null && (
+          <motion.span
+            aria-hidden
+            className="absolute -top-2 size-3 -translate-x-1/2 rotate-45 rounded-sm bg-white shadow"
+            initial={reduce ? false : { left: "50%" }}
+            animate={{ left: `${score}%` }}
+            transition={{ duration: 1.2, ease, delay: 0.3 }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ───────── วิธีคิดคะแนน ───────── */
+
+function HowScored({
+  cards,
+  onSelect,
+}: {
+  cards: (SignalCard & { pending: "stale" | "empty" | null })[];
+  onSelect: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="panel overflow-hidden rounded-2xl">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-2 px-5 py-3 text-left text-[14px] text-slate-200 transition-colors hover:bg-white/3"
+      >
+        <Calculator className="size-4 text-cyan-neon" />
+        คะแนนแต่ละข้อ และวิธีคิด
+        <motion.span animate={{ rotate: open ? 180 : 0 }} className="ml-auto">
+          <ChevronDown className="size-4 text-slate-400" />
+        </motion.span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-2 px-5 pb-4">
+              <p className="text-[13px] leading-relaxed text-slate-400">
+                แต่ละตัวในภาพที่ IC เลือก: ขึ้น/หนุน = 100 · ทรง = 50 · ลง/กดดัน = 0 แล้วเฉลี่ยเป็นคะแนนของข้อนั้น
+                คะแนนภาพรวมคือค่าเฉลี่ยของทุกข้อที่อัปเดตแล้ว
+              </p>
+              {cards.map((c, k) => {
+                const ct = toneOf(c.bias);
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => onSelect(c.id)}
+                    className="grid w-full grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1.2fr)_3.5rem] items-center gap-3 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-white/4"
+                  >
+                    <span className="font-display text-[14px] font-bold" style={{ color: ACCENT[c.accent].hex }}>
+                      {c.index}
+                    </span>
+                    <span className="truncate text-[13px] text-slate-200">{c.title}</span>
+                    <span className="h-2 overflow-hidden rounded-full bg-white/6">
+                      {c.score !== null && !c.pending && (
+                        <motion.span
+                          className="block h-full rounded-full"
+                          style={{ background: ct.hex }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${c.score}%` }}
+                          transition={{ duration: 0.8, delay: k * 0.05, ease }}
+                        />
+                      )}
+                    </span>
+                    <span className={`text-right text-[13px] font-semibold ${c.pending || c.score === null ? "text-slate-500" : ct.text}`}>
+                      {c.pending ? "รอ" : c.score === null ? "—" : `${c.score}%`}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 /* ───────── การ์ดสัญญาณ ───────── */
 
-function SignalTile({ card, active, onSelect }: { card: SignalCard; active: boolean; onSelect: () => void }) {
+function SignalTile({
+  card,
+  pending,
+  active,
+  onSelect,
+}: {
+  card: SignalCard;
+  pending: boolean;
+  active: boolean;
+  onSelect: () => void;
+}) {
   const a = ACCENT[card.accent];
   const t = toneOf(card.bias);
   const Icon = card.bias ? BIAS_ICON[card.bias] : Minus;
-  const color = card.bias ? t.hex : a.hex;
+  const color = pending ? "var(--c-amber)" : card.bias ? t.hex : a.hex;
 
   return (
     <Tilt className="h-full rounded-2xl" max={10} lift={active ? 18 : 0}>
@@ -249,10 +404,11 @@ function SignalTile({ card, active, onSelect }: { card: SignalCard; active: bool
         type="button"
         onClick={onSelect}
         aria-pressed={active}
-        className="panel group relative flex h-full min-h-[150px] w-full flex-col overflow-hidden rounded-2xl px-3.5 py-3.5 text-left transition-[border-color,box-shadow] duration-300"
+        className="panel group relative flex h-full min-h-[160px] w-full flex-col overflow-hidden rounded-2xl px-3.5 py-3.5 text-left transition-[border-color,box-shadow,opacity] duration-300"
         style={{
           borderColor: active ? color : `color-mix(in srgb, ${color} 20%, transparent)`,
           boxShadow: active ? `0 18px 50px -18px ${color}, inset 0 0 0 1px ${color}` : undefined,
+          opacity: pending && !active ? 0.75 : 1,
         }}
       >
         <span
@@ -264,18 +420,25 @@ function SignalTile({ card, active, onSelect }: { card: SignalCard; active: bool
           <span className="font-display text-[30px] leading-none font-bold" style={{ color: a.hex }}>
             {card.index}
           </span>
-          <span
-            className="grid size-8 place-items-center rounded-xl"
-            style={{ background: `color-mix(in srgb, ${color} 16%, transparent)`, color }}
-          >
-            <Icon className="size-4" />
-          </span>
+          {pending ? (
+            <span className="grid size-9 place-items-center rounded-xl bg-amber-neon/15 text-amber-neon">
+              <Clock3 className="size-4" />
+            </span>
+          ) : card.score !== null ? (
+            <ScoreRing score={card.score} color={color} />
+          ) : (
+            <span className="grid size-9 place-items-center rounded-xl" style={{ color }}>
+              <Icon className="size-4" />
+            </span>
+          )}
         </span>
         <span className="relative mt-2 line-clamp-2 text-[13px] leading-snug font-semibold text-slate-100">
           {card.title}
         </span>
         <span className="relative mt-auto pt-2" style={{ transform: "translateZ(20px)" }}>
-          {card.scenario ? (
+          {pending ? (
+            <span className="text-[12px] font-semibold text-amber-neon">ยังไม่อัปเดต</span>
+          ) : card.scenario ? (
             <span className={`line-clamp-1 text-[12px] font-semibold ${t.text}`}>{card.scenario}</span>
           ) : (
             <span className="text-[12px] text-slate-500">รอ IC สรุป</span>
@@ -284,6 +447,34 @@ function SignalTile({ card, active, onSelect }: { card: SignalCard; active: bool
         </span>
       </button>
     </Tilt>
+  );
+}
+
+function ScoreRing({ score, color }: { score: number; color: string }) {
+  const r = 15;
+  const c = 2 * Math.PI * r;
+  return (
+    <span className="relative grid size-10 place-items-center">
+      <svg viewBox="0 0 36 36" className="absolute inset-0 -rotate-90" aria-hidden>
+        <circle cx="18" cy="18" r={r} fill="none" stroke="var(--c-hover)" strokeWidth="3" />
+        <motion.circle
+          cx="18"
+          cy="18"
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeDasharray={c}
+          initial={{ strokeDashoffset: c }}
+          animate={{ strokeDashoffset: c * (1 - score / 100) }}
+          transition={{ duration: 1, ease }}
+        />
+      </svg>
+      <span className="text-[11px] font-bold" style={{ color }}>
+        {score}
+      </span>
+    </span>
   );
 }
 
@@ -296,10 +487,7 @@ function Detail({ card, onPrev, onNext }: { card: SignalCard; onPrev: () => void
   const vt = toneOf(card.view?.tone);
 
   return (
-    <div
-      className="panel relative overflow-hidden rounded-3xl"
-      style={{ borderColor: `color-mix(in srgb, ${color} 35%, transparent)` }}
-    >
+    <div className="panel relative overflow-hidden rounded-3xl" style={{ borderColor: `color-mix(in srgb, ${color} 35%, transparent)` }}>
       <div
         aria-hidden
         className="pointer-events-none absolute -top-24 -left-16 size-72 rounded-full blur-3xl"
@@ -335,11 +523,11 @@ function Detail({ card, onPrev, onNext }: { card: SignalCard; onPrev: () => void
             transition={{ delay: 0.1 }}
             className={`mt-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold ${t.bg} ${t.text}`}
           >
-            สถานการณ์: {card.scenario}
+            {card.scenario}
+            {card.score !== null && <span className="opacity-80">· {card.score}%</span>}
           </motion.span>
         )}
 
-        {/* ประโยคเดียวที่ต้องจำ */}
         <motion.blockquote
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -400,7 +588,7 @@ function Detail({ card, onPrev, onNext }: { card: SignalCard; onPrev: () => void
         className="group relative flex items-center justify-between border-t border-white/6 px-5 py-3.5 text-[14px] font-semibold transition-colors hover:bg-white/4 md:px-6"
         style={{ color }}
       >
-        อ่านข้อ {card.index} แบบเต็ม · กราฟและรายละเอียด
+        อ่านข้อ {card.index} แบบเต็ม · ภาพและรายละเอียด
         <ArrowUpRight className="size-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
       </Link>
     </div>
@@ -431,7 +619,9 @@ function Spark({ values, color, className, fill }: { values: number[]; color: st
   const h = 40;
   const min = Math.min(...values);
   const span = Math.max(...values) - min || 1;
-  const pts = values.map((v, i) => `${((i / (values.length - 1)) * w).toFixed(1)},${(h - ((v - min) / span) * (h - 6) - 3).toFixed(1)}`);
+  const pts = values.map(
+    (v, i) => `${((i / (values.length - 1)) * w).toFixed(1)},${(h - ((v - min) / span) * (h - 6) - 3).toFixed(1)}`,
+  );
   const d = `M${pts.join(" L")}`;
   return (
     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className={className} aria-hidden>
@@ -448,62 +638,5 @@ function Spark({ values, color, className, fill }: { values: number[]; color: st
         transition={{ duration: 1.1, ease }}
       />
     </svg>
-  );
-}
-
-/**
- * การ์ดเอียงตามเมาส์แบบ 3 มิติ พร้อมแสงสะท้อน
- * ปิดเองบนจอสัมผัสและเมื่อผู้ใช้ตั้งลดการเคลื่อนไหว
- */
-function Tilt({
-  children,
-  className,
-  max = 8,
-  lift = 0,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  max?: number;
-  lift?: number;
-}) {
-  const reduce = useReducedMotion();
-  const px = useMotionValue(0.5);
-  const py = useMotionValue(0.5);
-  const cfg = { stiffness: 220, damping: 22 };
-  const rotateX = useSpring(useTransform(py, [0, 1], [max, -max]), cfg);
-  const rotateY = useSpring(useTransform(px, [0, 1], [-max, max]), cfg);
-  const z = useSpring(lift, cfg);
-  const shineX = useTransform(px, (v) => `${v * 100}%`);
-  const shineY = useTransform(py, (v) => `${v * 100}%`);
-  const shine = useMotionTemplate`radial-gradient(420px circle at ${shineX} ${shineY}, rgba(255,255,255,0.09), transparent 45%)`;
-
-  useEffect(() => {
-    z.set(lift);
-  }, [lift, z]);
-
-  if (reduce) return <div className={className}>{children}</div>;
-
-  return (
-    <motion.div
-      className={`relative [transform-style:preserve-3d] ${className ?? ""}`}
-      style={{ rotateX, rotateY, z, transformPerspective: 1000 }}
-      onPointerMove={(e) => {
-        if (e.pointerType !== "mouse") return;
-        const r = e.currentTarget.getBoundingClientRect();
-        px.set((e.clientX - r.left) / r.width);
-        py.set((e.clientY - r.top) / r.height);
-      }}
-      onPointerLeave={() => {
-        px.set(0.5);
-        py.set(0.5);
-      }}
-    >
-      {children}
-      <motion.span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-[inherit]"
-        style={{ background: shine }}
-      />
-    </motion.div>
   );
 }

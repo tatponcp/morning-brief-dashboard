@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ArrowUpRight, CalendarDays, Check, Link2, Search, Sparkles } from "lucide-react";
-import { OPTIONS_DASHBOARD_URL } from "./OptionsDeepDive";
+import { CalendarDays, Check, Link2, Search, Sparkles } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 
 const MOBILE = [
@@ -99,15 +98,6 @@ export function Topbar({ dateLabel }: { dateLabel: string }) {
             </Link>
           );
         })}
-        <a
-          href={OPTIONS_DASHBOARD_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex shrink-0 items-center gap-1 rounded-full border border-cyan-neon/50 bg-gradient-to-r from-cyan-neon/20 to-violet-neon/20 px-3.5 py-1.5 text-[12px] font-semibold text-cyan-neon"
-        >
-          S50 Options
-          <ArrowUpRight className="size-3.5" />
-        </a>
       </nav>
     </header>
   );
