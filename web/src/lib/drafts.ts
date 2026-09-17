@@ -10,6 +10,10 @@ export type Draft = Narrative & {
   spread?: SpreadSeries;
   /** วันที่ของข้อมูล เมื่อไม่ตรงกับวันที่ของ brief */
   asOfLabel?: string;
+  /** ชื่อหัวข้อ คำโปรย และ series ที่ลูกค้าเห็น — IC แก้ได้ */
+  title?: string;
+  subtitle?: string;
+  series?: string;
 };
 
 export type DraftMap = Record<string, Draft>;
@@ -30,6 +34,9 @@ export function initialDrafts(brief: Brief): DraftMap {
       ...(s.flows ? { flows: structuredClone(s.flows) } : {}),
       ...(s.spread ? { spread: structuredClone(s.spread) } : {}),
       ...(s.asOfLabel ? { asOfLabel: s.asOfLabel } : {}),
+      title: s.title,
+      subtitle: s.subtitle,
+      ...(s.series ? { series: s.series } : {}),
     };
   }
   return out;

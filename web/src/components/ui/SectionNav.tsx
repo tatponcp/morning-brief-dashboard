@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { ACCENT } from "@/lib/accent";
 import type { Section } from "@/lib/types";
+import { displayTitle } from "@/lib/section-title";
 
 /** ปุ่มไป section ก่อนหน้า / ถัดไป ท้ายหน้า — อ่านไล่ทีละข้อได้โดยไม่ต้องกลับไปที่เมนู */
 export function SectionNav({
@@ -44,7 +45,7 @@ function NavCard({ section, dir }: { section: Section; dir: "prev" | "next" }) {
           {isNext ? "ถัดไป" : "ก่อนหน้า"}
         </span>
         <span className="block truncate text-[13px] font-semibold" style={{ color: a.hex }}>
-          {section.index} · {section.title}
+          {section.index} · {displayTitle(section.title, section.series)}
         </span>
       </span>
     </Link>

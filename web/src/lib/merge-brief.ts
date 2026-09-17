@@ -1,8 +1,9 @@
+import { S50_PRICE_REFERENCE } from "@/data/price-reference";
 import type { Brief, ContractSeries, FlowRow, Narrative, Section } from "./types";
 
 /** รูปร่างของไฟล์ที่กด "ส่งออก Brief" ออกมาจาก /studio (narrative ถูกแบให้แบนอยู่ระดับเดียวกับ id) */
 export type PublishedSection = { id: string } & Partial<Narrative> &
-  Partial<Pick<Section, "board" | "contracts" | "flows" | "spread" | "asOfLabel">>;
+  Partial<Pick<Section, "board" | "contracts" | "flows" | "spread" | "asOfLabel" | "title" | "subtitle" | "series">>;
 
 export type PublishedFile = {
   date?: string;
@@ -29,6 +30,10 @@ export function mergePublished(brief: Brief, file: PublishedFile | null): Brief 
       if (!o) return s;
       return {
         ...s,
+        // ชื่อหัวข้อ คำโปรย และ series ที่ IC ปรับใน Studio
+        title: o.title?.trim() || s.title,
+        subtitle: o.subtitle?.trim() || s.subtitle,
+        series: o.series?.trim() || s.series,
         narrative: {
           summary: o.summary ?? s.narrative.summary,
           interpretation: o.interpretation ?? s.narrative.interpretation,
@@ -63,7 +68,7 @@ export function mergePublished(brief: Brief, file: PublishedFile | null): Brief 
     }),
   };
 
-  const contracts = merged.sections.find((s) => s.contracts?.length)?.contracts;
+  const contracts = merged.sections.find((s) => s.contracts?.length)?.contracts ?? [S50_PRICE_REFERENCE];
   return {
     ...merged,
     sections: merged.sections.map((s) => (s.flows ? { ...s, flows: repairFlows(s.flows, contracts) } : s)),

@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Check, ChevronDown, Minus, TrendingDown, TrendingUp } from "lucide-react";
+import { Check, ChevronDown, Minus, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import { toneOf } from "@/lib/accent";
+import { bandOf } from "@/lib/market-score";
 import { optionOf, type SignalForm as Form, type SignalOption } from "@/lib/signal-forms";
 import type { Bias } from "@/lib/types";
 
@@ -15,7 +16,7 @@ const ICON: Record<Bias, React.ReactNode> = {
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-/** ข้อ 4 และ 5: เลือกทิศทางของแต่ละเส้น ระบบสรุปให้ทันทีเมื่อครบ */
+/** เลือกทิศทางของแต่ละตัวในภาพ ระบบสรุปและให้คะแนนทันทีเมื่อครบ */
 export function SignalForm({
   form,
   values,
@@ -28,6 +29,7 @@ export function SignalForm({
   const done = form.fields.filter((f) => values[f.key]).length;
   const result = form.conclude(values);
   const rt = toneOf(result?.bias);
+  const band = result ? bandOf(result.score) : null;
 
   return (
     <div className="space-y-3">
@@ -48,8 +50,8 @@ export function SignalForm({
           >
             <Dropdown
               label={f.label}
-              options={form.options}
-              value={optionOf(form, values[f.key])}
+              options={f.options}
+              value={optionOf(f, values[f.key])}
               onPick={(o) => onChange({ ...values, [f.key]: o.value })}
             />
           </motion.div>
@@ -59,9 +61,9 @@ export function SignalForm({
       <p className="text-[12px] leading-relaxed text-slate-500">กติกาสรุป · {form.rule}</p>
 
       <AnimatePresence initial={false} mode="wait">
-        {result && (
+        {result && band && (
           <motion.div
-            key={result.id}
+            key={`${result.id}-${result.score}`}
             initial={{ opacity: 0, y: 12, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
@@ -72,12 +74,26 @@ export function SignalForm({
               background: `color-mix(in srgb, ${rt.hex} 10%, transparent)`,
             }}
           >
-            <p className="flex items-center gap-2 text-[12px] text-slate-400">
-              <Check className="size-3.5" style={{ color: rt.hex }} />
-              ระบบสรุปให้แล้ว
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="flex items-center gap-1.5 text-[12px] text-slate-400">
+                <Sparkles className="size-3.5" style={{ color: rt.hex }} />
+                ระบบสรุปให้แล้ว
+              </p>
+              <span className={`ml-auto rounded-full px-2.5 py-0.5 text-[12px] font-semibold ${rt.bg} ${rt.text}`}>
+                คะแนนข้อนี้ {result.score}% · {band.label}
+              </span>
+            </div>
             <p className={`font-display text-[18px] font-bold ${rt.text}`}>{result.title}</p>
-            <p className="mt-1 text-[13.5px] leading-relaxed text-slate-200">{result.interpretation}</p>
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/8">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${result.score}%` }}
+                transition={{ duration: 0.6, ease }}
+                className="h-full rounded-full"
+                style={{ background: rt.hex }}
+              />
+            </div>
+            <p className="mt-2 text-[13.5px] leading-relaxed text-slate-200">{result.interpretation}</p>
           </motion.div>
         )}
       </AnimatePresence>

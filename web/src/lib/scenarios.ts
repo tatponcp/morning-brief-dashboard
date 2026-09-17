@@ -1,4 +1,4 @@
-import type { Bias, ContractSeries, FlowRow, Instrument, Narrative } from "./types";
+import type { Bias, FlowRow, Narrative, ScenarioPick } from "./types";
 
 /**
  * คู่มือสถานการณ์ของแต่ละ section — IC เลือกการ์ดแล้วระบบร่างข้อความให้ แก้คำต่อได้ทุกช่อง
@@ -50,7 +50,7 @@ export const GUIDES: Record<string, Guide> = {
         title: "ราคาขึ้น + OI เพิ่ม",
         tag: "Long ใหม่เข้า",
         bias: "bull",
-        summary: ["ราคา S50 ขึ้นพร้อม Open Interest เพิ่ม", "มีสถานะ Long ใหม่เข้ามา"],
+        summary: ["ราคา {series} ขึ้นพร้อม Open Interest เพิ่ม", "มีสถานะ Long ใหม่เข้ามา"],
         interpretation: "แรงซื้อเป็นเงินใหม่ ไม่ใช่แค่การปิด Short แนวโน้มขาขึ้นจึงแข็งแรงและมีโอกาสไปต่อ",
         insight: "ขาขึ้นที่มี OI หนุนมักไปต่อได้",
         views: ["hold-long", "buy-dip"],
@@ -60,7 +60,7 @@ export const GUIDES: Record<string, Guide> = {
         title: "ราคาขึ้น + OI ลด",
         tag: "แรงปิด Short",
         bias: "neutral",
-        summary: ["ราคา S50 ขึ้น แต่ Open Interest ลดลง", "แรงขึ้นมาจากการปิดสถานะ Short"],
+        summary: ["ราคา {series} ขึ้น แต่ Open Interest ลดลง", "แรงขึ้นมาจากการปิดสถานะ Short"],
         interpretation: "การขึ้นรอบนี้ยังไม่มีเงินใหม่หนุน อาจเป็นเพียงรีบาวด์ระยะสั้น ไม่ควรไล่ราคา",
         insight: "ขึ้นเพราะ Short cover ระวังหมดแรงเร็ว",
         views: ["selective-long"],
@@ -70,7 +70,7 @@ export const GUIDES: Record<string, Guide> = {
         title: "ราคาลง + OI เพิ่ม",
         tag: "Short ใหม่เข้า",
         bias: "bear",
-        summary: ["ราคา S50 ย่อลง แต่ Open Interest เพิ่มขึ้น", "มีสถานะใหม่เข้ามาฝั่ง Short"],
+        summary: ["ราคา {series} ย่อลง แต่ Open Interest เพิ่มขึ้น", "มีสถานะใหม่เข้ามาฝั่ง Short"],
         interpretation: "ภาพนี้ไม่ใช่การพักตัวธรรมดา มีแรงกดดันใหม่เข้ามา ต้องระวังการลงต่อ",
         insight: "ราคาลงพร้อม OI เพิ่ม แรงขายใหม่ยังไม่หมด",
         views: ["reduce-long", "short-rebound"],
@@ -80,7 +80,7 @@ export const GUIDES: Record<string, Guide> = {
         title: "ราคาลง + OI ลด",
         tag: "ปิด Long / ขายทำกำไร",
         bias: "neutral",
-        summary: ["ราคา S50 ย่อลงพร้อม Open Interest ลดลง", "เป็นการปิดสถานะ Long มากกว่า Short ใหม่"],
+        summary: ["ราคา {series} ย่อลงพร้อม Open Interest ลดลง", "เป็นการปิดสถานะ Long มากกว่า Short ใหม่"],
         interpretation: "แรงขายมาจากการขายทำกำไร ไม่ใช่การเปิด Short ใหม่ แรงกดดันจึงเริ่มจำกัด",
         insight: "ย่อแบบ OI ลด มักเป็นการพัก ไม่ใช่กลับตัว",
         views: ["wait"],
@@ -307,44 +307,19 @@ export const GUIDES: Record<string, Guide> = {
   },
 };
 
-/* ───────────────── เดาการ์ดจากตัวเลขที่มี ───────────────── */
+/* ───────────────── เดาการ์ดจากตัวเลขที่มี (ข้อ 2 จากชีต) ───────────────── */
 
-export function suggestScenario(
-  sectionId: string,
-  data: { contracts?: ContractSeries[]; flows?: FlowRow[]; instruments?: Instrument[] },
-): { id: string; reason: string } | null {
-  if (sectionId === "s50-oi") {
-    const rows = data.contracts?.[0]?.rows ?? [];
-    const [prev, last] = rows.slice(-2);
-    if (!prev || !last) return null;
-    const up = last.close >= prev.close;
-    const oiUp = last.oi >= prev.oi;
-    return {
-      id: `px-${up ? "up" : "down"}-oi-${oiUp ? "up" : "down"}`,
-      reason: `ราคา${up ? "ขึ้น" : "ลง"} ${Math.abs(last.close - prev.close).toFixed(2)} จุด · OI ${oiUp ? "เพิ่ม" : "ลด"} ${Math.abs(last.oi - prev.oi).toLocaleString("en-US")} สัญญา`,
-    };
-  }
-  if (sectionId === "flows") {
-    const [prev, last] = (data.flows ?? []).slice(-2);
-    if (!prev || !last) return null;
-    const f = last.foreign - prev.foreign;
-    const k = last.fund - prev.fund;
-    const text = `ต่างชาติ${f >= 0 ? "ซื้อ" : "ขาย"}สุทธิ ${Math.abs(f).toLocaleString("en-US")} · กองทุน${k >= 0 ? "ซื้อ" : "ขาย"}สุทธิ ${Math.abs(k).toLocaleString("en-US")}`;
-    if (f >= 0 && k >= 0) return { id: "both-long", reason: text };
-    if (f < 0 && k < 0) return { id: "both-short", reason: text };
-    if (f < 0) return { id: "foreign-sell-fund-buy", reason: text };
-    return { id: last.foreign < 0 ? "foreign-turn" : "both-long", reason: text };
-  }
-  if (sectionId === "macro") {
-    const vix = data.instruments?.find((x) => x.id === "vix");
-    const dxy = data.instruments?.find((x) => x.id === "dxy");
-    if (!vix || !dxy) return null;
-    const text = `VIX ${vix.changePct >= 0 ? "+" : ""}${vix.changePct.toFixed(2)}% · DXY ${dxy.changePct >= 0 ? "+" : ""}${dxy.changePct.toFixed(2)}%`;
-    if (vix.changePct < 0 && dxy.changePct <= 0) return { id: "risk-on", reason: text };
-    if (vix.changePct > 0 && dxy.changePct > 0) return { id: "risk-off", reason: text };
-    return { id: "mixed", reason: text };
-  }
-  return null;
+export function suggestScenario(sectionId: string, data: { flows?: FlowRow[] }): { id: string; reason: string } | null {
+  if (sectionId !== "flows") return null;
+  const [prev, last] = (data.flows ?? []).slice(-2);
+  if (!prev || !last) return null;
+  const f = last.foreign - prev.foreign;
+  const k = last.fund - prev.fund;
+  const text = `ต่างชาติ${f >= 0 ? "ซื้อ" : "ขาย"}สุทธิ ${Math.abs(f).toLocaleString("en-US")} · กองทุน${k >= 0 ? "ซื้อ" : "ขาย"}สุทธิ ${Math.abs(k).toLocaleString("en-US")}`;
+  if (f >= 0 && k >= 0) return { id: "both-long", reason: text };
+  if (f < 0 && k < 0) return { id: "both-short", reason: text };
+  if (f < 0) return { id: "foreign-sell-fund-buy", reason: text };
+  return { id: last.foreign < 0 ? "foreign-turn" : "both-long", reason: text };
 }
 
 /* ───────────────── การ์ด → ข้อความ ───────────────── */
@@ -370,16 +345,51 @@ export function buildActions(
   return rows;
 }
 
-export function applyScenario(
-  sc: Scenario,
-  views: ViewId[],
-  levels: Record<string, string>,
+/* ───────────────── คำที่ IC ปรับเอง ───────────────── */
+
+/** ข้อความของหนึ่งสถานการณ์ที่ IC บันทึกทับคำตั้งต้นของระบบ */
+export type TextTemplate = { summary: string[]; interpretation: string; insight: string };
+export type Templates = Record<string, TextTemplate>;
+
+export const templateKey = (sectionId: string, scenarioId: string) => `${sectionId}:${scenarioId}`;
+
+/** แทน {series} ด้วยชื่อสัญญาที่ใช้อยู่ — เปลี่ยน series แล้วข้อความตามเอง */
+export function fillText(text: string, vars: { series?: string }) {
+  return text.replaceAll("{series}", vars.series?.trim() || "S50");
+}
+
+export type ScenarioBase = Pick<Scenario, "id" | "title" | "bias" | "summary" | "interpretation" | "insight">;
+
+/**
+ * สถานการณ์ → ข้อความที่ลูกค้าเห็น
+ * ใช้คำที่ IC บันทึกไว้ก่อน ถ้าไม่มีค่อยใช้คำตั้งต้นของระบบ
+ */
+export function composeNarrative(
+  base: ScenarioBase,
+  opts: {
+    sectionId: string;
+    views: ViewId[];
+    levels: Record<string, string>;
+    series?: string;
+    templates?: Templates;
+    extra?: Partial<ScenarioPick>;
+  },
 ): Partial<Narrative> {
+  const tpl = opts.templates?.[templateKey(opts.sectionId, base.id)];
+  const src = tpl ?? base;
+  const fill = (t: string) => fillText(t, { series: opts.series });
   return {
-    summary: [...sc.summary],
-    interpretation: sc.interpretation,
-    insight: sc.insight,
-    actions: buildActions(views, levels, sc.bias),
-    scenario: { id: sc.id, title: sc.title, bias: sc.bias, views, levels },
+    summary: src.summary.map(fill),
+    interpretation: fill(src.interpretation),
+    insight: fill(src.insight),
+    actions: buildActions(opts.views, opts.levels, base.bias),
+    scenario: {
+      id: base.id,
+      title: fill(base.title),
+      bias: base.bias,
+      views: opts.views,
+      levels: opts.levels,
+      ...opts.extra,
+    },
   };
 }

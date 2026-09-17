@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { Check, CircleDashed } from "lucide-react";
 import { toneOf } from "@/lib/accent";
+import { displayTitle } from "@/lib/section-title";
 import { ACCENT } from "@/lib/accent";
 import { draftStatus } from "@/lib/draft-status";
 import type { DraftMap } from "@/lib/drafts";
@@ -53,7 +54,7 @@ export function SectionRail({
               <span
                 className={`block truncate text-[12.5px] ${on ? "font-semibold text-white" : "text-slate-300"}`}
               >
-                {s.title}
+                {displayTitle(drafts[s.id]?.title || s.title, drafts[s.id]?.series)}
               </span>
               <span className="hidden truncate text-[11px] lg:block">
                 {drafts[s.id]?.scenario ? (

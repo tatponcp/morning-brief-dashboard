@@ -1,19 +1,29 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
+import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "motion/react";
+import { useEffect } from "react";
 
 /**
- * เกจภาพรวมของวัน — เข็มชี้จากจำนวนสัญญาณบวก/ลบที่ IC เลือก
- * score อยู่ระหว่าง -1 (ลบทั้งหมด) ถึง 1 (บวกทั้งหมด)
+ * เกจคะแนนภาพรวม 0–100% — เข็มหมุนและตัวเลขนับขึ้นพร้อมกัน
+ * percent = null หมายถึงยังไม่มีข้อไหนอัปเดต
  */
-export function BiasGauge({ score, label, sub }: { score: number; label: string; sub: string }) {
+export function BiasGauge({ percent, color, label }: { percent: number | null; color: string; label: string }) {
   const reduce = useReducedMotion();
-  const angle = Math.max(-1, Math.min(1, score)) * 80;
-  const color = score > 0.25 ? "var(--c-green)" : score < -0.25 ? "var(--c-rose)" : "var(--c-amber)";
+  const target = percent ?? 50;
+  const value = useMotionValue(reduce ? target : 0);
+  const shown = useTransform(value, (v) => Math.round(v));
+  // ปลายเข็มคำนวณเป็นพิกัดตรง ๆ — การหมุนกลุ่ม SVG ด้วย transform-origin ไม่นิ่งในทุกเบราว์เซอร์
+  const tipX = useTransform(value, (v) => 100 + Math.sin((((v - 50) / 50) * 80 * Math.PI) / 180) * 64);
+  const tipY = useTransform(value, (v) => 100 - Math.cos((((v - 50) / 50) * 80 * Math.PI) / 180) * 64);
+
+  useEffect(() => {
+    const c = animate(value, target, { duration: reduce ? 0 : 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.2 });
+    return () => c.stop();
+  }, [target, value, reduce]);
 
   return (
     <div className="flex flex-col items-center">
-      <svg viewBox="0 0 200 118" className="w-[220px] max-w-full">
+      <svg viewBox="0 0 200 124" className="w-[240px] max-w-full" aria-hidden>
         <defs>
           <linearGradient id="gauge-arc" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="var(--c-rose)" />
@@ -31,25 +41,39 @@ export function BiasGauge({ score, label, sub }: { score: number; label: string;
           initial={reduce ? false : { pathLength: 0 }}
           animate={{ pathLength: 1 }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          opacity={0.9}
+          opacity={percent === null ? 0.35 : 0.9}
         />
-        <motion.g
-          style={{ originX: "100px", originY: "100px" }}
-          initial={reduce ? false : { rotate: -80 }}
-          animate={{ rotate: angle }}
-          transition={{ type: "spring", stiffness: 60, damping: 12, delay: 0.3 }}
-        >
-          <line x1="100" y1="100" x2="100" y2="34" stroke={color} strokeWidth="4" strokeLinecap="round" />
-        </motion.g>
+        {/* ขีดแบ่งเกณฑ์ 20 / 40 / 60 / 80 */}
+        {[20, 40, 60, 80].map((p) => {
+          const r = ((p - 50) / 50) * 80 * (Math.PI / 180);
+          return (
+            <line
+              key={p}
+              x1={100 + Math.sin(r) * 62}
+              y1={100 - Math.cos(r) * 62}
+              x2={100 + Math.sin(r) * 70}
+              y2={100 - Math.cos(r) * 70}
+              stroke="var(--c-neutral)"
+              strokeOpacity={0.5}
+              strokeWidth={1.5}
+            />
+          );
+        })}
+        {percent !== null && (
+          <motion.line x1={100} y1={100} x2={tipX} y2={tipY} stroke={color} strokeWidth={4} strokeLinecap="round" />
+        )}
         <circle cx="100" cy="100" r="8" fill={color} />
         <circle cx="100" cy="100" r="3.5" fill="var(--ink-950)" />
-        <text x="18" y="116" fontSize="10" fill="var(--c-neutral)">ลบ</text>
-        <text x="170" y="116" fontSize="10" fill="var(--c-neutral)">บวก</text>
+        <text x="14" y="120" fontSize="10" fill="var(--c-neutral)">0%</text>
+        <text x="166" y="120" fontSize="10" fill="var(--c-neutral)">100%</text>
       </svg>
-      <p className="-mt-1 font-display text-[22px] font-bold" style={{ color }}>
+      <p className="-mt-2 font-display text-[40px] leading-none font-bold" style={{ color }}>
+        {percent === null ? "—" : <motion.span>{shown}</motion.span>}
+        {percent !== null && <span className="text-[22px]">%</span>}
+      </p>
+      <p className="mt-1 font-display text-[16px] font-bold" style={{ color }}>
         {label}
       </p>
-      <p className="text-[12px] text-slate-400">{sub}</p>
     </div>
   );
 }

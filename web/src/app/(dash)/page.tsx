@@ -1,4 +1,7 @@
 import { loadBrief } from "@/lib/brief-store";
+import { isSectionEmpty } from "@/lib/freshness";
+import { sectionScore } from "@/lib/market-score";
+import { displayTitle } from "@/lib/section-title";
 import { sparkValues } from "@/components/ui/MiniSpark";
 import { OverviewExperience, type SignalCard } from "@/components/overview/OverviewExperience";
 
@@ -17,11 +20,13 @@ export default async function SummaryPage() {
     return {
       id: s.id,
       index: s.index,
-      title: s.title,
+      title: displayTitle(s.title, s.series),
       subtitle: s.subtitle,
       accent: s.accent,
       bias: s.narrative.scenario?.bias,
-      scenario: s.narrative.scenario?.title,
+      scenario: s.narrative.scenario?.id === "pending" ? undefined : s.narrative.scenario?.title,
+      score: sectionScore(s.narrative.scenario),
+      empty: isSectionEmpty(s),
       insight: s.narrative.insight,
       summary: s.narrative.summary.filter(Boolean).slice(0, 3),
       view: view?.value ? { value: view.value, tone: view.tone } : undefined,
@@ -33,5 +38,5 @@ export default async function SummaryPage() {
     };
   });
 
-  return <OverviewExperience dateLabel={brief.dateLabelTH} cards={cards} />;
+  return <OverviewExperience dateLabel={brief.dateLabelTH} briefDate={brief.date} cards={cards} />;
 }

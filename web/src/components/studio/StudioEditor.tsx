@@ -4,8 +4,12 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 import { AnimatePresence, motion } from "motion/react";
 import {
   ArrowRight,
+  BookmarkPlus,
+  CalendarPlus,
   Check,
   Compass,
+  Pencil,
+  Undo,
   Download,
   Eye,
   History,
@@ -30,13 +34,14 @@ import {
 } from "@/lib/drafts";
 import { draftStatus, fieldLabel } from "@/lib/draft-status";
 import { thaiDate, todayBangkok } from "@/lib/format";
-import type { Brief, Instrument, PaneGroup, Section } from "@/lib/types";
+import type { Brief, Section } from "@/lib/types";
+import { GUIDES, templateKey, type Templates } from "@/lib/scenarios";
+import { SIGNAL_FORMS } from "@/lib/signal-forms";
+import { displayTitle, hasSeriesSlot } from "@/lib/section-title";
 import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
 import { ImageBoard } from "@/components/ui/ImageBoard";
 import { PriceOIPanel } from "@/components/charts/PriceOIPanel";
 import { FlowPanel } from "@/components/charts/FlowPanel";
-import { PaneGroupCard } from "@/components/charts/PaneGroupCard";
-import { InstrumentCard } from "@/components/charts/InstrumentCard";
 import { SpreadPanel } from "@/components/charts/SpreadPanel";
 import { BoardEditor } from "./BoardEditor";
 import { DataImporter } from "./DataImporter";
@@ -61,7 +66,11 @@ function stepsFor(s: Section, d: Draft) {
   if (s.mode === "image") list.push({ key: "media", label: "ใส่ภาพ", done: d.board.images.some((im) => im.src) });
   else if (s.contracts || s.flows)
     list.push({ key: "media", label: "วางชีต", done: !!(d.contracts?.length || d.flows?.length) });
-  list.push({ key: "scenario", label: "เลือกสถานการณ์", done: !!d.scenario });
+  list.push({
+    key: "scenario",
+    label: SIGNAL_FORMS[s.id] ? "เลือกสัญญาณ" : "เลือกสถานการณ์",
+    done: !!d.scenario && d.scenario.id !== "pending",
+  });
   list.push({ key: "text", label: "ตรวจและแก้คำ", done: draftStatus(s, d).complete });
   return list;
 }
@@ -71,16 +80,13 @@ const firstOpen = (s: Section, d: Draft): Step => stepsFor(s, d).find((x) => !x.
 export function StudioEditor({
   brief,
   canPublish,
-  instruments,
-  macroGroup,
+  templates: initialTemplates,
 }: {
   brief: Brief;
   /** true = ต่อ Supabase แล้ว กดเผยแพร่ขึ้นเว็บได้เลย */
   canPublish: boolean;
-  /** ราคา Gold / VIX / DXY / US10Y สำหรับใส่ในรูปข้อ 6 */
-  instruments?: Instrument[];
-  /** กราฟทองคำของข้อ 6 — ใส่ในพรีวิวและรูปส่งลูกค้า */
-  macroGroup?: PaneGroup;
+  /** คำที่ทีม IC บันทึกไว้ต่อสถานการณ์ */
+  templates: Templates;
 }) {
   const [sectionId, setSectionId] = useState(brief.sections[0].id);
   const section = brief.sections.find((s) => s.id === sectionId)!;
@@ -106,6 +112,9 @@ export function StudioEditor({
   const [exported, setExported] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [shareOpen, setShareOpen] = useState(false);
+  const [templates, setTemplates] = useState<Templates>(initialTemplates);
+  const [editNames, setEditNames] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
 
   /* ---------- แก้ไข + ประวัติ undo ---------- */
 
@@ -128,7 +137,7 @@ export function StudioEditor({
   const applyDailySheet = useCallback(
     (sheet: DailySheet, withSummary: boolean) => {
       const next = { ...drafts };
-      const s50 = next["s50-oi"];
+      const s50 = brief.sections.find((x) => x.id === "s50-oi")?.contracts ? next["s50-oi"] : undefined;
       const flow = next["flows"];
       if (s50) {
         next["s50-oi"] = {
@@ -149,8 +158,66 @@ export function StudioEditor({
       }
       commit(next);
     },
-    [commit, drafts],
+    [commit, drafts, brief.sections],
   );
+
+  /**
+   * เริ่มวันใหม่ — ล้างของเมื่อวานออกทีเดียว
+   *  "images" = ล้างเฉพาะรูป · "all" = ล้างรูป สัญญาณ และข้อความ
+   * ชื่อหัวข้อ series และข้อมูลจากชีตยังอยู่ · Ctrl+Z ย้อนได้
+   */
+  const startNewDay = useCallback(
+    (mode: "images" | "all") => {
+      const next: DraftMap = {};
+      for (const s of brief.sections) {
+        const d = drafts[s.id];
+        const board = { images: [{ src: "", alt: "", callouts: [] }], stats: [] };
+        next[s.id] =
+          mode === "images"
+            ? { ...d, board }
+            : {
+                ...d,
+                board,
+                scenario: undefined,
+                summary: [],
+                interpretation: "",
+                actions: [],
+                insight: "",
+              };
+      }
+      commit(next);
+      setDate(todayBangkok());
+      setResetOpen(false);
+      setMsg({ ok: true, text: mode === "images" ? "ล้างรูปของทุกข้อแล้ว · Ctrl+Z ย้อนได้" : "เริ่มวันใหม่แล้ว · Ctrl+Z ย้อนได้" });
+    },
+    [brief.sections, commit, drafts],
+  );
+
+  /** บันทึกคำชุดปัจจุบันเป็นคำตั้งต้นของสถานการณ์นี้ (ทั้งทีมใช้ร่วมกัน) */
+  async function saveWords(remove: boolean) {
+    const sc = draft.scenario;
+    if (!sc || sc.id === "pending") return;
+    const key = templateKey(sectionId, sc.id);
+    const template = remove
+      ? null
+      : { summary: draft.summary.filter((x) => x.trim()), interpretation: draft.interpretation, insight: draft.insight };
+    try {
+      const res = await fetch("/api/templates", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ key, template }),
+      });
+      const json = (await res.json()) as { ok: true; templates: Templates } | { ok: false; reason: string };
+      if (json.ok) setTemplates(json.templates);
+      setMsg(
+        json.ok
+          ? { ok: true, text: remove ? `คืนคำตั้งต้นของ "${sc.title}" แล้ว` : `บันทึกคำของ "${sc.title}" แล้ว ครั้งหน้าเลือกสถานการณ์นี้จะได้คำชุดนี้` }
+          : { ok: false, text: json.reason },
+      );
+    } catch {
+      setMsg({ ok: false, text: "ติดต่อเซิร์ฟเวอร์ไม่ได้" });
+    }
+  }
 
   const undo = useCallback(() => {
     setPast((p) => {
@@ -320,6 +387,14 @@ export function StudioEditor({
         </label>
 
         <div className="relative ml-auto flex items-center gap-3">
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={() => setResetOpen((v) => !v)}
+            className="flex items-center gap-1.5 rounded-xl border border-amber-neon/35 bg-amber-neon/8 px-3 py-2 text-[12.5px] font-semibold text-amber-neon transition hover:bg-amber-neon/15"
+          >
+            <CalendarPlus className="size-4" />
+            เริ่มวันใหม่
+          </motion.button>
           <ProgressRing done={progress.done} total={progress.total} />
           <button
             onClick={() => setShowPreview((v) => !v)}
@@ -334,6 +409,42 @@ export function StudioEditor({
           </button>
         </div>
       </motion.div>
+
+      <AnimatePresence>
+        {resetOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="panel mb-3 flex flex-wrap items-center gap-3 border-amber-neon/30 px-4 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[14px] font-semibold text-white">ล้างของวันก่อนหน้า</p>
+                <p className="text-[12.5px] text-slate-400">
+                  ชื่อหัวข้อ, Series และข้อมูลจากชีตยังอยู่ · วันที่จะตั้งเป็นวันนี้ · กด Ctrl+Z ย้อนได้
+                </p>
+              </div>
+              <button
+                onClick={() => startNewDay("images")}
+                className="rounded-xl border border-white/12 bg-white/5 px-3.5 py-2 text-[13px] text-slate-100 transition hover:border-white/25"
+              >
+                ล้างเฉพาะรูป
+              </button>
+              <button
+                onClick={() => startNewDay("all")}
+                className="rounded-xl bg-gradient-to-r from-amber-neon to-rose-neon px-3.5 py-2 text-[13px] font-semibold text-ink-950 transition hover:brightness-110"
+              >
+                ล้างรูป + สัญญาณ + ข้อความ
+              </button>
+              <button onClick={() => setResetOpen(false)} className="text-[12.5px] text-slate-400 hover:text-white">
+                ยกเลิก
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
       {msg && (
@@ -397,11 +508,26 @@ export function StudioEditor({
                     {section.index}
                   </span>
                   <div className="min-w-0">
-                    <p className="font-display text-[16px] leading-tight font-bold" style={{ color: a.hex }}>
-                      {section.title}
+                    <p className="flex items-center gap-2 font-display text-[16px] leading-tight font-bold" style={{ color: a.hex }}>
+                      {displayTitle(draft.title || section.title, draft.series)}
+                      {draft.series && !hasSeriesSlot(draft.title || section.title) && (
+                        <span className="rounded-md bg-white/8 px-1.5 py-0.5 font-sans text-[11.5px] font-semibold text-slate-200">
+                          {draft.series}
+                        </span>
+                      )}
                     </p>
-                    <p className="truncate text-[11.5px] text-slate-400">{section.subtitle}</p>
+                    <p className="truncate text-[11.5px] text-slate-400">{draft.subtitle || section.subtitle}</p>
                   </div>
+                  <button
+                    onClick={() => setEditNames((v) => !v)}
+                    aria-label="แก้ชื่อหัวข้อ"
+                    title="แก้ชื่อหัวข้อ / Series"
+                    className={`rounded-lg border p-1.5 transition ${
+                      editNames ? "border-cyan-neon/50 text-cyan-neon" : "border-white/10 text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <Pencil className="size-3.5" />
+                  </button>
                   <span className="ml-auto">
                     {progress.current.missing.length > 0 ? (
                       <span className="flex items-center gap-1.5 rounded-lg bg-amber-neon/10 px-2 py-1 text-[11px] text-amber-neon">
@@ -416,6 +542,40 @@ export function StudioEditor({
                     )}
                   </span>
                 </div>
+
+                <AnimatePresence initial={false}>
+                  {editNames && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="relative overflow-hidden"
+                    >
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                        <NameInput
+                          label="ชื่อหัวข้อที่ลูกค้าเห็น"
+                          value={draft.title ?? ""}
+                          placeholder={section.title}
+                          onChange={(title) => patch({ title })}
+                        />
+                        <NameInput
+                          label="คำโปรยใต้หัวข้อ"
+                          value={draft.subtitle ?? ""}
+                          placeholder={section.subtitle}
+                          onChange={(subtitle) => patch({ subtitle })}
+                        />
+                        {section.id === "s50-oi" && (
+                          <NameInput
+                            label="Series ที่ใช้อยู่ (เปลี่ยนเมื่อย้ายสัญญา เช่น S50Z26)"
+                            value={draft.series ?? ""}
+                            placeholder="S50U26"
+                            onChange={(series) => patch({ series: series.toUpperCase() })}
+                          />
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <Stepper steps={steps} current={step} onSelect={setStepPref} accent={a.hex} />
               </div>
@@ -456,7 +616,7 @@ export function StudioEditor({
                     <ScenarioPicker
                       sectionId={section.id}
                       value={draft}
-                      data={{ contracts: draft.contracts, flows: draft.flows, instruments }}
+                      templates={templates}
                       onApply={patch}
                       onNext={() => setStepPref("text")}
                     />
@@ -474,6 +634,30 @@ export function StudioEditor({
                           <span className="ml-auto text-[11.5px] text-slate-500">เปลี่ยน</span>
                         </button>
                       )}
+                      {draft.scenario && draft.scenario.id !== "pending" && canPublish && GUIDES[sectionId] && (
+                        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-violet-neon/25 bg-violet-neon/6 px-3 py-2">
+                          <p className="min-w-0 flex-1 text-[12.5px] text-slate-300">
+                            แก้คำแล้วชอบ? บันทึกไว้ ครั้งหน้าเลือก &ldquo;{draft.scenario.title}&rdquo; จะได้คำชุดนี้ทันที (ทั้งทีมใช้ร่วมกัน)
+                          </p>
+                          <motion.button
+                            whileTap={{ scale: 0.96 }}
+                            onClick={() => saveWords(false)}
+                            className="flex items-center gap-1.5 rounded-lg bg-violet-neon/20 px-3 py-1.5 text-[12.5px] font-semibold text-violet-neon transition hover:bg-violet-neon/30"
+                          >
+                            <BookmarkPlus className="size-4" />
+                            บันทึกเป็นคำของทีม
+                          </motion.button>
+                          {templates[templateKey(sectionId, draft.scenario.id)] && (
+                            <button
+                              onClick={() => saveWords(true)}
+                              className="flex items-center gap-1 text-[12px] text-slate-400 hover:text-white"
+                            >
+                              <Undo className="size-3.5" />
+                              ใช้คำตั้งต้นของระบบ
+                            </button>
+                          )}
+                        </div>
+                      )}
                       <NarrativeEditor
                         value={{
                           summary: draft.summary,
@@ -487,7 +671,7 @@ export function StudioEditor({
                         const i = brief.sections.findIndex((x) => x.id === sectionId);
                         const next = brief.sections[i + 1];
                         return next ? (
-                          <NextButton onClick={() => selectSection(next.id)} label={`ไปข้อ ${next.index} ${next.title}`} />
+                          <NextButton onClick={() => selectSection(next.id)} label={`ไปข้อ ${next.index} ${drafts[next.id]?.title || next.title}`} />
                         ) : null;
                       })()}
                     </div>
@@ -511,16 +695,6 @@ export function StudioEditor({
                   <PriceOIPanel key={c.symbol} series={c} />
                 ))}
                 {draft.spread && <SpreadPanel spread={draft.spread} />}
-              </div>
-            )}
-            {section.id === "macro" && macroGroup && (
-              <div className="mb-3 space-y-3">
-                <PaneGroupCard group={macroGroup} />
-                <div className="grid grid-cols-2 gap-2">
-                  {instruments?.map((inst) => (
-                    <InstrumentCard key={inst.id} inst={inst} />
-                  ))}
-                </div>
               </div>
             )}
             {!!draft.flows?.length && (
@@ -651,12 +825,14 @@ export function StudioEditor({
       <ShareImageDialog
         open={shareOpen}
         onClose={() => setShareOpen(false)}
-        section={section}
+        section={{
+          ...section,
+          title: displayTitle(draft.title || section.title, draft.series),
+          subtitle: draft.subtitle || section.subtitle,
+        }}
         draft={draft}
         dateLabel={thaiDate(date)}
         dateISO={date}
-        instruments={section.id === "macro" ? instruments : undefined}
-        macroGroup={section.id === "macro" ? macroGroup : undefined}
       />
     </div>
   );
@@ -708,6 +884,30 @@ function Stepper({
         );
       })}
     </div>
+  );
+}
+
+function NameInput({
+  label,
+  value,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[11.5px] text-slate-400">{label}</span>
+      <input
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-xl border border-white/10 bg-ink-950/60 px-3 py-2 text-[13.5px] text-white transition outline-none placeholder:text-slate-600 focus:border-cyan-neon/60"
+      />
+    </label>
   );
 }
 

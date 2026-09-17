@@ -4,7 +4,7 @@ import { forwardRef } from "react";
 import { TriangleAlert } from "lucide-react";
 import { ACCENT } from "@/lib/accent";
 import type { Draft } from "@/lib/drafts";
-import type { Instrument, PaneGroup, Section } from "@/lib/types";
+import type { Section } from "@/lib/types";
 import { StaticRender } from "@/components/ui/Reveal";
 import { NarrativeGrid } from "@/components/ui/NarrativeGrid";
 import { ImageBoard } from "@/components/ui/ImageBoard";
@@ -12,7 +12,6 @@ import { PriceOIPanel } from "@/components/charts/PriceOIPanel";
 import { SpreadPanel } from "@/components/charts/SpreadPanel";
 import { FlowPanel } from "@/components/charts/FlowPanel";
 import { PaneGroupCard } from "@/components/charts/PaneGroupCard";
-import { InstrumentCard } from "@/components/charts/InstrumentCard";
 
 /** ความกว้างคงที่ของรูป — 1080px ตรงกับขนาดที่ LINE / IG แสดงคมที่สุด */
 export const SHARE_WIDTH = 1080;
@@ -31,12 +30,9 @@ export const ShareCard = forwardRef<
     section: Section;
     draft: Draft;
     dateLabel: string;
-    instruments?: Instrument[];
-    /** ข้อ 6 — กราฟทองคำที่โหลดสด ไม่ได้อยู่ใน section */
-    macroGroup?: PaneGroup;
     options: ShareOptions;
   }
->(function ShareCard({ section, draft, dateLabel, instruments, macroGroup, options }, ref) {
+>(function ShareCard({ section, draft, dateLabel, options }, ref) {
   const a = ACCENT[section.accent];
   const hasImages = draft.board.images.some((im) => im.src);
 
@@ -100,20 +96,10 @@ export const ShareCard = forwardRef<
 
           {!!draft.flows?.length && <FlowPanel rows={draft.flows} />}
 
-          {macroGroup && <PaneGroupCard group={macroGroup} />}
-
           {!!section.groups?.length && (
             <div className="grid grid-cols-2 gap-3">
               {section.groups.map((g) => (
                 <PaneGroupCard key={g.id} group={g} />
-              ))}
-            </div>
-          )}
-
-          {!!instruments?.length && (
-            <div className="grid grid-cols-4 gap-3">
-              {instruments.map((inst) => (
-                <InstrumentCard key={inst.id} inst={inst} />
               ))}
             </div>
           )}
