@@ -7,6 +7,7 @@ import { bandOf } from "@/lib/market-score";
 import type { Draft } from "@/lib/drafts";
 import type { Bias, Section } from "@/lib/types";
 import { StaticRender } from "@/components/ui/Reveal";
+import { BrandMark } from "@/components/ui/BrandMark";
 import { ImageBoard } from "@/components/ui/ImageBoard";
 import { PriceOIPanel } from "@/components/charts/PriceOIPanel";
 import { SpreadPanel } from "@/components/charts/SpreadPanel";
@@ -71,9 +72,7 @@ export const ShareCard = forwardRef<
 
         {/* ---------- แถบแบรนด์ ---------- */}
         <div className="relative flex items-center gap-3 border-b border-white/8 px-8 py-4">
-          <span className="grid size-8 place-items-center rounded-xl bg-gradient-to-br from-cyan-neon to-violet-neon font-display text-[13px] font-bold text-ink-950">
-            MB
-          </span>
+          <BrandMark size={36} still />
           <span className="font-display text-[17px] font-bold text-white">Morning Brief</span>
           <span className="text-[14px] text-slate-500">S50 Signal Desk</span>
           <span className="ml-auto rounded-full border border-amber-neon/40 bg-amber-neon/10 px-4 py-1.5 font-display text-[15px] font-bold text-amber-neon">
