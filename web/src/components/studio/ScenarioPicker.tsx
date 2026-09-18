@@ -13,7 +13,7 @@ import {
   type Templates,
   type ViewId,
 } from "@/lib/scenarios";
-import { SIGNAL_FORMS, optionOf } from "@/lib/signal-forms";
+import { getSignalForm, optionOf, seriesList } from "@/lib/signal-forms";
 import { TONE_SCORE } from "@/lib/market-score";
 import type { Draft } from "@/lib/drafts";
 import type { Bias, Narrative } from "@/lib/types";
@@ -56,19 +56,21 @@ export function ScenarioPicker({
   onNext: () => void;
 }) {
   const guide = GUIDES[sectionId];
-  const form = SIGNAL_FORMS[sectionId];
+  const form = getSignalForm(sectionId, { series: value.series });
   if (!guide) return null;
 
   const picked = value.scenario;
   const views = (picked?.views ?? []) as ViewId[];
   const levels = picked?.levels ?? {};
-  const series = value.series;
+  // ข้อความใช้ series หลัก (ตัวแรก) · series อื่นระบบเขียนเพิ่มในสรุปให้เอง
+  const series = seriesList(value.series)[0] ?? value.series;
   const suggestion = form ? null : suggestScenario(sectionId, { flows: value.flows });
   const ready = !!picked && picked.id !== "pending";
   const usingTeamWords = ready && !!templates[templateKey(sectionId, picked.id)];
 
   /** เลือก dropdown แล้ว — ครบเมื่อไหร่เขียนข้อความให้ทันที */
   function applySignals(nextValues: Record<string, string>) {
+    if (!form) return;
     const result = form.conclude(nextValues);
     const signals = form.fields
       .map((f) => ({ label: f.label, opt: optionOf(f, nextValues[f.key]) }))

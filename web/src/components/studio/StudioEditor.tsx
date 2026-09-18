@@ -50,6 +50,7 @@ import type { DailySheet } from "@/lib/csv";
 import { NarrativeEditor } from "./NarrativeEditor";
 import { SectionRail } from "./SectionRail";
 import { ScenarioPicker } from "./ScenarioPicker";
+import { SeriesEditor } from "./SeriesEditor";
 import { ShareImageDialog } from "./ShareImageDialog";
 
 /** subscribe ที่ไม่เคยแจ้งเปลี่ยน — ใช้แค่ให้รู้ว่าอยู่ฝั่ง client แล้ว */
@@ -565,12 +566,7 @@ export function StudioEditor({
                           onChange={(subtitle) => patch({ subtitle })}
                         />
                         {section.id === "s50-oi" && (
-                          <NameInput
-                            label="Series ที่ใช้อยู่ (เปลี่ยนเมื่อย้ายสัญญา เช่น S50Z26)"
-                            value={draft.series ?? ""}
-                            placeholder="S50U26"
-                            onChange={(series) => patch({ series: series.toUpperCase() })}
-                          />
+                          <SeriesEditor value={draft.series} onChange={(series) => patch({ series })} />
                         )}
                       </div>
                     </motion.div>

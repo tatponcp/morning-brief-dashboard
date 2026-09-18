@@ -13,11 +13,11 @@ export type Band = { min: number; max: number; label: string; tone: Bias; hint: 
 
 /** เกณฑ์ของภาพรวม — แสดงให้ลูกค้าเห็นบนหน้าแรกด้วย */
 export const BANDS: Band[] = [
-  { min: 80, max: 100, label: "บวกชัดเจน", tone: "bull", hint: "สัญญาณเกือบทั้งหมดหนุนฝั่ง Long" },
-  { min: 60, max: 80, label: "เอียงบวก", tone: "bull", hint: "ส่วนใหญ่หนุนขึ้น แต่ยังมีข้อที่ต้องระวัง" },
-  { min: 40, max: 60, label: "กลาง · ยังไม่เลือกทาง", tone: "neutral", hint: "สัญญาณผสม รอการยืนยันก่อน" },
-  { min: 20, max: 40, label: "เอียงลบ", tone: "bear", hint: "ส่วนใหญ่กดดัน ระวังความเสี่ยง" },
-  { min: 0, max: 20, label: "ลบชัดเจน", tone: "bear", hint: "สัญญาณเกือบทั้งหมดกดดัน" },
+  { min: 80, max: 100, label: "บวกชัดเจน", tone: "bull", hint: "สัญญาณเกือบทุกข้อหนุนฝั่ง Long" },
+  { min: 60, max: 80, label: "ค่อนข้างบวก", tone: "bull", hint: "ส่วนใหญ่หนุนขึ้น แต่ยังมีบางข้อที่ต้องระวัง" },
+  { min: 40, max: 60, label: "กลาง · รอดูทิศทาง", tone: "neutral", hint: "สัญญาณผสม ยังไม่มีฝั่งไหนชนะชัด" },
+  { min: 20, max: 40, label: "ค่อนข้างลบ", tone: "bear", hint: "ส่วนใหญ่กดดัน ควรระวังความเสี่ยง" },
+  { min: 0, max: 20, label: "ลบชัดเจน", tone: "bear", hint: "สัญญาณเกือบทุกข้อกดดัน" },
 ];
 
 export function bandOf(score: number): Band {
