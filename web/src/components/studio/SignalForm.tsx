@@ -26,6 +26,11 @@ export function SignalForm({
   values: Record<string, string>;
   onChange: (next: Record<string, string>) => void;
 }) {
+  // เมนูที่กำลังปิด (ยังเล่นแอนิเมชันอยู่) ถือ values รุ่นเก่า — อ่านค่าล่าสุดจาก ref เสมอ ไม่ให้ค่าข้ออื่นหาย
+  const latest = useRef(values);
+  useEffect(() => {
+    latest.current = values;
+  }, [values]);
   const done = form.fields.filter((f) => values[f.key]).length;
   const result = form.conclude(values);
   const rt = toneOf(result?.bias);
@@ -52,7 +57,11 @@ export function SignalForm({
               label={f.label}
               options={f.options}
               value={optionOf(f, values[f.key])}
-              onPick={(o) => onChange({ ...values, [f.key]: o.value })}
+              onPick={(o) => {
+                const next = { ...latest.current, [f.key]: o.value };
+                latest.current = next;
+                onChange(next);
+              }}
             />
           </motion.div>
         ))}
@@ -173,7 +182,7 @@ function Dropdown({
             aria-label={label}
             initial={{ opacity: 0, y: -6, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97, pointerEvents: "none" }}
             transition={{ duration: 0.18, ease }}
             className="absolute inset-x-0 top-[calc(100%+6px)] z-30 overflow-hidden rounded-2xl border border-white/12 bg-ink-900/95 p-1 shadow-2xl backdrop-blur-xl"
           >
