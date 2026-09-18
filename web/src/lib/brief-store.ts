@@ -1,6 +1,8 @@
 import "server-only";
 import { getBrief, getLatestBrief } from "@/data";
-import { mergePublished, type PublishedFile } from "./merge-brief";
+import { mergePublished, type PublishMeta, type PublishedFile } from "./merge-brief";
+import { overallScore, sectionScore } from "./market-score";
+import { RULES_VERSION } from "./signal-forms";
 import { getSupabase, IMAGE_BUCKET, supabaseStatus } from "./supabase";
 import type { Brief } from "./types";
 
@@ -120,7 +122,7 @@ export async function saveBrief(payload: PublishedFile): Promise<SaveResult> {
   }
 
   const before = countDataUrls(payload);
-  const withUrls = await uploadImages(date, payload);
+  const withUrls = { ...(await uploadImages(date, payload)), meta: stampMeta(payload) };
   const after = countDataUrls(withUrls);
 
   const { error } = await db.from("briefs").upsert(
@@ -135,6 +137,18 @@ export async function saveBrief(payload: PublishedFile): Promise<SaveResult> {
 
   if (error) return { ok: false, reason: `บันทึกลงฐานข้อมูลไม่สำเร็จ: ${error.message}` };
   return { ok: true, date, imagesUploaded: before - after };
+}
+
+/** คะแนนของวันนี้ตามกติกาที่ใช้อยู่ คำนวณที่เซิร์ฟเวอร์ ไม่เชื่อค่าที่ส่งมาจากเบราว์เซอร์ */
+function stampMeta(p: PublishedFile): PublishMeta {
+  const scores: PublishMeta["scores"] = {};
+  const biases: PublishMeta["biases"] = {};
+  for (const s of p.sections ?? []) {
+    scores[s.id] = sectionScore(s.scenario);
+    biases[s.id] = s.scenario && s.scenario.id !== "pending" ? s.scenario.bias : undefined;
+  }
+  const { score, counted } = overallScore(Object.values(scores));
+  return { rules: RULES_VERSION, overall: score, counted, scores, biases };
 }
 
 function countDataUrls(p: PublishedFile) {

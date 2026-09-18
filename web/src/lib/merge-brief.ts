@@ -9,6 +9,17 @@ export type PublishedFile = {
   date?: string;
   dateLabelTH?: string;
   sections?: PublishedSection[];
+  /** ประทับตอนเผยแพร่ (ฝั่งเซิร์ฟเวอร์) — ใช้ตรวจความแม่นย้อนหลัง */
+  meta?: PublishMeta;
+};
+
+export type PublishMeta = {
+  /** เวอร์ชันกติกาการให้คะแนน — เปลี่ยนกติกาแล้วข้อมูลเก่าไม่ถูกคิดใหม่ปนกัน */
+  rules: string;
+  overall: number | null;
+  counted: number;
+  scores: Record<string, number | null>;
+  biases: Record<string, "bull" | "neutral" | "bear" | undefined>;
 };
 
 /**
