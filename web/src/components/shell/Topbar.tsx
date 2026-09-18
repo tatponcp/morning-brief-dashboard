@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { CalendarDays, Check, Link2, Search, Sparkles } from "lucide-react";
+import { CalendarDays, Check, Link2, Search } from "lucide-react";
+import { BrandMark } from "@/components/ui/BrandMark";
 import { ThemeToggle } from "./ThemeToggle";
 
 const MOBILE = [
@@ -34,7 +35,7 @@ export function Topbar({ dateLabel }: { dateLabel: string }) {
     <header className="sticky top-0 z-20 border-b border-white/8 bg-ink-950/70 backdrop-blur-xl">
       <div className="flex items-center gap-2 px-3 py-2 sm:gap-3 sm:px-4 md:px-6">
         <div className="flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-white/4 px-3 py-1.5 whitespace-nowrap md:hidden lg:flex">
-          <Sparkles className="size-3.5 text-cyan-neon" />
+          <BrandMark size={20} />
           <span className="text-[11.5px] tracking-wide text-slate-300">
             Morning Brief<span className="hidden sm:inline"> · ก่อนตลาดเปิด</span>
           </span>

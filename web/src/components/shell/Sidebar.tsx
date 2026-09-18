@@ -8,13 +8,13 @@ import {
   Activity,
   BarChart3,
   ChevronLeft,
-  Compass,
   DollarSign,
   Globe2,
   LayoutGrid,
   Radar,
   Users,
 } from "lucide-react";
+import { BrandMark } from "@/components/ui/BrandMark";
 import { ACCENT, type Accent } from "@/lib/accent";
 
 type Item = {
@@ -72,9 +72,7 @@ export function Sidebar() {
       className="sticky top-0 z-30 hidden h-dvh shrink-0 flex-col border-r border-white/8 bg-ink-900/70 backdrop-blur-xl md:flex"
     >
       <div className="flex items-center gap-3 px-5 py-6">
-        <div className="relative grid size-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-cyan-neon to-violet-neon shadow-[0_0_28px_-6px_rgba(34,211,238,0.8)]">
-          <Compass className="size-5 text-ink-950" />
-        </div>
+        <BrandMark size={42} />
         <AnimatePresence initial={false}>
           {!collapsed && (
             <motion.div
