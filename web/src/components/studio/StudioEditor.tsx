@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import {
   ArrowRight,
@@ -8,6 +9,7 @@ import {
   CalendarPlus,
   Check,
   Compass,
+  FlaskConical,
   Pencil,
   Undo,
   Download,
@@ -388,6 +390,13 @@ export function StudioEditor({
         </label>
 
         <div className="relative ml-auto flex items-center gap-3">
+          <Link
+            href="/studio/log"
+            className="flex items-center gap-1.5 rounded-xl border border-violet-neon/35 bg-violet-neon/8 px-3 py-2 text-[12.5px] font-semibold text-violet-neon transition hover:bg-violet-neon/15"
+          >
+            <FlaskConical className="size-4" />
+            ความแม่นย้อนหลัง
+          </Link>
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={() => setResetOpen((v) => !v)}

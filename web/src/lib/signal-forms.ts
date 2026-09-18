@@ -9,6 +9,9 @@ import { TONE_SCORE } from "./market-score";
  * tone ของตัวเลือก = ผลต่อตลาดหุ้น / S50 (bull = หนุน · bear = กดดัน) ใช้ระบายสีและคิดคะแนน
  */
 
+/** เวอร์ชันกติกาปัจจุบัน — เปลี่ยนทุกครั้งที่ปรับวิธีให้คะแนน (ใช้แยกข้อมูลย้อนหลังตามกติกา) */
+export const RULES_VERSION = "2026-09-18";
+
 export type SignalOption = { value: string; label: string; tone: Bias; short?: string };
 
 export type SignalField = { key: string; label: string; options: SignalOption[] };
