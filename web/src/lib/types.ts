@@ -23,8 +23,21 @@ export type ScenarioPick = {
   /** ข้อ 4 · 5 — คำตอบจาก dropdown ของแต่ละเส้น (ค่าที่เลือก + ที่แสดงให้ลูกค้า) */
   values?: Record<string, string>;
   signals?: { label: string; value: string; tone: Bias }[];
+  /** ข้อ 1 — อ่านแยกทีละ series (ตัวแรกคือตัวหลัก) ลูกค้าเห็นเป็นการ์ดเทียบกัน */
+  perSeries?: SeriesRead[];
   /** คะแนน 0–100 ของ section นี้ ใช้คำนวณภาพรวมบนหน้าแรก */
   score?: number;
+};
+
+export type SeriesRead = {
+  series: string;
+  price: "up" | "down";
+  oi: "up" | "down";
+  /** สถานการณ์ของ series นี้ เช่น "ราคาขึ้น + OI เพิ่ม" */
+  title: string;
+  tag: string;
+  bias: Bias;
+  score: number;
 };
 
 export type Candle = {

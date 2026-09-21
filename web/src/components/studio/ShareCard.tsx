@@ -8,6 +8,7 @@ import type { Draft } from "@/lib/drafts";
 import type { Bias, Section } from "@/lib/types";
 import { StaticRender } from "@/components/ui/Reveal";
 import { BrandMark } from "@/components/ui/BrandMark";
+import { SeriesBreakdown } from "@/components/ui/SeriesBreakdown";
 import { ImageBoard } from "@/components/ui/ImageBoard";
 import { PriceOIPanel } from "@/components/charts/PriceOIPanel";
 import { SpreadPanel } from "@/components/charts/SpreadPanel";
@@ -137,7 +138,9 @@ export const ShareCard = forwardRef<
           )}
 
           {/* ---------- สัญญาณที่ IC เลือก ---------- */}
-          {!!sc?.signals?.length && (
+          {sc?.perSeries && sc.perSeries.length > 1 && sc.id !== "pending" ? (
+            <SeriesBreakdown reads={sc.perSeries} big />
+          ) : !!sc?.signals?.length && (
             <div className="grid grid-cols-2 gap-2.5">
               {sc.signals.map((sig) => {
                 const st = toneOf(sig.tone);
