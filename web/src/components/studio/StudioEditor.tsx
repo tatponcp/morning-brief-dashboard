@@ -52,6 +52,7 @@ import type { DailySheet } from "@/lib/csv";
 import { NarrativeEditor } from "./NarrativeEditor";
 import { SectionRail } from "./SectionRail";
 import { ScenarioPicker } from "./ScenarioPicker";
+import { PublishCelebration, type PublishDone } from "./PublishCelebration";
 import { SeriesEditor } from "./SeriesEditor";
 import { ShareImageDialog } from "./ShareImageDialog";
 
@@ -112,6 +113,8 @@ export function StudioEditor({
   const [date, setDate] = useState(() => todayBangkok());
   const [publishing, setPublishing] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [published, setPublished] = useState<PublishDone | null>(null);
+  const closePublished = useCallback(() => setPublished(null), []);
   const [exported, setExported] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [shareOpen, setShareOpen] = useState(false);
@@ -335,16 +338,11 @@ export function StudioEditor({
       const json = (await res.json()) as
         | { ok: true; date: string; imagesUploaded: number }
         | { ok: false; reason: string };
-      setMsg(
-        json.ok
-          ? {
-              ok: true,
-              text: `เผยแพร่ ${thaiDate(json.date)} ขึ้นเว็บแล้ว${
-                json.imagesUploaded ? ` · อัปโหลดภาพ ${json.imagesUploaded} รูป` : ""
-              }`,
-            }
-          : { ok: false, text: json.reason },
-      );
+      if (json.ok) {
+        setPublished({ date: json.date, images: json.imagesUploaded, ready: progress.done, total: progress.total });
+      } else {
+        setMsg({ ok: false, text: json.reason });
+      }
     } catch {
       setMsg({ ok: false, text: "ติดต่อเซิร์ฟเวอร์ไม่ได้" });
     } finally {
@@ -460,6 +458,7 @@ export function StudioEditor({
       </AnimatePresence>
 
       <AnimatePresence>
+      <PublishCelebration done={published} onClose={closePublished} />
       {msg && (
         <motion.div
           key={msg.text}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
 import {
   Activity,
   BarChart3,
@@ -15,19 +15,22 @@ import {
   Users,
 } from "lucide-react";
 import { BrandMark } from "@/components/ui/BrandMark";
+import { Icon3D } from "@/components/ui/Icon3D";
 import { ACCENT, type Accent } from "@/lib/accent";
 
 type Item = {
   href: string;
   label: string;
   hint: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties; strokeWidth?: number }>;
   accent: Accent;
+  /** สีปลายไล่ของไอคอน 3 มิติ */
+  color2?: string;
   badge?: string;
 };
 
 const NAV: Item[] = [
-  { href: "/", label: "สรุปภาพรวม", hint: "ภาพรวมและสิ่งที่ควรทำ", icon: LayoutGrid, accent: "cyan" },
+  { href: "/", label: "สรุปภาพรวม", hint: "ภาพรวมและสิ่งที่ควรทำ", icon: LayoutGrid, accent: "cyan", color2: "var(--c-violet)" },
   { href: "/s50-oi", label: "S50 Futures + OI", hint: "ราคาและสถานะคงค้าง", icon: BarChart3, accent: "cyan", badge: "1" },
   { href: "/flows", label: "สะสม Long / Short", hint: "เงินต่างชาติและกองทุน", icon: Users, accent: "green", badge: "2" },
   { href: "/usd-futures", label: "USD Futures Flow", hint: "ทิศทางค่าเงินบาท", icon: DollarSign, accent: "sky", badge: "3" },
@@ -92,7 +95,7 @@ export function Sidebar() {
 
       <nav className="scroll-slim flex-1 overflow-y-auto px-3 pb-4">
         <SectionLabel collapsed={collapsed}>Dashboard</SectionLabel>
-        <ul className="space-y-1">
+        <ul className="space-y-1.5">
           {NAV.map((item) => (
             <NavRow
               key={item.href}
@@ -146,65 +149,104 @@ function NavRow({
   collapsed: boolean;
 }) {
   const a = ACCENT[item.accent];
-  const Icon = item.icon;
-  return (
-    <li className="relative">
-      <Link
-        href={item.href}
-        className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition ${
-          active ? "bg-white/7" : "hover:bg-white/4"
-        }`}
-      >
-        {active && (
-          <motion.span
-            layoutId="nav-active"
-            transition={{ type: "spring", stiffness: 420, damping: 34 }}
-            className="absolute inset-0 -z-10 rounded-xl"
-            style={{
-              background: `linear-gradient(90deg, ${a.soft}, transparent 70%)`,
-              boxShadow: `inset 2px 0 0 0 ${a.hex}`,
-            }}
-          />
-        )}
-        <span
-          className="grid size-8 shrink-0 place-items-center rounded-lg border transition"
-          style={{
-            borderColor: active ? a.hex : "rgba(148,163,184,0.16)",
-            background: active ? a.soft : "var(--c-hover)",
-            color: active ? a.hex : "var(--c-axis)",
-          }}
-        >
-          <Icon className="size-4" />
-        </span>
+  const reduce = useReducedMotion();
+  const [hover, setHover] = useState(false);
+  // เอียงตามเมาส์ + แสงไฟส่องตามตำแหน่งเมาส์
+  const mx = useMotionValue(0.5);
+  const my = useMotionValue(0.5);
+  const rotateY = useSpring(useTransform(mx, [0, 1], [-7, 7]), { stiffness: 300, damping: 22 });
+  const rotateX = useSpring(useTransform(my, [0, 1], [5, -5]), { stiffness: 300, damping: 22 });
+  const spot = useTransform(
+    [mx, my],
+    ([x, y]: number[]) =>
+      `radial-gradient(160px circle at ${x * 100}% ${y * 100}%, color-mix(in srgb, ${a.hex} 16%, transparent), transparent 70%)`,
+  );
 
-        {!collapsed && (
-          <span className="min-w-0 flex-1">
-            <span
-              className={`block truncate text-[13.5px] leading-tight ${
-                active ? "font-semibold text-white" : "text-slate-300"
-              }`}
+  return (
+    <li className="relative" style={{ perspective: 700 }}>
+      <motion.div
+        style={{ rotateX: reduce ? 0 : rotateX, rotateY: reduce ? 0 : rotateY, transformStyle: "preserve-3d" }}
+        onPointerMove={(e) => {
+          if (e.pointerType !== "mouse") return;
+          const r = e.currentTarget.getBoundingClientRect();
+          mx.set((e.clientX - r.left) / r.width);
+          my.set((e.clientY - r.top) / r.height);
+        }}
+        onPointerEnter={() => setHover(true)}
+        onPointerLeave={() => {
+          setHover(false);
+          mx.set(0.5);
+          my.set(0.5);
+        }}
+      >
+        <Link
+          href={item.href}
+          className={`group relative flex items-center gap-3 rounded-2xl px-2.5 py-2 transition-colors ${
+            collapsed ? "justify-center" : ""
+          }`}
+          style={{ transformStyle: "preserve-3d" }}
+        >
+          {/* แผ่นของเมนูที่เลือกอยู่ — เลื่อนตามไปเมื่อเปลี่ยนหน้า */}
+          {active && (
+            <motion.span
+              layoutId="nav-active"
+              transition={{ type: "spring", stiffness: 420, damping: 34 }}
+              className="absolute inset-0 rounded-2xl border"
+              style={{
+                borderColor: `color-mix(in srgb, ${a.hex} 40%, transparent)`,
+                background: `linear-gradient(100deg, color-mix(in srgb, ${a.hex} 20%, transparent), color-mix(in srgb, ${a.hex} 4%, transparent) 75%)`,
+                boxShadow: `0 10px 26px -12px ${a.hex}, inset 0 1px 0 rgba(255,255,255,0.08)`,
+              }}
+            />
+          )}
+          {/* แสงไฟตามเมาส์ */}
+          <motion.span
+            className="pointer-events-none absolute inset-0 rounded-2xl"
+            style={{ background: spot }}
+            animate={{ opacity: hover && !reduce ? 1 : 0 }}
+          />
+
+          <Icon3D icon={item.icon} color={a.hex} color2={item.color2} size={36} lift={hover} on={active} />
+
+          {!collapsed && (
+            <motion.span
+              className="relative min-w-0 flex-1"
+              animate={{ x: hover && !reduce ? 3 : 0 }}
+              style={{ z: 6 }}
             >
+              <span
+                className={`block truncate text-[13.5px] leading-tight transition-colors ${
+                  active ? "font-semibold text-white" : "text-slate-300 group-hover:text-white"
+                }`}
+              >
+                {item.label}
+              </span>
+              <span className="block truncate text-[11.5px] text-slate-400">{item.hint}</span>
+            </motion.span>
+          )}
+
+          {!collapsed && item.badge && (
+            <motion.span
+              className="relative grid size-6 shrink-0 place-items-center rounded-lg font-display text-[11px] font-bold"
+              animate={{ scale: active ? 1.08 : 1, rotateY: hover && !reduce ? 180 : 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 18 }}
+              style={{
+                background: active ? a.hex : a.soft,
+                color: active ? "var(--ink-950)" : a.hex,
+                boxShadow: active ? `0 4px 12px -4px ${a.hex}` : "none",
+              }}
+            >
+              <span style={{ transform: hover && !reduce ? "rotateY(180deg)" : undefined }}>{item.badge}</span>
+            </motion.span>
+          )}
+
+          {collapsed && (
+            <span className="pointer-events-none absolute left-full z-50 ml-3 hidden whitespace-nowrap rounded-lg border border-white/10 bg-ink-800 px-3 py-1.5 text-[12px] text-white shadow-xl group-hover:block">
               {item.label}
             </span>
-            <span className="block truncate text-[11.5px] text-slate-400">{item.hint}</span>
-          </span>
-        )}
-
-        {!collapsed && item.badge && (
-          <span
-            className="grid size-5 shrink-0 place-items-center rounded-md text-[10px] font-bold"
-            style={{ background: a.soft, color: a.hex }}
-          >
-            {item.badge}
-          </span>
-        )}
-
-        {collapsed && (
-          <span className="pointer-events-none absolute left-full z-50 ml-3 hidden whitespace-nowrap rounded-lg border border-white/10 bg-ink-800 px-3 py-1.5 text-[12px] text-white shadow-xl group-hover:block">
-            {item.label}
-          </span>
-        )}
-      </Link>
+          )}
+        </Link>
+      </motion.div>
     </li>
   );
 }
