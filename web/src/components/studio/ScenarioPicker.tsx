@@ -13,11 +13,12 @@ import {
   type Templates,
   type ViewId,
 } from "@/lib/scenarios";
-import { getSignalForm, optionOf, seriesList } from "@/lib/signal-forms";
+import { getSignalForm, optionOf, remapSeriesValues, seriesList, type SignalForm as Form } from "@/lib/signal-forms";
 import { TONE_SCORE } from "@/lib/market-score";
 import type { Draft } from "@/lib/drafts";
-import type { Bias, Narrative } from "@/lib/types";
+import type { Bias } from "@/lib/types";
 import { SignalForm } from "./SignalForm";
+import { SeriesEditor } from "./SeriesEditor";
 
 const BIAS_LABEL: Record<Bias, string> = { bull: "บวก", neutral: "กลาง", bear: "ลบ" };
 const BIAS_ICON: Record<Bias, React.ReactNode> = {
@@ -52,7 +53,7 @@ export function ScenarioPicker({
   sectionId: string;
   value: Draft;
   templates: Templates;
-  onApply: (patch: Partial<Narrative>) => void;
+  onApply: (patch: Partial<Draft>) => void;
   onNext: () => void;
 }) {
   const guide = GUIDES[sectionId];
@@ -63,36 +64,47 @@ export function ScenarioPicker({
   const views = (picked?.views ?? []) as ViewId[];
   const levels = picked?.levels ?? {};
   // ข้อความใช้ series หลัก (ตัวแรก) · series อื่นระบบเขียนเพิ่มในสรุปให้เอง
-  const series = seriesList(value.series)[0] ?? value.series;
+  const mainOf = (raw?: string) => seriesList(raw)[0] ?? raw;
+  const series = mainOf(value.series);
   const suggestion = form ? null : suggestScenario(sectionId, { flows: value.flows });
   const ready = !!picked && picked.id !== "pending";
   const usingTeamWords = ready && !!templates[templateKey(sectionId, picked.id)];
 
   /** เลือก dropdown แล้ว — ครบเมื่อไหร่เขียนข้อความให้ทันที */
-  function applySignals(nextValues: Record<string, string>) {
-    if (!form) return;
-    const result = form.conclude(nextValues);
-    const signals = form.fields
+  function applySignals(nextValues: Record<string, string>, f: Form | undefined = form, extraPatch: Partial<Draft> = {}) {
+    if (!f) return;
+    const result = f.conclude(nextValues);
+    const signals = f.fields
       .map((f) => ({ label: f.label, opt: optionOf(f, nextValues[f.key]) }))
       .filter((x) => x.opt)
       .map((x) => ({ label: x.label, value: x.opt!.short ?? x.opt!.label, tone: x.opt!.tone }));
 
     if (!result) {
       onApply({
+        ...extraPatch,
         scenario: { id: "pending", title: "ยังเลือกไม่ครบ", bias: "neutral", views, levels, values: nextValues, signals },
       });
       return;
     }
-    onApply(
-      composeNarrative(result, {
+    onApply({
+      ...extraPatch,
+      ...composeNarrative(result, {
         sectionId,
         views: result.views,
         levels,
-        series,
+        series: "series" in extraPatch ? mainOf(extraPatch.series) : series,
         templates,
-        extra: { values: nextValues, signals, score: result.score },
+        extra: { values: nextValues, signals, score: result.score, perSeries: result.perSeries },
       }),
-    );
+    });
+  }
+
+  /** เพิ่ม/ลบ/สลับ series ตรงนี้ได้เลย — ค่าที่เลือกไว้ย้ายตาม series เดิม ข้อความเขียนใหม่ให้ทันที */
+  function changeSeries(next: string) {
+    const nextValues = remapSeriesValues(picked?.values ?? {}, value.series, next);
+    const nextForm = getSignalForm(sectionId, { series: next });
+    if (!picked) return onApply({ series: next });
+    applySignals(nextValues, nextForm, { series: next });
   }
 
   /** เปลี่ยนเฉพาะแถวที่มาจากการเลือก — แถวที่ IC เพิ่มเองในขั้นแก้คำยังอยู่ */
@@ -108,8 +120,17 @@ export function ScenarioPicker({
 
   return (
     <div className="space-y-4">
+      {sectionId === "s50-oi" && (
+        <div className="rounded-2xl border border-white/10 bg-white/2 px-3 py-2.5">
+          <SeriesEditor value={value.series} onChange={changeSeries} />
+          <p className="mt-1.5 text-[11.5px] leading-relaxed text-slate-500">
+            มีหลาย series ในภาพ (เช่นช่วงย้ายสัญญา) กด &ldquo;เพิ่ม&rdquo; แล้ว dropdown ราคา/OI ของ series นั้นจะขึ้นมาให้เลือก ·
+            ลูกค้าจะเห็นการ์ดเทียบทีละ series
+          </p>
+        </div>
+      )}
       {form ? (
-        <SignalForm form={form} values={picked?.values ?? {}} onChange={applySignals} />
+        <SignalForm form={form} values={picked?.values ?? {}} onChange={(v) => applySignals(v)} />
       ) : (
         <>
           <div className="flex flex-wrap items-center gap-2">

@@ -1,4 +1,4 @@
-import type { Bias } from "./types";
+import type { Bias, SeriesRead } from "./types";
 import { GUIDES, fillText, type ScenarioBase, type ViewId } from "./scenarios";
 import { TONE_SCORE } from "./market-score";
 
@@ -16,7 +16,7 @@ export type SignalOption = { value: string; label: string; tone: Bias; short?: s
 
 export type SignalField = { key: string; label: string; options: SignalOption[] };
 
-export type SignalConclusion = ScenarioBase & { views: ViewId[]; score: number };
+export type SignalConclusion = ScenarioBase & { views: ViewId[]; score: number; perSeries?: SeriesRead[] };
 
 export type SignalForm = {
   question: string;
@@ -107,7 +107,7 @@ function s50Form(series?: string): SignalForm {
         const up = values[key("price", s)] === "up";
         const oiUp = values[key("oi", s)] === "up";
         const id = `px-${up ? "up" : "down"}-oi-${oiUp ? "up" : "down"}`;
-        return { s, id, score: PX_OI_SCORE[id] };
+        return { s, id, up, oiUp, score: PX_OI_SCORE[id] };
       });
       const main = per[0];
       const score = Math.round(per.reduce((n, x) => n + x.score, 0) / per.length);
@@ -121,9 +121,43 @@ function s50Form(series?: string): SignalForm {
             : `${other.s} ต่างออกไป: ${fillText(sc.title, { series: other.s })} — ${sc.tag}`,
         );
       }
+      if (list.length) {
+        base.perSeries = per.map((x) => {
+          const sc = GUIDES["s50-oi"].scenarios.find((g) => g.id === x.id)!;
+          return {
+            series: x.s,
+            price: x.up ? "up" : "down",
+            oi: x.oiUp ? "up" : "down",
+            title: fillText(sc.title, { series: x.s }),
+            tag: sc.tag,
+            bias: sc.bias,
+            score: x.score,
+          };
+        });
+      }
       return base;
     },
   };
+}
+
+/**
+ * เพิ่ม/ลบ/สลับ series แล้วคีย์ของ dropdown เปลี่ยน (series เดียวใช้ "price", หลายตัวใช้ "price:S50U26")
+ * ย้ายค่าที่เลือกไว้ตาม series เดิม ไม่ต้องเลือกใหม่
+ */
+export function remapSeriesValues(values: Record<string, string>, from?: string, to?: string) {
+  const a = seriesList(from);
+  const b = seriesList(to);
+  const oldKey = (k: string, s: string) => (a.length > 1 ? `${k}:${s}` : a.length === 1 && a[0] !== s ? null : k);
+  const newKey = (k: string, s: string) => (b.length > 1 ? `${k}:${s}` : k);
+  const next: Record<string, string> = {};
+  for (const s of b.length ? b : [a[0] ?? ""]) {
+    for (const k of ["price", "oi"]) {
+      const ok = a.length || !s ? oldKey(k, s) : b.indexOf(s) === 0 ? k : null;
+      const v = ok ? values[ok] : undefined;
+      if (v) next[newKey(k, s)] = v;
+    }
+  }
+  return next;
 }
 
 /* ───────── ข้อ 3: USD Futures 3 อินดี้ตามชีต ───────── */

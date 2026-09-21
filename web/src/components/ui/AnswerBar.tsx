@@ -3,6 +3,7 @@ import { ACCENT, toneOf, type Accent } from "@/lib/accent";
 import { READING_GUIDE } from "@/lib/reading-guide";
 import type { Narrative } from "@/lib/types";
 import { Reveal } from "./Reveal";
+import { SeriesBreakdown } from "./SeriesBreakdown";
 
 const BIAS_LABEL = { bull: "บวก", neutral: "กลาง", bear: "ลบ" } as const;
 
@@ -40,7 +41,9 @@ export function AnswerBar({ id, accent, n }: { id: string; accent: Accent; n: Na
                 {n.insight}
               </span>
             </p>
-            {!!sc?.signals?.length && (
+            {sc?.perSeries && sc.perSeries.length > 1 && sc.id !== "pending" ? (
+              <SeriesBreakdown reads={sc.perSeries} />
+            ) : !!sc?.signals?.length && (
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {sc.signals.map((sig, i) => {
                   const st = toneOf(sig.tone);
