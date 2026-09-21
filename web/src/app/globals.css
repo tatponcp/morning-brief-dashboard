@@ -148,6 +148,15 @@
     radial-gradient(1100px 700px at 50% 108%, rgba(4, 120, 87, 0.05), transparent 62%);
 }
 
+@keyframes mb-countdown {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }

@@ -33,18 +33,18 @@ export function SectionRail({
             onClick={() => onSelect(s.id)}
             whileHover={{ x: on ? 0 : 3 }}
             whileTap={{ scale: 0.98 }}
-            className="group relative flex shrink-0 items-center gap-2.5 rounded-xl border border-white/8 bg-[var(--c-hover)] px-3 py-2 text-left lg:w-full"
+            className="group relative flex shrink-0 items-center gap-3 rounded-2xl border border-white/8 bg-[var(--c-hover)] px-3.5 py-3 text-left lg:w-full"
           >
             {on && (
               <motion.span
                 layoutId="studio-rail"
                 transition={{ type: "spring", stiffness: 420, damping: 36 }}
-                className="absolute inset-0 rounded-xl border"
+                className="absolute inset-0 rounded-2xl border"
                 style={{ borderColor: a.hex, background: a.soft }}
               />
             )}
             <span
-              className="relative grid size-6 shrink-0 place-items-center rounded-md font-display text-[11px] font-bold"
+              className="relative grid size-8 shrink-0 place-items-center rounded-lg font-display text-[14px] font-bold"
               style={{ background: on ? a.hex : "var(--c-hover)", color: on ? "var(--ink-950)" : a.hex }}
             >
               {s.index}
@@ -52,11 +52,11 @@ export function SectionRail({
 
             <span className="relative min-w-0 flex-1">
               <span
-                className={`block truncate text-[12.5px] ${on ? "font-semibold text-white" : "text-slate-300"}`}
+                className={`block truncate text-[14px] ${on ? "font-semibold text-white" : "text-slate-300"}`}
               >
                 {displayTitle(drafts[s.id]?.title || s.title, drafts[s.id]?.series)}
               </span>
-              <span className="hidden truncate text-[11px] lg:block">
+              <span className="hidden truncate text-[12.5px] lg:block">
                 {drafts[s.id]?.scenario ? (
                   <span className={toneOf(drafts[s.id].scenario!.bias).text}>{drafts[s.id].scenario!.title}</span>
                 ) : (
@@ -69,10 +69,10 @@ export function SectionRail({
 
             {st.complete ? (
               <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="relative">
-                <Check className="size-4 shrink-0 text-green-neon" />
+                <Check className="size-5 shrink-0 text-green-neon" />
               </motion.span>
             ) : (
-              <CircleDashed className="relative size-4 shrink-0 text-slate-600" />
+              <CircleDashed className="relative size-5 shrink-0 text-slate-600" />
             )}
           </motion.button>
         );

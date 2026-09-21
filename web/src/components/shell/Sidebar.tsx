@@ -54,8 +54,10 @@ export function Sidebar() {
   // อ่านค่าที่จำไว้แบบไม่ผ่าน effect — เมนูจะได้ไม่กางแล้วหุบให้เห็นตอนโหลดหน้า
   const isClient = useSyncExternalStore(subscribeNever, () => true, () => false);
   const [override, setOverride] = useState<boolean | null>(null);
+  // หน้า Studio หุบเมนูไว้ก่อน ให้พื้นที่ทำงานกว้าง (กดขยายเองได้)
+  const onStudio = pathname.startsWith("/studio");
   const collapsed =
-    override ?? (isClient && window.localStorage.getItem(STORE_KEY) === "1");
+    override ?? (onStudio || (isClient && window.localStorage.getItem(STORE_KEY) === "1"));
 
   const toggle = () => {
     const next = !collapsed;
