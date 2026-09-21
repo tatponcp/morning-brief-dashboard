@@ -19,6 +19,7 @@ import type { Draft } from "@/lib/drafts";
 import type { Bias } from "@/lib/types";
 import { SignalForm } from "./SignalForm";
 import { SeriesEditor } from "./SeriesEditor";
+import { RolloverBanner } from "./RolloverBanner";
 
 const BIAS_LABEL: Record<Bias, string> = { bull: "บวก", neutral: "กลาง", bear: "ลบ" };
 const BIAS_ICON: Record<Bias, React.ReactNode> = {
@@ -47,17 +48,20 @@ export function ScenarioPicker({
   sectionId,
   value,
   templates,
+  date,
   onApply,
   onNext,
 }: {
   sectionId: string;
+  /** วันที่ของ brief — ข้อ 1 ใช้นับวันหมดอายุของ series */
+  date: string;
   value: Draft;
   templates: Templates;
   onApply: (patch: Partial<Draft>) => void;
   onNext: () => void;
 }) {
   const guide = GUIDES[sectionId];
-  const form = getSignalForm(sectionId, { series: value.series });
+  const form = getSignalForm(sectionId, { series: value.series, date });
   if (!guide) return null;
 
   const picked = value.scenario;
@@ -102,7 +106,7 @@ export function ScenarioPicker({
   /** เพิ่ม/ลบ/สลับ series ตรงนี้ได้เลย — ค่าที่เลือกไว้ย้ายตาม series เดิม ข้อความเขียนใหม่ให้ทันที */
   function changeSeries(next: string) {
     const nextValues = remapSeriesValues(picked?.values ?? {}, value.series, next);
-    const nextForm = getSignalForm(sectionId, { series: next });
+    const nextForm = getSignalForm(sectionId, { series: next, date });
     if (!picked) return onApply({ series: next });
     applySignals(nextValues, nextForm, { series: next });
   }
@@ -120,6 +124,7 @@ export function ScenarioPicker({
 
   return (
     <div className="space-y-4">
+      {sectionId === "s50-oi" && <RolloverBanner series={value.series} date={date} onSeries={changeSeries} />}
       {sectionId === "s50-oi" && (
         <div className="rounded-2xl border border-white/10 bg-white/2 px-3 py-2.5">
           <SeriesEditor value={value.series} onChange={changeSeries} />

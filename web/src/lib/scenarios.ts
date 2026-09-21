@@ -85,6 +85,56 @@ export const GUIDES: Record<string, Guide> = {
         insight: "ย่อแบบ OI ลด มักเป็นการพัก ไม่ใช่กลับตัว",
         views: ["wait"],
       },
+      {
+        id: "px-up-oi-flat",
+        title: "ราคาขึ้น · OI ยังไม่ยืนยัน",
+        tag: "ขึ้นแต่เงินใหม่ยังไม่ยืนยัน",
+        bias: "bull",
+        summary: ["ราคา {series} ปิดบวกทั้งเทียบราคาเปิดและวันก่อน", "Open Interest ยังไม่ยืนยันทิศทาง"],
+        interpretation: "แรงซื้อยังคุมตลาด แต่ยังไม่มีสถานะใหม่เข้ามาหนุน ขาขึ้นไปต่อได้ถ้า OI เริ่มเพิ่มตาม",
+        insight: "ขาขึ้นยังอยู่ รอ OI ยืนยัน",
+        views: ["buy-dip", "selective-long"],
+      },
+      {
+        id: "px-down-oi-flat",
+        title: "ราคาลง · OI ยังไม่ยืนยัน",
+        tag: "ลงแต่ยังไม่มี Short ใหม่",
+        bias: "bear",
+        summary: ["ราคา {series} ปิดลบทั้งเทียบราคาเปิดและวันก่อน", "Open Interest ยังไม่ยืนยันทิศทาง"],
+        interpretation: "แรงขายยังคุมตลาด แต่ยังไม่มีสถานะ Short ใหม่เพิ่ม ถ้า OI เริ่มเพิ่มตามจะเป็นสัญญาณลบชัดขึ้น",
+        insight: "ฝั่งขายยังได้เปรียบ ระวังถ้า OI เพิ่มตาม",
+        views: ["wait", "reduce-long"],
+      },
+      {
+        id: "px-rebound",
+        title: "เปิดต่ำแล้วดีดกลับ",
+        tag: "แรงซื้อกลับระหว่างวัน",
+        bias: "neutral",
+        summary: ["ราคา {series} ปิดสูงกว่าราคาเปิด แม้ยังต่ำกว่าวันก่อน", "มีแรงซื้อรับระหว่างวัน"],
+        interpretation: "ช่วงเช้าถูกกดลงแต่มีคนเข้ารับจนปิดเหนือราคาเปิด ฝั่งซื้อเริ่มกลับมา ต้องดูว่าวันถัดไปยืนเหนือราคาปิดวันก่อนได้ไหม",
+        insight: "เปิดต่ำปิดสูง แรงซื้อเริ่มกลับ",
+        views: ["selective-long", "buy-dip"],
+      },
+      {
+        id: "px-fade",
+        title: "เปิดสูงแล้วโดนขาย",
+        tag: "แรงขายคืนระหว่างวัน",
+        bias: "neutral",
+        summary: ["ราคา {series} ปิดต่ำกว่าราคาเปิด แม้ยังสูงกว่าวันก่อน", "มีแรงขายออกมาระหว่างวัน"],
+        interpretation: "เปิดตลาดได้ดีแต่ถูกขายคืนจนปิดใต้ราคาเปิด แรงซื้อยังไม่มั่นใจ ระวังการไล่ราคา",
+        insight: "เปิดสูงปิดต่ำ อย่าเพิ่งไล่ราคา",
+        views: ["wait", "reduce-long"],
+      },
+      {
+        id: "px-doji",
+        title: "แท่ง Doji · ลังเล",
+        tag: "ยังไม่เลือกทาง",
+        bias: "neutral",
+        summary: ["ราคา {series} ปิดใกล้ราคาเปิด (แท่ง Doji)", "แรงซื้อและแรงขายยังพอ ๆ กัน"],
+        interpretation: "ตลาดยังลังเล รอให้ราคาหลุดกรอบของแท่งวันนี้ก่อนค่อยตามทิศทาง",
+        insight: "Doji รอหลุดกรอบก่อนค่อยตาม",
+        views: ["wait"],
+      },
     ],
   },
 
@@ -358,7 +408,10 @@ export function fillText(text: string, vars: { series?: string }) {
   return text.replaceAll("{series}", vars.series?.trim() || "S50");
 }
 
-export type ScenarioBase = Pick<Scenario, "id" | "title" | "bias" | "summary" | "interpretation" | "insight">;
+export type ScenarioBase = Pick<Scenario, "id" | "title" | "bias" | "summary" | "interpretation" | "insight"> & {
+  /** บรรทัดที่ระบบเขียนจากข้อมูลวันนี้ (เช่นช่วงย้ายสัญญา, series อื่น) ต่อท้ายสรุปเสมอ แม้ทีมบันทึกคำเองไว้ */
+  notes?: string[];
+};
 
 /**
  * สถานการณ์ → ข้อความที่ลูกค้าเห็น
@@ -379,7 +432,7 @@ export function composeNarrative(
   const src = tpl ?? base;
   const fill = (t: string) => fillText(t, { series: opts.series });
   return {
-    summary: src.summary.map(fill),
+    summary: [...src.summary.map(fill), ...(base.notes ?? [])],
     interpretation: fill(src.interpretation),
     insight: fill(src.insight),
     actions: buildActions(opts.views, opts.levels, base.bias),
@@ -389,6 +442,7 @@ export function composeNarrative(
       bias: base.bias,
       views: opts.views,
       levels: opts.levels,
+      ...(base.notes?.length ? { notes: base.notes } : {}),
       ...opts.extra,
     },
   };

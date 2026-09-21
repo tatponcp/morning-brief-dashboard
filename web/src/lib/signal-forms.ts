@@ -1,6 +1,8 @@
 import type { Bias, SeriesRead } from "./types";
 import { GUIDES, fillText, type ScenarioBase, type ViewId } from "./scenarios";
 import { TONE_SCORE } from "./market-score";
+import { expiryInfo, inRoll, type ExpiryInfo } from "./contract-expiry";
+import { thaiDate, todayBangkok } from "./format";
 
 /**
  * ข้อที่แนบภาพ (1, 3, 4, 5, 6) — IC ดูภาพแล้วเลือกจาก dropdown แบบเดียวกับชีตที่ทีมใช้
@@ -10,9 +12,9 @@ import { TONE_SCORE } from "./market-score";
  */
 
 /** เวอร์ชันกติกาปัจจุบัน — เปลี่ยนทุกครั้งที่ปรับวิธีให้คะแนน (ใช้แยกข้อมูลย้อนหลังตามกติกา) */
-export const RULES_VERSION = "2026-09-18";
+export const RULES_VERSION = "2026-09-21";
 
-export type SignalOption = { value: string; label: string; tone: Bias; short?: string };
+export type SignalOption = { value: string; label: string; tone: Bias; short?: string; /** บรรทัดอธิบายเล็กใต้ตัวเลือก */ hint?: string };
 
 export type SignalField = { key: string; label: string; options: SignalOption[] };
 
@@ -53,11 +55,12 @@ function fromGuide(sectionId: string, scenarioId: string, score: number): Signal
   return { ...sc, summary: [...sc.summary], score };
 }
 
-const opt = (value: string, label: string, tone: Bias, short?: string): SignalOption => ({
+const opt = (value: string, label: string, tone: Bias, short?: string, hint?: string): SignalOption => ({
   value,
   label,
   tone,
   short,
+  ...(hint ? { hint } : {}),
 });
 
 /** series ที่ IC ใส่ไว้ เช่น "S50U26 / S50Z26" → ["S50U26", "S50Z26"] */
@@ -68,66 +71,150 @@ export function seriesList(series?: string): string[] {
     .filter(Boolean);
 }
 
-/* ───────── ข้อ 1: ราคา + OI ต่อ series (ภาพเดียวมีได้หลาย series ช่วงย้ายสัญญา) ───────── */
+/* ───────── ข้อ 1: แท่ง Day + OI ต่อ series (ภาพเดียวมีได้หลาย series ช่วงย้ายสัญญา) ─────────
+ *
+ * ราคา — TF Day อ่านจากแท่งเทียน 2 มุมพร้อมกัน
+ *   ปิดเทียบเปิด     = ใครคุมตลาดระหว่างวัน (แท่งเขียว/แดง)
+ *   ปิดเทียบวันก่อน  = ทิศทางรวมของวัน
+ *   → ขึ้นชัด · ดีดกลับ (เปิดต่ำปิดสูง) · Doji · โดนขายคืน (เปิดสูงปิดต่ำ) · ลงชัด
+ *
+ * OI — เพิ่ม / ทรงตัว / ลด · ช่วงใกล้หมดอายุ OI ของ series เดิมลดเพราะคนย้ายสัญญา
+ *   จึงถามเพิ่ม "OI รวมทุก series" แล้วใช้ค่านั้นแทน (ดูไม่ได้ = ไม่นับ OI วันนั้น อ่านจากราคาอย่างเดียว)
+ */
 
-const PX_OI_SCORE: Record<string, number> = {
-  "px-up-oi-up": 90,
-  "px-up-oi-down": 60,
-  "px-down-oi-down": 40,
-  "px-down-oi-up": 10,
+const PRICE_OPTIONS = [
+  opt("up", "ขึ้นชัด", "bull", "ขึ้นชัด", "ปิด > เปิด และ > วันก่อน"),
+  opt("rebound", "ดีดกลับ (เปิดต่ำปิดสูง)", "bull", "ดีดกลับ", "ปิด > เปิด แต่ยัง < วันก่อน"),
+  opt("doji", "Doji · ลังเล", "neutral", "Doji", "ปิดใกล้ราคาเปิด ตัวแท่งเล็กมาก"),
+  opt("fade", "โดนขายคืน (เปิดสูงปิดต่ำ)", "bear", "โดนขายคืน", "ปิด < เปิด แต่ยัง > วันก่อน"),
+  opt("down", "ลงชัด", "bear", "ลงชัด", "ปิด < เปิด และ < วันก่อน"),
+];
+const OI_OPTIONS = [
+  opt("up", "เพิ่มขึ้น", "neutral", "เพิ่ม"),
+  opt("flat", "ทรงตัว", "neutral", "ทรงตัว", "เปลี่ยนไม่ถึง ~1%"),
+  opt("down", "ลดลง", "neutral", "ลด"),
+];
+const OI_ALL_OPTIONS = [
+  opt("up", "OI รวมเพิ่มขึ้น", "neutral", "รวมเพิ่ม"),
+  opt("flat", "OI รวมทรงตัว", "neutral", "รวมทรงตัว"),
+  opt("down", "OI รวมลดลง", "neutral", "รวมลด"),
+  opt("unknown", "ดูไม่ได้", "neutral", "ไม่นับ OI", "ไม่นับ OI วันนี้ อ่านจากราคาอย่างเดียว"),
+];
+
+/** คะแนน [แท่งราคา][OI ที่ใช้] — ขึ้นชัด/ลงชัด ตรงกับตารางเดิมของทีม (90 · 60 · 40 · 10) */
+const PX_OI_SCORE: Record<string, Record<string, number>> = {
+  up: { up: 90, flat: 70, down: 60 },
+  rebound: { up: 65, flat: 60, down: 55 },
+  doji: { up: 50, flat: 50, down: 50 },
+  fade: { up: 35, flat: 45, down: 45 },
+  down: { up: 10, flat: 30, down: 40 },
 };
 
-function s50Form(series?: string): SignalForm {
+function pxScenario(price: string, oi: string) {
+  if (price === "up" || price === "down") return `px-${price}-oi-${oi}`;
+  return `px-${price}`;
+}
+
+/** แท่งที่ไม่ใช่ขึ้นชัด/ลงชัด ใช้การ์ดเดียวกันทุกกรณี OI → บอกเรื่อง OI เพิ่มอีกบรรทัด */
+const OI_NOTE: Record<string, string> = {
+  up: "Open Interest เพิ่มขึ้น มีสถานะใหม่เข้ามาพร้อมการเคลื่อนไหวนี้",
+  flat: "Open Interest ยังไม่ยืนยันทิศทาง",
+  down: "Open Interest ลดลง เป็นการปิดสถานะมากกว่าเปิดใหม่",
+};
+
+const OI_ALL_NOTE: Record<string, string> = {
+  up: "OI รวมทุก series เพิ่มขึ้น — มีสถานะใหม่จริง ไม่ใช่แค่ย้ายสัญญา",
+  flat: "OI รวมทุก series ทรงตัว — ส่วนใหญ่เป็นการย้ายสัญญา ยังไม่มีเงินใหม่",
+  down: "OI รวมทุก series ลดลง — มีการปิดสถานะจริง ไม่ใช่แค่ย้ายสัญญา",
+  unknown: "วันนี้ไม่นับ OI เพราะอยู่ช่วงย้ายสัญญา อ่านจากแท่งราคาอย่างเดียว",
+};
+
+function expiryNote(e: ExpiryInfo) {
+  const when = `ซื้อขายวันสุดท้าย ${thaiDate(e.lastTrade).replace(/ \d{4}$/, "")}`;
+  if (e.phase === "expired") return `${e.series} หมดอายุแล้ว (${when}) — ควรดู ${e.next} แทน`;
+  if (e.phase === "last-day") return `วันนี้เป็นวันซื้อขายวันสุดท้ายของ ${e.series} — OI ลดลงจากการย้ายไป ${e.next} เป็นเรื่องปกติ`;
+  return `${e.series} เหลือ ${e.daysLeft} วันทำการ (${when}) — OI ที่ลดลงส่วนหนึ่งมาจากการย้ายไป ${e.next}`;
+}
+
+function s50Form(series?: string, date = todayBangkok()): SignalForm {
   const list = seriesList(series);
   // series เดียวใช้คีย์เดิม (price / oi) ร่างที่บันทึกไว้ก่อนหน้าจะยังใช้ได้
   const key = (k: string, s: string) => (list.length > 1 ? `${k}:${s}` : k);
   const shown = list.length ? list : [""];
+  const expiries = list.map((s) => expiryInfo(s, date));
+  const rolling = expiries.find(inRoll) ?? null;
+
+  const fields: SignalField[] = shown.flatMap((s) => {
+    const e = expiries[list.indexOf(s)];
+    return [
+      { key: key("price", s), label: s ? `แท่ง Day ${s}` : "แท่ง Day", options: PRICE_OPTIONS },
+      {
+        key: key("oi", s),
+        label: `${s ? `OI ${s}` : "Open Interest"}${inRoll(e) ? " · ช่วงย้ายสัญญา" : ""}`,
+        options: OI_OPTIONS,
+      },
+    ];
+  });
+  if (rolling) fields.push({ key: "oiAll", label: "OI รวมทุก series (ใช้แทนช่วงย้ายสัญญา)", options: OI_ALL_OPTIONS });
 
   return {
     question:
-      list.length > 1 ? `ราคาและ Open Interest ของแต่ละ series (${list.join(" · ")})` : "ราคาและ Open Interest ในภาพไปทางไหน",
+      list.length > 1
+        ? `แท่งราคา Day และ Open Interest ของแต่ละ series (${list.join(" · ")})`
+        : "แท่งราคา Day และ Open Interest ในภาพเป็นแบบไหน",
     rule:
-      "ราคาขึ้น + OI เพิ่ม = 90% · ราคาขึ้น + OI ลด = 60% · ราคาลง + OI ลด = 40% · ราคาลง + OI เพิ่ม = 10%" +
-      (list.length > 1 ? " · หลาย series: ใช้ series แรกเป็นหลัก คะแนนเฉลี่ยทุก series" : ""),
-    fields: shown.flatMap((s) => [
-      {
-        key: key("price", s),
-        label: s ? `ราคา ${s}` : "ราคา",
-        options: [opt("up", "ขึ้น", "bull", "ขึ้น"), opt("down", "ลง", "bear", "ลง")],
-      },
-      {
-        key: key("oi", s),
-        label: s ? `OI ${s}` : "Open Interest",
-        options: [opt("up", "เพิ่มขึ้น", "neutral", "เพิ่ม"), opt("down", "ลดลง", "neutral", "ลด")],
-      },
-    ]),
+      "ขึ้นชัด + OI เพิ่ม 90 · ทรงตัว 70 · ลด 60 | ดีดกลับ 55–65 | Doji 50 | โดนขายคืน 35–45 | ลงชัด + OI ลด 40 · ทรงตัว 30 · เพิ่ม 10" +
+      (rolling ? " · ช่วงย้ายสัญญาใช้ OI รวมทุก series แทน OI ของแต่ละตัว" : "") +
+      (list.length > 1 ? " · หลาย series: series แรกเป็นตัวหลัก คะแนนเฉลี่ยทุก series" : ""),
+    fields,
     conclude(values) {
       if (!answers(this.fields, values)) return null;
-      const per = shown.map((s) => {
-        const up = values[key("price", s)] === "up";
-        const oiUp = values[key("oi", s)] === "up";
-        const id = `px-${up ? "up" : "down"}-oi-${oiUp ? "up" : "down"}`;
-        return { s, id, up, oiUp, score: PX_OI_SCORE[id] };
+      const oiAll = rolling ? values.oiAll : undefined;
+      const per = shown.map((s, i) => {
+        const price = values[key("price", s)];
+        const oi = values[key("oi", s)];
+        // ช่วงย้ายสัญญา OI ของแต่ละตัวบิด → ใช้ OI รวม · ดูไม่ได้ = ไม่นับ OI (เท่ากับทรงตัว)
+        const used = oiAll ? (oiAll === "unknown" ? "flat" : oiAll) : oi;
+        const id = pxScenario(price, used);
+        return { s, price, oi, used, id, score: PX_OI_SCORE[price]?.[used] ?? 50, expiry: expiries[i] ?? null };
       });
       const main = per[0];
       const score = Math.round(per.reduce((n, x) => n + x.score, 0) / per.length);
       const base = fromGuide("s50-oi", main.id, score);
-      // series อื่นไปคนละทาง → บอกลูกค้าตรง ๆ ในสรุป
+      const notes: string[] = [];
+
+      // ช่วงย้ายสัญญาบรรทัด OI รวมบอกเรื่อง OI แทนแล้ว
+      if (main.price !== "up" && main.price !== "down" && !oiAll) notes.push(OI_NOTE[main.used]);
+      if (rolling && oiAll) {
+        notes.push(expiryNote(rolling));
+        notes.push(OI_ALL_NOTE[oiAll]);
+      }
+      // series อื่นไปคนละทาง → บอกลูกค้าตรง ๆ
       for (const other of per.slice(1)) {
         const sc = GUIDES["s50-oi"].scenarios.find((x) => x.id === other.id)!;
-        base.summary.push(
+        notes.push(
           other.id === main.id
             ? `${other.s} ไปทางเดียวกัน (${fillText(sc.title, { series: other.s })})`
             : `${other.s} ต่างออกไป: ${fillText(sc.title, { series: other.s })} — ${sc.tag}`,
         );
       }
+      base.notes = notes;
+
       if (list.length) {
         base.perSeries = per.map((x) => {
           const sc = GUIDES["s50-oi"].scenarios.find((g) => g.id === x.id)!;
+          const po = PRICE_OPTIONS.find((o) => o.value === x.price);
+          const e = x.expiry;
           return {
             series: x.s,
-            price: x.up ? "up" : "down",
-            oi: x.oiUp ? "up" : "down",
+            price: x.price,
+            priceLabel: po?.short,
+            priceTone: po?.tone,
+            oi: x.oi,
+            ...(oiAll ? { oiUsed: oiAll } : {}),
+            ...(e && e.phase !== "normal"
+              ? { expiry: { lastTrade: e.lastTrade, daysLeft: e.daysLeft, phase: e.phase, next: e.next } }
+              : {}),
             title: fillText(sc.title, { series: x.s }),
             tag: sc.tag,
             bias: sc.bias,
@@ -157,6 +244,7 @@ export function remapSeriesValues(values: Record<string, string>, from?: string,
       if (v) next[newKey(k, s)] = v;
     }
   }
+  if (values.oiAll) next.oiAll = values.oiAll;
   return next;
 }
 
@@ -359,7 +447,7 @@ export const SIGNAL_FORMS: Record<string, SignalForm> = {
 };
 
 /** ฟอร์มของ section — ข้อ 1 สร้างตาม series ที่ IC ใส่ (มีได้หลาย series ในภาพเดียว) */
-export function getSignalForm(sectionId: string, ctx: { series?: string } = {}): SignalForm | undefined {
-  if (sectionId === "s50-oi") return s50Form(ctx.series);
+export function getSignalForm(sectionId: string, ctx: { series?: string; date?: string } = {}): SignalForm | undefined {
+  if (sectionId === "s50-oi") return s50Form(ctx.series, ctx.date);
   return SIGNAL_FORMS[sectionId];
 }
