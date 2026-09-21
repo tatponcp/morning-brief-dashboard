@@ -114,7 +114,8 @@ export function StudioEditor({
   const [publishing, setPublishing] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [published, setPublished] = useState<PublishDone | null>(null);
-  const closePublished = useCallback(() => setPublished(null), []);
+  const [publishedOpen, setPublishedOpen] = useState(false);
+  const closePublished = useCallback(() => setPublishedOpen(false), []);
   const [exported, setExported] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [shareOpen, setShareOpen] = useState(false);
@@ -340,6 +341,7 @@ export function StudioEditor({
         | { ok: false; reason: string };
       if (json.ok) {
         setPublished({ date: json.date, images: json.imagesUploaded, ready: progress.done, total: progress.total });
+        setPublishedOpen(true);
       } else {
         setMsg({ ok: false, text: json.reason });
       }
@@ -363,37 +365,37 @@ export function StudioEditor({
   }
 
   return (
-    <div className="pb-16">
+    <div className="pb-28">
       {/* ---------- header ---------- */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="panel relative mb-3 flex flex-wrap items-center gap-3 overflow-hidden px-4 py-3"
+        className="panel relative mb-4 flex flex-wrap items-center gap-3.5 overflow-hidden px-5 py-4"
       >
         <div className="pointer-events-none absolute -top-20 -left-10 size-56 rounded-full bg-amber-neon/10 blur-3xl" />
-        <span className="relative grid size-10 place-items-center rounded-2xl bg-gradient-to-br from-amber-neon/25 to-rose-neon/20 text-amber-neon">
-          <Wand2 className="size-5" />
+        <span className="relative grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-amber-neon/25 to-rose-neon/20 text-amber-neon">
+          <Wand2 className="size-6" />
         </span>
         <div className="relative">
-          <h1 className="font-display text-[18px] leading-tight font-bold text-white">IC Studio</h1>
-          <p className="text-[11.5px] text-slate-400">เลือกสถานการณ์ แก้คำ แล้วเผยแพร่</p>
+          <h1 className="font-display text-[22px] leading-tight font-bold text-white">IC Studio</h1>
+          <p className="text-[13px] text-slate-400">ใส่ภาพ → เลือกสัญญาณ → ตรวจคำ แล้วกดเผยแพร่</p>
         </div>
 
-        <label className="relative flex items-center gap-2 rounded-xl border border-white/10 bg-ink-950/60 px-3 py-1.5 transition focus-within:border-amber-neon/50">
-          <span className="text-[11.5px] text-slate-500">วันที่</span>
+        <label className="relative flex items-center gap-2.5 rounded-xl border border-white/10 bg-ink-950/60 px-3.5 py-2.5 transition focus-within:border-amber-neon/50">
+          <span className="text-[13px] text-slate-400">วันที่</span>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="bg-transparent text-[12.5px] text-white outline-none"
+            className="bg-transparent text-[14px] text-white outline-none"
           />
-          <span className="text-[12px] font-semibold text-amber-neon">{thaiDate(date)}</span>
+          <span className="text-[14px] font-semibold text-amber-neon">{thaiDate(date)}</span>
         </label>
 
         <div className="relative ml-auto flex items-center gap-3">
           <Link
             href="/studio/log"
-            className="flex items-center gap-1.5 rounded-xl border border-violet-neon/35 bg-violet-neon/8 px-3 py-2 text-[12.5px] font-semibold text-violet-neon transition hover:bg-violet-neon/15"
+            className="flex items-center gap-2 rounded-xl border border-violet-neon/35 bg-violet-neon/8 px-4 py-2.5 text-[14px] font-semibold text-violet-neon transition hover:bg-violet-neon/15"
           >
             <FlaskConical className="size-4" />
             ความแม่นย้อนหลัง
@@ -401,7 +403,7 @@ export function StudioEditor({
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={() => setResetOpen((v) => !v)}
-            className="flex items-center gap-1.5 rounded-xl border border-amber-neon/35 bg-amber-neon/8 px-3 py-2 text-[12.5px] font-semibold text-amber-neon transition hover:bg-amber-neon/15"
+            className="flex items-center gap-2 rounded-xl border border-amber-neon/35 bg-amber-neon/8 px-4 py-2.5 text-[14px] font-semibold text-amber-neon transition hover:bg-amber-neon/15"
           >
             <CalendarPlus className="size-4" />
             เริ่มวันใหม่
@@ -457,8 +459,8 @@ export function StudioEditor({
         )}
       </AnimatePresence>
 
+      <PublishCelebration done={published} open={publishedOpen} onClose={closePublished} />
       <AnimatePresence>
-      <PublishCelebration done={published} onClose={closePublished} />
       {msg && (
         <motion.div
           key={msg.text}
@@ -481,7 +483,7 @@ export function StudioEditor({
       </AnimatePresence>
 
       {/* ---------- 3 คอลัมน์: rail / editor / preview ---------- */}
-      <div className="grid gap-3 lg:grid-cols-[190px_minmax(0,1fr)] xl:grid-cols-[190px_minmax(0,1fr)_minmax(0,0.85fr)]">
+      <div className="grid gap-4 lg:grid-cols-[236px_minmax(0,1fr)] xl:grid-cols-[236px_minmax(0,1.25fr)_minmax(0,0.85fr)]">
         <div className="lg:sticky lg:top-20 lg:self-start">
           <SectionRail
             sections={brief.sections}
@@ -489,7 +491,7 @@ export function StudioEditor({
             activeId={sectionId}
             onSelect={selectSection}
           />
-          <p className="mt-2 hidden text-[11px] leading-relaxed text-slate-600 lg:block">
+          <p className="mt-3 hidden text-[12px] leading-relaxed text-slate-500 lg:block">
             คีย์ลัด · Alt+1-6 สลับ section · Ctrl+Z ย้อนกลับ
           </p>
         </div>
@@ -505,7 +507,7 @@ export function StudioEditor({
             >
               {/* หัว section */}
               <div
-                className="panel relative mb-3 overflow-hidden px-4 py-3"
+                className="panel relative mb-4 overflow-hidden px-5 py-4"
                 style={{ borderColor: `color-mix(in srgb, ${a.hex} 30%, transparent)` }}
               >
                 <div
@@ -514,13 +516,13 @@ export function StudioEditor({
                 />
                 <div className="relative flex flex-wrap items-center gap-2.5">
                   <span
-                    className="grid size-8 place-items-center rounded-xl font-display text-[13px] font-bold"
+                    className="grid size-10 place-items-center rounded-xl font-display text-[16px] font-bold"
                     style={{ background: a.hex, color: "var(--ink-950)" }}
                   >
                     {section.index}
                   </span>
                   <div className="min-w-0">
-                    <p className="flex items-center gap-2 font-display text-[16px] leading-tight font-bold" style={{ color: a.hex }}>
+                    <p className="flex items-center gap-2 font-display text-[20px] leading-tight font-bold" style={{ color: a.hex }}>
                       {displayTitle(draft.title || section.title, draft.series)}
                       {draft.series && !hasSeriesSlot(draft.title || section.title) && (
                         <span className="rounded-md bg-white/8 px-1.5 py-0.5 font-sans text-[11.5px] font-semibold text-slate-200">
@@ -528,7 +530,7 @@ export function StudioEditor({
                         </span>
                       )}
                     </p>
-                    <p className="truncate text-[11.5px] text-slate-400">{draft.subtitle || section.subtitle}</p>
+                    <p className="truncate text-[13px] text-slate-400">{draft.subtitle || section.subtitle}</p>
                   </div>
                   <button
                     onClick={() => setEditNames((v) => !v)}
@@ -692,8 +694,8 @@ export function StudioEditor({
 
         {/* พรีวิว */}
         <div className={`${showPreview ? "" : "hidden"} xl:sticky xl:top-20 xl:block xl:self-start`}>
-          <p className="mb-2 flex items-center gap-1.5 text-[11.5px] text-slate-500">
-            <Eye className="size-3.5" />
+          <p className="mb-2 flex items-center gap-1.5 text-[13px] font-semibold text-slate-400">
+            <Eye className="size-4" />
             สิ่งที่ลูกค้าจะเห็น
           </p>
           <div className="panel scroll-slim max-h-[calc(100dvh-9rem)] overflow-y-auto px-3 py-3">
@@ -733,9 +735,9 @@ export function StudioEditor({
 
       {/* ---------- แถบล่างติดหน้าจอ ---------- */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-ink-900/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-2 px-3 py-2 md:px-6">
+        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-2.5 px-3 py-3 md:px-6">
           <span
-            className={`flex items-center gap-1.5 text-[11.5px] ${
+            className={`flex items-center gap-1.5 text-[13px] ${
               saveState === "saved" ? "text-slate-500" : "text-amber-neon"
             }`}
           >
@@ -755,44 +757,47 @@ export function StudioEditor({
           </span>
 
           {stored.restored && !edits && (
-            <span className="flex items-center gap-1.5 text-[11.5px] text-cyan-neon">
+            <span className="flex items-center gap-1.5 text-[13px] text-cyan-neon">
               <History className="size-3.5" /> กู้ร่างเดิมแล้ว
             </span>
           )}
 
-          <div className="ml-auto flex flex-wrap items-center gap-1.5">
+          <div className="ml-auto flex flex-wrap items-center gap-2">
             <button
               onClick={undo}
               disabled={!past.length}
               title="ย้อนกลับ (Ctrl+Z)"
               aria-label="ย้อนกลับ"
-              className="rounded-lg border border-white/10 p-2 text-slate-400 transition hover:text-white disabled:opacity-30"
+              className={BAR_BTN}
             >
-              <Undo2 className="size-4" />
+              <Undo2 className="size-5" />
+              <span className="hidden md:inline">ย้อนกลับ</span>
             </button>
             <button
               onClick={redo}
               disabled={!future.length}
               title="ทำซ้ำ (Ctrl+Shift+Z)"
               aria-label="ทำซ้ำ"
-              className="rounded-lg border border-white/10 p-2 text-slate-400 transition hover:text-white disabled:opacity-30"
+              className={BAR_BTN}
             >
-              <Redo2 className="size-4" />
+              <Redo2 className="size-5" />
+              <span className="hidden md:inline">ทำซ้ำ</span>
             </button>
             <button
               onClick={() => commit({ ...drafts, [sectionId]: initialDrafts(brief)[sectionId] })}
               title="คืนค่า section นี้"
               aria-label="คืนค่า section นี้"
-              className="rounded-lg border border-white/10 p-2 text-slate-400 transition hover:text-white"
+              className={BAR_BTN}
             >
-              <RotateCcw className="size-4" />
+              <RotateCcw className="size-5" />
+              <span className="hidden md:inline">คืนค่าข้อนี้</span>
             </button>
 
             <button
               onClick={() => setShareOpen(true)}
-              className="flex items-center gap-1.5 rounded-lg border border-cyan-neon/40 bg-cyan-neon/10 px-3 py-2 text-[12.5px] text-cyan-neon transition hover:bg-cyan-neon/20"
+              className="flex h-12 items-center gap-2 rounded-xl border border-cyan-neon/40 bg-cyan-neon/10 px-4 text-[14.5px] font-semibold text-cyan-neon transition hover:bg-cyan-neon/20"
             >
-              <ImageDown className="size-4" />
+              <ImageDown className="size-5" />
               <span className="hidden sm:inline">รูปส่งลูกค้า</span>
             </button>
 
@@ -800,9 +805,10 @@ export function StudioEditor({
               onClick={exportJson}
               title="ส่งออก .json (สำรอง)"
               aria-label="ส่งออก .json"
-              className="rounded-lg border border-white/10 p-2 text-slate-400 transition hover:text-white"
+              className={BAR_BTN}
             >
-              {exported ? <Check className="size-4 text-green-neon" /> : <Download className="size-4" />}
+              {exported ? <Check className="size-5 text-green-neon" /> : <Download className="size-5" />}
+              <span className="hidden md:inline">สำรอง .json</span>
             </button>
 
             {canPublish ? (
@@ -811,18 +817,18 @@ export function StudioEditor({
                 disabled={publishing}
                 whileHover={{ y: -1 }}
                 whileTap={{ scale: 0.97 }}
-                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-green-neon to-cyan-neon px-4 py-2 text-[13px] font-semibold text-ink-950 shadow-[0_0_24px_-6px_var(--c-green)] transition hover:brightness-110 disabled:opacity-60"
+                className="flex h-12 items-center gap-2 rounded-xl bg-gradient-to-r from-green-neon to-cyan-neon px-6 text-[15.5px] font-bold text-ink-950 shadow-[0_0_24px_-6px_var(--c-green)] transition hover:brightness-110 disabled:opacity-60"
               >
                 <motion.span
                   animate={publishing ? { y: [0, -3, 0] } : { y: 0 }}
                   transition={publishing ? { repeat: Infinity, duration: 0.6 } : undefined}
                 >
-                  <Rocket className="size-4" />
+                  <Rocket className="size-5" />
                 </motion.span>
                 {publishing ? "กำลังเผยแพร่…" : `เผยแพร่ขึ้นเว็บ · ${progress.done}/${progress.total}`}
               </motion.button>
             ) : (
-              <span className="hidden text-[11px] text-slate-600 lg:block">
+              <span className="hidden text-[12.5px] text-slate-500 lg:block">
                 เผยแพร่: วางไฟล์ทับ src/data/published.json แล้ว push
               </span>
             )}
@@ -846,6 +852,10 @@ export function StudioEditor({
   );
 }
 
+/** ปุ่มแถบล่าง — ใหญ่พอกดง่าย มีชื่อกำกับบนจอกว้าง */
+const BAR_BTN =
+  "flex h-12 items-center gap-2 rounded-xl border border-white/12 bg-white/4 px-3.5 text-[14px] text-slate-200 transition hover:border-white/25 hover:bg-white/8 hover:text-white disabled:opacity-30 disabled:hover:bg-white/4";
+
 function Stepper({
   steps,
   current,
@@ -858,25 +868,25 @@ function Stepper({
   accent: string;
 }) {
   return (
-    <div className="relative mt-3 flex items-center gap-1 rounded-xl border border-white/8 bg-ink-950/40 p-1">
+    <div className="relative mt-4 flex items-center gap-1 rounded-2xl border border-white/8 bg-ink-950/40 p-1.5">
       {steps.map((st, i) => {
         const on = st.key === current;
         return (
           <button
             key={st.key}
             onClick={() => onSelect(st.key)}
-            className="relative flex flex-1 items-center justify-center gap-2 rounded-lg px-2 py-2 text-[12.5px] transition-colors"
+            className="relative flex flex-1 items-center justify-center gap-2.5 rounded-xl px-2 py-3 text-[14.5px] transition-colors"
           >
             {on && (
               <motion.span
                 layoutId="studio-step"
                 transition={{ type: "spring", stiffness: 420, damping: 36 }}
-                className="absolute inset-0 rounded-lg"
+                className="absolute inset-0 rounded-xl"
                 style={{ background: `color-mix(in srgb, ${accent} 16%, transparent)`, boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${accent} 45%, transparent)` }}
               />
             )}
             <span
-              className="relative grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-bold transition-colors"
+              className="relative grid size-7 shrink-0 place-items-center rounded-full text-[13px] font-bold transition-colors"
               style={
                 st.done
                   ? { background: "var(--c-green)", color: "var(--ink-950)" }
@@ -885,7 +895,7 @@ function Stepper({
                     : { background: "var(--c-hover)", color: "var(--c-neutral)" }
               }
             >
-              {st.done ? <Check className="size-3" /> : i + 1}
+              {st.done ? <Check className="size-4" /> : i + 1}
             </span>
             <span className={`relative truncate ${on ? "font-semibold text-white" : "text-slate-400"}`}>{st.label}</span>
           </button>

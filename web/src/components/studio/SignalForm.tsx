@@ -39,7 +39,7 @@ export function SignalForm({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <p className="text-[14px] font-semibold text-slate-100">{form.question}</p>
+        <p className="text-[16px] font-semibold text-slate-100">{form.question}</p>
         <span className="rounded-full border border-white/10 px-2.5 py-0.5 text-[11.5px] text-slate-400">
           เลือกแล้ว {done}/{form.fields.length}
         </span>
@@ -67,7 +67,7 @@ export function SignalForm({
         ))}
       </div>
 
-      <p className="text-[12px] leading-relaxed text-slate-500">กติกาสรุป · {form.rule}</p>
+      <p className="text-[13px] leading-relaxed text-slate-500">กติกาสรุป · {form.rule}</p>
 
       <AnimatePresence initial={false} mode="wait">
         {result && band && (
@@ -147,7 +147,7 @@ function Dropdown({
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-left transition-colors duration-300 hover:border-white/25"
+        className="flex w-full items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition-colors duration-300 hover:border-white/25"
         style={{
           borderColor: value ? `color-mix(in srgb, ${t.hex} 45%, transparent)` : "rgba(148,163,184,0.16)",
           background: value ? `color-mix(in srgb, ${t.hex} 8%, transparent)` : "var(--c-hover)",
@@ -164,8 +164,8 @@ function Dropdown({
         </motion.span>
 
         <span className="min-w-0 flex-1">
-          <span className="block text-[12px] text-slate-400">{label}</span>
-          <span className={`block truncate text-[14px] font-semibold ${value ? t.text : "text-slate-500"}`}>
+          <span className="block text-[13px] text-slate-400">{label}</span>
+          <span className={`block truncate text-[15.5px] font-semibold ${value ? t.text : "text-slate-500"}`}>
             {value?.label ?? "เลือกทิศทาง"}
           </span>
         </span>
@@ -199,7 +199,7 @@ function Dropdown({
                       onPick(o);
                       setOpen(false);
                     }}
-                    className={`flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13.5px] transition-colors ${
+                    className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[14.5px] transition-colors ${
                       on ? `${ot.bg} ${ot.text}` : "text-slate-200 hover:bg-white/6"
                     }`}
                   >
@@ -208,7 +208,7 @@ function Dropdown({
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate">{o.label}</span>
-                      {o.hint && <span className="block text-[11.5px] leading-tight text-slate-400">{o.hint}</span>}
+                      {o.hint && <span className="block text-[12.5px] leading-tight text-slate-400">{o.hint}</span>}
                     </span>
                     {on && <Check className="size-4 shrink-0" />}
                   </button>
