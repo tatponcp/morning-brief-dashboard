@@ -206,7 +206,10 @@ function Dropdown({
                     <span className={`grid size-6 shrink-0 place-items-center rounded-lg ${ot.bg} ${ot.text}`}>
                       {ICON[o.tone]}
                     </span>
-                    <span className="min-w-0 flex-1 truncate">{o.label}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate">{o.label}</span>
+                      {o.hint && <span className="block text-[11.5px] leading-tight text-slate-400">{o.hint}</span>}
+                    </span>
                     {on && <Check className="size-4 shrink-0" />}
                   </button>
                 </li>

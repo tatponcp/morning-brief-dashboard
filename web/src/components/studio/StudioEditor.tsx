@@ -203,7 +203,10 @@ export function StudioEditor({
     const key = templateKey(sectionId, sc.id);
     const template = remove
       ? null
-      : { summary: draft.summary.filter((x) => x.trim()), interpretation: draft.interpretation, insight: draft.insight };
+      : {
+          // บรรทัดที่ระบบเขียนจากข้อมูลวันนี้ (series อื่น, ช่วงย้ายสัญญา) ไม่เก็บเป็นคำของทีม — ระบบเติมให้เองทุกวัน
+          summary: draft.summary.filter((x) => x.trim() && !sc.notes?.includes(x)),
+          interpretation: draft.interpretation, insight: draft.insight };
     try {
       const res = await fetch("/api/templates", {
         method: "POST",
@@ -622,6 +625,7 @@ export function StudioEditor({
                       sectionId={section.id}
                       value={draft}
                       templates={templates}
+                      date={date}
                       onApply={patch}
                       onNext={() => setStepPref("text")}
                     />
