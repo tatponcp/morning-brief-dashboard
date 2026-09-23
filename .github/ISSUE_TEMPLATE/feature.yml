@@ -1,0 +1,27 @@
+name: เสนอฟีเจอร์
+description: อยากให้ระบบทำอะไรเพิ่ม
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: ปัญหาที่เจอตอนนี้
+      description: อธิบายสถานการณ์จริงที่ทำให้อยากได้สิ่งนี้
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: อยากให้เป็นแบบไหน
+    validations:
+      required: true
+  - type: dropdown
+    id: who
+    attributes:
+      label: ใครได้ประโยชน์
+      options:
+        - ลูกค้า
+        - ทีม IC
+        - ทั้งสองฝ่าย
+    validations:
+      required: true

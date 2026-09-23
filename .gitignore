@@ -8,7 +8,11 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 
+# เครื่องมือของนักพัฒนา
+.claude/settings.local.json
+
 # Windows / OneDrive
 Thumbs.db
 desktop.ini
 .DS_Store
+*-Tatpon.*

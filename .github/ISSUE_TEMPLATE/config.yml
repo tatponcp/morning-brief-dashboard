@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: คู่มือใช้งาน IC Studio
+    url: https://github.com/tatponcp/morning-brief-dashboard/blob/main/docs/studio.md
+    about: วิธีใช้งานประจำวันและปัญหาที่พบบ่อย
+  - name: แจ้งเรื่องความปลอดภัย
+    url: https://github.com/tatponcp/morning-brief-dashboard/blob/main/SECURITY.md
+    about: ห้ามแจ้งช่องโหว่เป็น issue สาธารณะ
