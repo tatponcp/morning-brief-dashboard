@@ -250,24 +250,27 @@ export function remapSeriesValues(values: Record<string, string>, from?: string,
 
 /* ───────── ข้อ 3: USD Futures 3 อินดี้ตามชีต ───────── */
 
-/** ทิศทางของ USD — ค่าบวกคือดอลลาร์ขึ้น (บาทอ่อน) ซึ่งกดดันหุ้นไทย */
+/**
+ * ทิศทางของ USD — 3 ทางตามที่ทีมดูจริงในภาพ
+ * ค่าบวกคือดอลลาร์ขึ้น (บาทอ่อน) ซึ่งกดดันหุ้นไทย
+ */
 const USD_DIR = [
-  { value: "up", label: "ขาขึ้น Breakout", level: 1, tone: "bear" as Bias },
-  { value: "side-up", label: "Sideway Up", level: 0.5, tone: "bear" as Bias },
-  { value: "side", label: "Sideway", level: 0, tone: "neutral" as Bias },
-  { value: "side-down", label: "Sideway Down", level: -0.5, tone: "bull" as Bias },
-  { value: "down", label: "ขาลง Breakdown", level: -1, tone: "bull" as Bias },
+  { value: "up", label: "Break High", hint: "ทะลุกรอบบน · USD แข็ง บาทอ่อน", level: 1, tone: "bear" as Bias },
+  { value: "side", label: "Sideway", hint: "ยังอยู่ในกรอบ ไม่ทะลุด้านไหน", level: 0, tone: "neutral" as Bias },
+  { value: "down", label: "Break Low", hint: "หลุดกรอบล่าง · USD อ่อน บาทแข็ง", level: -1, tone: "bull" as Bias },
 ];
-const USD_OPTIONS = USD_DIR.map((d) => opt(d.value, d.label, d.tone));
-const usdLevel = (v?: string) => USD_DIR.find((d) => d.value === v)?.level ?? 0;
+const USD_OPTIONS = USD_DIR.map((d) => opt(d.value, d.label, d.tone, d.label, d.hint));
+/** ค่าที่ทีมเคยเลือกไว้ตอนยังมี 5 ตัวเลือก — ร่างเก่ายังอ่านได้ */
+const USD_LEGACY: Record<string, number> = { "side-up": 0.5, "side-down": -0.5 };
+const usdLevel = (v?: string) => USD_DIR.find((d) => d.value === v)?.level ?? USD_LEGACY[v ?? ""] ?? 0;
 
-/** ระดับเฉลี่ย → คำเรียกทิศทางแบบที่ทีมใช้ในชีต */
+/** ระดับเฉลี่ย → คำเรียกทิศทาง (เฉลี่ยจาก 2 อินดี้ จึงมีกรณีเอนไปทางเดียว) */
 function dirLabel(level: number) {
-  if (level >= 0.75) return "ขาขึ้น";
-  if (level >= 0.25) return "Sideway Up";
+  if (level >= 0.75) return "Break High";
+  if (level >= 0.25) return "ค่อนไป Break High";
   if (level > -0.25) return "Sideway";
-  if (level > -0.75) return "Sideway Down";
-  return "ขาลง";
+  if (level > -0.75) return "ค่อนไป Break Low";
+  return "Break Low";
 }
 
 /* ───────── ข้อ 5 ───────── */
@@ -287,7 +290,7 @@ export const SIGNAL_FORMS: Record<string, SignalForm> = {
   "usd-futures": {
     question: "มุมมอง USD Futures จาก 3 อินดี้ในภาพ",
     rule:
-      "ระยะกลาง-ยาว = เฉลี่ย Super Flow กับ PBC สะสม · ระยะสั้น = PBC รายวัน · USD ขึ้น (บาทอ่อน) กดดันหุ้นไทย, USD ลง (บาทแข็ง) หนุนหุ้นไทย",
+      "ระยะกลาง-ยาว = เฉลี่ย Super Flow กับ PBC สะสม · ระยะสั้น = PBC รายวัน · Break High (บาทอ่อน) กดดันหุ้นไทย, Break Low (บาทแข็ง) หนุนหุ้นไทย",
     fields: [
       { key: "superflow", label: "① Super Flow · เงินไหลเข้า/ออก สะสมของต่างชาติ (ระยะยาว)", options: USD_OPTIONS },
       { key: "pbc", label: "② PBC · เงินไหลเข้า/ออก สะสม (ระยะยาว)", options: USD_OPTIONS },
@@ -302,7 +305,7 @@ export const SIGNAL_FORMS: Record<string, SignalForm> = {
       // ระยะกลาง-ยาวน้ำหนัก 2 ระยะสั้น 1 · USD ขึ้น = คะแนนหุ้นไทยลดลง
       const combined = (mid * 2 + short) / 3;
       const score = Math.round(50 - combined * 50);
-      // เลือกสถานการณ์จากมุมมองระยะกลาง-ยาว — Sideway Up/Down ยังนับเป็นแกว่ง ไม่ใช่เทรนด์
+      // เลือกสถานการณ์จากมุมมองระยะกลาง-ยาว — เอนไปทางเดียว (2 อินดี้ไม่ตรงกัน) ยังนับเป็นแกว่ง
       const id = mid >= 0.75 ? "usd-strong" : mid <= -0.75 ? "usd-weak" : "usd-range";
       const base = fromGuide("usd-futures", id, score);
       base.title = `USD ${midLabel}`;
@@ -314,9 +317,9 @@ export const SIGNAL_FORMS: Record<string, SignalForm> = {
           : id === "usd-weak"
             ? "บาทมีแนวโน้มแข็ง หนุนหุ้นใหญ่"
             : mid > 0
-              ? "USD เอนขึ้นเล็กน้อย บาทยังไม่อ่อนชัด"
+              ? "USD เอนขึ้นเล็กน้อย ยังไม่ Break High ทั้งสองอินดี้"
               : mid < 0
-                ? "USD เอนลงเล็กน้อย บาทยังไม่แข็งชัด"
+                ? "USD เอนลงเล็กน้อย ยังไม่ Break Low ทั้งสองอินดี้"
                 : "ค่าเงินยังไม่ใช่ตัวตัดสิน",
       ];
       base.interpretation = `สรุประยะกลาง-ยาวมองว่า USD เป็น ${midLabel} · ระยะสั้นภายในวันมองว่าเป็น ${shortLabel} — ${base.interpretation}`;
