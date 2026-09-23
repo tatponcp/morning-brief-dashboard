@@ -1,0 +1,41 @@
+name: แจ้งปัญหา
+description: ระบบทำงานไม่เหมือนที่ควรเป็น
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: เกิดที่ส่วนไหน
+      options:
+        - หน้าลูกค้า (สรุปภาพรวมหรือ 6 section)
+        - IC Studio
+        - ความแม่นย้อนหลัง (/studio/log)
+        - การเผยแพร่หรือรูปส่งลูกค้า
+        - อื่น ๆ
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: เกิดอะไรขึ้น
+      description: เล่าสิ่งที่เจอ และสิ่งที่คาดว่าจะเกิด
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: ทำอย่างไรถึงเจอ
+      placeholder: |
+        1. เข้า /studio
+        2. เลือกข้อ 1
+        3. ...
+  - type: input
+    id: env
+    attributes:
+      label: เบราว์เซอร์และอุปกรณ์
+      placeholder: Chrome บน Windows / Safari บน iPhone
+  - type: textarea
+    id: extra
+    attributes:
+      label: ภาพหน้าจอหรือข้อมูลเพิ่มเติม
+      description: ระวังอย่าให้ภาพติดรหัสผ่านหรือข้อมูลลูกค้า
